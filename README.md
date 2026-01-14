@@ -2,6 +2,8 @@
 
 This guide is for client developers who want to use the `tsb-fontos-ui` framework to build React + TypeScript applications.
 
+<img width="1897" height="961" alt="Image" src="https://github.com/user-attachments/assets/c5d8bc3f-2377-4b9e-94b4-be9bb36feb5c" />
+
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
@@ -134,8 +136,6 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
 ---
 
 ## 1. Introduction
-
-<img width="1897" height="961" alt="Image" src="https://github.com/user-attachments/assets/c5d8bc3f-2377-4b9e-94b4-be9bb36feb5c" />
 
 `tsb-fontos-ui` is a comprehensive UI framework built on top of React, Ant Design and TUI Grid, providing enterprise-grade components and utilities for building complex business applications.
 
