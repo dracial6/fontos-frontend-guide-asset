@@ -7,11 +7,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
-   - 1.1 [Key Features](#key-features)
-   - 1.2 [Architecture](#architecture)
 2. [Installation](#2-installation)
-   - 2.1 [Prerequisites](#prerequisites)
-   - 2.2 [Install from Workspace](#install-from-workspace)
 3. [Client Initialization](#3-client-initialization)
    - 3.1 [Basic App Structure](#31-basic-app-structure)
      - 3.1.1 [MainComponent Props](#311-maincomponent-props)
@@ -31,7 +27,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 3.9 [Initialization Order](#39-initialization-order)
 4. [Core Components](#4-core-components)
    - 4.1 [CommonProps and FontosCls](#41-commonprops-and-fontoscls)
-     - 4.1.1 [CommonProps](#commonprops)
+     - 4.1.1 [CommonProps](#411-commonprops)
    - 4.2 [TButton](#42-tbutton)
    - 4.3 [TInput](#43-tinput)
    - 4.4 [TLabel](#44-tlabel)
@@ -49,12 +45,12 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 4.17 [TTabs](#417-ttabs)
    - 4.18 [TTree](#418-ttree)
    - 4.19 [Component Support for CommonProps](#419-component-support-for-commonprops)
-   - 4.20 [TConfigProvider](#420-tconfigprovider)
 5. [Layout Components](#5-layout-components)
    - 5.1 [TLayout](#51-tlayout)
    - 5.2 [TFlex](#52-tflex)
    - 5.3 [TSplitter](#53-tsplitter)
    - 5.4 [TSpace](#54-tspace)
+   - 5.5 [TConfigProvider](#55-tconfigprovider)
 6. [Form Components](#6-form-components)
    - 6.1 [TForm](#61-tform)
    - 6.2 [Form Value Change Handler](#62-form-value-change-handler)
@@ -62,13 +58,13 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
 7. [TSpreadGrid Component](#7-tspreadgrid-component)
    - 7.1 [Basic Usage](#71-basic-usage)
    - 7.2 [Grid Schema](#72-grid-schema)
-     - 7.2.1 [ColorRuleType Configuration](#colorruletype-configuration)
+     - 7.2.1 [ColorRuleType Configuration](#721-colorruletype-configuration)
    - 7.3 [Grid Events](#73-grid-events)
      - 7.3.1 [Data Source Events](#data-source-events)
      - 7.3.2 [Focus Change Events](#focus-change-events)
    - 7.4 [Data Binding](#74-data-binding)
-     - 7.4.1 [Binding Data to Grid](#binding-data-to-grid)
-     - 7.4.2 [Getting Selected Row](#getting-selected-row)
+     - 7.4.1 [Binding Data to Grid](#741-binding-data-to-grid)
+     - 7.4.2 [Getting Selected Row](#742-getting-selected-row)
    - 7.5 [Pagination](#75-pagination)
    - 7.6 [Context Menu](#76-context-menu)
    - 7.7 [Grid Methods](#77-grid-methods)
@@ -101,7 +97,6 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
      - 7.13.1 [Basic Excel Export](#7131-basic-excel-export)
      - 7.13.2 [Excel Export with Frontend Data](#7132-excel-export-with-frontend-data)
 8. [UI Templates](#8-ui-templates)
-   - 8.0 [MVP Pattern Overview](#mvp-pattern-overview)
    - 8.1 [BaseSingleGridComponent](#81-basesinglegridcomponent)
    - 8.2 [BaseMultiGridComponent](#82-basemultigridcomponent)
    - 8.3 [BaseSingleDrawComponent](#83-basesingledrawcomponent)
@@ -230,7 +225,6 @@ interface AppProps {
 
 ```typescript
 import React, { useEffect } from "react";
-import { Provider } from "react-redux";
 import store from "./store/config";
 import {
   MainComponent,
@@ -254,9 +248,9 @@ function App() {
   }, []);
 
   return (
-    <Provider store={store}>
+    <TConfigProvider>
       <MainComponent menu={menuItems} />
-    </Provider>
+    </TConfigProvider>
   );
 }
 
@@ -474,17 +468,10 @@ MaskHandler.toggleMask();
 const isEnabled = MaskHandler.getMaskEnabled();
 ```
 
-**Note:** The mask element must exist in your HTML with `id="mask"`:
-
-```html
-<div id="mask"></div>
-```
-
 #### 3.1.7 Complete Example with All Features
 
 ```typescript
 import React, { useEffect } from "react";
-import { Provider } from "react-redux";
 import store from "./store/config";
 import { MainComponent, MainLayout } from "tsb-fontos-ui";
 import { LoginedUserInfo } from "tsb-fontos-core";
@@ -534,7 +521,7 @@ import { JsonCellStyleLoader } from "tsb-catos-ui"; // or your custom loader
 CellStyleManager.setCellStyleLoader(new JsonCellStyleLoader());
 ```
 
-**JsonCellStyleLoader Overview:**
+**CellStyle Loader Overview:**
 
 Implements the `ICellStyleLoader` interface and loads cell styles from JSON files. It supports the following cell style types:
 
@@ -1030,8 +1017,7 @@ The `BaseCodeHandler` interface (`@packages/Fontos-Framework-Frontend/tsb-fontos
 **Example Custom Implementation:**
 
 ```typescript
-import BaseCodeHandler, { CodeGroupTypes } from "tsb-fontos-core";
-import { BaseDataItem } from "tsb-fontos-core";
+import BaseCodeHandler, { CodeGroupTypes, BaseDataItem } from "tsb-fontos-core";
 
 class MyCustomCodeHandler implements BaseCodeHandler {
   async getCodes<T>(codeType: string, ...args: string[]): Promise<Array<T>> {
@@ -1078,6 +1064,8 @@ CodeManager.initializeInstance(new MyCustomCodeHandler());
 ```
 
 ### 3.6 MainLayout Custom Toolbars
+
+<img width="985" height="175" alt="Image" src="https://github.com/user-attachments/assets/8576a7fe-18c5-4c0e-ac97-7e0233d4e0fb" />
 
 Set up custom toolbar icons and actions:
 
@@ -1133,7 +1121,6 @@ Here's a complete example combining all initialization steps:
 
 ```typescript
 import React, { useEffect } from "react";
-import { Provider } from "react-redux";
 import store from "./store/config";
 import {
   MainComponent,
@@ -2286,142 +2273,6 @@ import { TInput, TSelect, TDatePicker } from "tsb-fontos-ui";
 
 ---
 
-## 4.20 TConfigProvider
-
-`TConfigProvider` is a wrapper component around Ant Design's `ConfigProvider` that provides global configuration settings for all Ant Design components in your application. It extends the base `ConfigProvider` functionality with a default `componentSize` of `"small"` to maintain consistency across the framework.
-
-### Purpose
-
-`TConfigProvider` allows you to:
-- Set global component size defaults (defaults to `"small"`)
-- Configure locale settings for internationalization
-- Set layout direction (LTR/RTL)
-- Configure popup container for modals, dropdowns, etc.
-- Apply global form validation messages
-- Customize empty state rendering
-- Configure other Ant Design global settings
-
-### Basic Usage
-
-Wrap your application root (typically `MainComponent`) with `TConfigProvider`:
-
-```typescript
-import { TConfigProvider, MainComponent } from "tsb-fontos-ui";
-import menuItems from "./Menu";
-
-function App() {
-  return (
-    <TConfigProvider>
-      <MainComponent menu={menuItems} />
-    </TConfigProvider>
-  );
-}
-
-export default App;
-```
-
-### Props
-
-`TConfigProvider` accepts all props from Ant Design's `ConfigProvider`. The most commonly used props are:
-
-**componentSize** (default: `"small"`)
-- Sets the default size for all Ant Design components
-- Values: `"small"` | `"middle"` | `"large"`
-- If not specified, defaults to `"small"` (unlike Ant Design's default `"middle"`)
-
-**locale**
-- Sets the locale/language for Ant Design components
-- Example: `import locale from 'antd/locale/en_US'`
-
-**direction**
-- Sets the layout direction
-- Values: `"ltr"` | `"rtl"`
-
-**getPopupContainer**
-- Function that returns the container element for popup-based components (Select, Tooltip, Menu, Modal, etc.)
-- Default: `() => document.body`
-
-**form**
-- Global form configuration
-- Can include `validateMessages` and `requiredMark` settings
-
-### Complete Example
-
-```typescript
-import React from "react";
-import { TConfigProvider, MainComponent } from "tsb-fontos-ui";
-import locale from "antd/locale/en_US";
-import menuItems from "./Menu";
-
-function App() {
-  return (
-    <TConfigProvider
-      componentSize="small"  // Default, can be omitted
-      locale={locale}
-      direction="ltr"
-      getPopupContainer={(triggerNode) => triggerNode?.parentElement || document.body}
-      form={{
-        validateMessages: {
-          required: "This field is required",
-          types: {
-            email: "Invalid email format",
-            number: "Must be a number",
-          },
-        },
-        requiredMark: true,
-      }}
-      select={{
-        showSearch: true,
-      }}
-      input={{
-        autoComplete: "off",
-      }}
-    >
-      <MainComponent menu={menuItems} />
-    </TConfigProvider>
-  );
-}
-
-export default App;
-```
-
-### Component-Specific Configuration
-
-You can also configure specific component types globally:
-
-```typescript
-<TConfigProvider
-  select={{
-    showSearch: true,
-    filterOption: (input, option) =>
-      (option?.label ?? "").toLowerCase().includes(input.toLowerCase()),
-  }}
-  input={{
-    autoComplete: "off",
-  }}
-  datePicker={{
-    format: "YYYY-MM-DD",
-  }}
->
-  {/* Your app */}
-</TConfigProvider>
-```
-
-### Key Differences from Ant Design ConfigProvider
-
-1. **Default componentSize**: `TConfigProvider` defaults to `"small"` instead of Ant Design's default `"middle"`. This ensures consistency across the framework where smaller components are preferred.
-
-2. **Framework Integration**: `TConfigProvider` is designed to work seamlessly with other `tsb-fontos-ui` components and follows the framework's design patterns.
-
-### Notes
-
-- You can wrap your layout with `TConfigProvider` or the root component (`MainComponent`)
-- All Ant Design components within the provider will inherit the global configuration
-- Component-specific props will override global settings
-- The provider uses React Context, so it must wrap components that need access to the configuration
-
----
-
 ## 5. Layout Components
 
 ### 5.1 TLayout
@@ -2575,6 +2426,140 @@ import { TSpace, TButton, TLabel } from "tsb-fontos-ui";
   <TButton>Button 3</TButton>
 </TSpace>
 ```
+
+### 5.5 TConfigProvider
+
+`TConfigProvider` is a wrapper component around Ant Design's `ConfigProvider` that provides global configuration settings for all Ant Design components in your application. It extends the base `ConfigProvider` functionality with a default `componentSize` of `"small"` to maintain consistency across the framework.
+
+#### Purpose
+
+`TConfigProvider` allows you to:
+- Set global component size defaults (defaults to `"small"`)
+- Configure locale settings for internationalization
+- Set layout direction (LTR/RTL)
+- Configure popup container for modals, dropdowns, etc.
+- Apply global form validation messages
+- Customize empty state rendering
+- Configure other Ant Design global settings
+
+#### Basic Usage
+
+Wrap your application root (typically `MainComponent`) with `TConfigProvider`:
+
+```typescript
+import { TConfigProvider, MainComponent } from "tsb-fontos-ui";
+import menuItems from "./Menu";
+
+function App() {
+  return (
+    <TConfigProvider>
+      <MainComponent menu={menuItems} />
+    </TConfigProvider>
+  );
+}
+
+export default App;
+```
+
+#### Props
+
+`TConfigProvider` accepts all props from Ant Design's `ConfigProvider`. The most commonly used props are:
+
+**componentSize** (default: `"small"`)
+- Sets the default size for all Ant Design components
+- Values: `"small"` | `"middle"` | `"large"`
+- If not specified, defaults to `"small"` (unlike Ant Design's default `"middle"`)
+
+**locale**
+- Sets the locale/language for Ant Design components
+- Example: `import locale from 'antd/locale/en_US'`
+
+**direction**
+- Sets the layout direction
+- Values: `"ltr"` | `"rtl"`
+
+**getPopupContainer**
+- Function that returns the container element for popup-based components (Select, Tooltip, Menu, Modal, etc.)
+- Default: `() => document.body`
+
+**form**
+- Global form configuration
+- Can include `validateMessages` and `requiredMark` settings
+
+#### Complete Example
+
+```typescript
+import React from "react";
+import { TConfigProvider, MainComponent } from "tsb-fontos-ui";
+import locale from "antd/locale/en_US";
+import menuItems from "./Menu";
+
+function App() {
+  return (
+    <TConfigProvider
+      componentSize="small"  // Default, can be omitted
+      locale={locale}
+      direction="ltr"
+      getPopupContainer={(triggerNode) => triggerNode?.parentElement || document.body}
+      form={{
+        validateMessages: {
+          required: "This field is required",
+          types: {
+            email: "Invalid email format",
+            number: "Must be a number",
+          },
+        },
+        requiredMark: true,
+      }}
+      select={{
+        showSearch: true,
+      }}
+      input={{
+        autoComplete: "off",
+      }}
+    >
+      <MainComponent menu={menuItems} />
+    </TConfigProvider>
+  );
+}
+
+export default App;
+```
+
+#### Component-Specific Configuration
+
+You can also configure specific component types globally:
+
+```typescript
+<TConfigProvider
+  select={{
+    showSearch: true,
+    filterOption: (input, option) =>
+      (option?.label ?? "").toLowerCase().includes(input.toLowerCase()),
+  }}
+  input={{
+    autoComplete: "off",
+  }}
+  datePicker={{
+    format: "YYYY-MM-DD",
+  }}
+>
+  {/* Your app */}
+</TConfigProvider>
+```
+
+#### Key Differences from Ant Design ConfigProvider
+
+1. **Default componentSize**: `TConfigProvider` defaults to `"small"` instead of Ant Design's default `"middle"`. This ensures consistency across the framework where smaller components are preferred.
+
+2. **Framework Integration**: `TConfigProvider` is designed to work seamlessly with other `tsb-fontos-ui` components and follows the framework's design patterns.
+
+#### Notes
+
+- You can wrap your layout with `TConfigProvider` or the root component (`MainComponent`)
+- All Ant Design components within the provider will inherit the global configuration
+- Component-specific props will override global settings
+- The provider uses React Context, so it must wrap components that need access to the configuration
 
 ---
 
@@ -4520,9 +4505,8 @@ The Presenter (Controller) uses `ControllerToolbarSet` decorators to register me
 **Example:**
 
 ```typescript
-import { BaseSingleGridController } from "tsb-fontos-ui";
-import { ControllerToolbarSet } from "tsb-fontos-ui";
 import { TEventArgs } from "tsb-fontos-core";
+import { ControllerToolbarSet, BaseSingleGridController } from "tsb-fontos-ui";
 
 class ProductController extends BaseSingleGridController<ProductView> {
   // This method will be called when the "Refresh" toolbar button is clicked
