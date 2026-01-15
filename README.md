@@ -1,13 +1,17 @@
 # tsb-fontos-ui Developer Guide
 
-This guide is for client developers who want to use the `tsb-fontos-ui` framework to build React + TypeScript applications.
+<img width="1918" height="956" alt="Image" src="https://github.com/user-attachments/assets/2bca3fce-e033-417c-bcda-d029c7c256cb" />
 
-<img width="1897" height="961" alt="Image" src="https://github.com/user-attachments/assets/c5d8bc3f-2377-4b9e-94b4-be9bb36feb5c" />
+This guide is for client developers who want to use the `tsb-fontos-ui` framework to build React + TypeScript applications.
 
 ## Table of Contents
 
 1. [Introduction](#1-introduction)
+   - 1.1 [Key Features](#key-features)
+   - 1.2 [Architecture](#architecture)
 2. [Installation](#2-installation)
+   - 2.1 [Prerequisites](#prerequisites)
+   - 2.2 [Install from Workspace](#install-from-workspace)
 3. [Client Initialization](#3-client-initialization)
    - 3.1 [Basic App Structure](#31-basic-app-structure)
      - 3.1.1 [MainComponent Props](#311-maincomponent-props)
@@ -27,6 +31,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 3.9 [Initialization Order](#39-initialization-order)
 4. [Core Components](#4-core-components)
    - 4.1 [CommonProps and FontosCls](#41-commonprops-and-fontoscls)
+     - 4.1.1 [CommonProps](#commonprops)
    - 4.2 [TButton](#42-tbutton)
    - 4.3 [TInput](#43-tinput)
    - 4.4 [TLabel](#44-tlabel)
@@ -44,6 +49,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 4.17 [TTabs](#417-ttabs)
    - 4.18 [TTree](#418-ttree)
    - 4.19 [Component Support for CommonProps](#419-component-support-for-commonprops)
+   - 4.20 [TConfigProvider](#420-tconfigprovider)
 5. [Layout Components](#5-layout-components)
    - 5.1 [TLayout](#51-tlayout)
    - 5.2 [TFlex](#52-tflex)
@@ -95,6 +101,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
      - 7.13.1 [Basic Excel Export](#7131-basic-excel-export)
      - 7.13.2 [Excel Export with Frontend Data](#7132-excel-export-with-frontend-data)
 8. [UI Templates](#8-ui-templates)
+   - 8.0 [MVP Pattern Overview](#mvp-pattern-overview)
    - 8.1 [BaseSingleGridComponent](#81-basesinglegridcomponent)
    - 8.2 [BaseMultiGridComponent](#82-basemultigridcomponent)
    - 8.3 [BaseSingleDrawComponent](#83-basesingledrawcomponent)
@@ -102,8 +109,8 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 8.5 [BaseCompositeComponent](#85-basecompositecomponent)
    - 8.6 [CustomContainerComponent](#86-customcontainercomponent)
    - 8.7 [Common Features](#87-common-features)
-     - 8.7.1 [UI Authentication](#871-ui-authentication)
-     - 8.7.2 [Data Synchronization](#872-data-synchronization)
+     - 8.7.1 [UI Authentication](#ui-authentication)
+     - 8.7.2 [Data Synchronization](#data-synchronization)
 9. [Menu System](#9-menu-system)
    - 9.1 [MainLayout](#91-mainlayout)
    - 9.2 [Menu Configuration](#92-menu-configuration)
@@ -182,20 +189,6 @@ If you're working in a monorepo workspace:
     "tsb-fontos-ui": "1.0.0",
     "tsb-fontos-core": "^1.0.0"
   }
-}
-```
-
-### Basic Setup
-
-```typescript
-import { TConfigProvider } from "tsb-fontos-ui";
-
-function App() {
-  return (
-    <TConfigProvider>
-      {/* Your application */}
-    </TConfigProvider>
-  );
 }
 ```
 
@@ -353,6 +346,8 @@ The `MainComponent` (exported as `MainLayout`) provides static methods for contr
 
 **Toolbar Control:**
 
+<img width="600" height="150" alt="Image" src="https://github.com/user-attachments/assets/bf5b820e-70b9-4d92-94b6-447981539104" />
+
 ```typescript
 // Activate specific toolbars
 MainLayout.activateControllerToolbars("New", "Save", "Delete");
@@ -409,9 +404,9 @@ The `MainComponent` processes menu items by:
 ```typescript
 const menuItems: MenuType[] = [
   {
-    id: "singleGrid",
+    id: "singleGrid", // Matching key
     icon: <BulbOutlined />,
-    customTabTitle: () => <span>Custom Title</span>,
+    customTabTitle: () => <span>Custom Title</span>, // Custom dock tab title
     content: (
       <div className="ft-root-wrapper">
         <SingleGridView menuId="singleGrid" />
@@ -419,6 +414,44 @@ const menuItems: MenuType[] = [
     ),
   },
 ];
+```
+
+```json
+{
+  "__menuCompressType": ["zeroWidth", "initialOnly"],
+  "menuCompressType": "zeroWidth",
+  "initialViewKeys": [],
+  "hideCommonMenu": false,
+  "showCommonMenuOnActive": false,
+  "menuWidth": 200,
+  "menu": {
+    "Data": {
+      "Grid": [
+        {
+          "key": "singleGrid", // Matching key
+          "label": "WRD_FTSL_SingleGrid",
+          "isAllowMultiTab": true,
+          "floatPosition": {
+            "left": 0,
+            "top": 0,
+            "width": 1500,
+            "height": 800
+          }
+        },
+        // Other menu items...
+      ]
+    },
+    // Other menu chapters...
+    "common": { // Common menu would be remain even after chapter changed
+      "File": {
+        "key": "fileUpDown",
+        "label": "File Upload",
+        "direction": "custom"
+      },
+      // Other common menu items...
+    }
+  }
+}
 ```
 
 #### 3.1.6 Mask Handler
@@ -473,14 +506,14 @@ function App() {
   }, []);
 
   return (
-    <Provider store={store}>
+    <TConfigProvider>
       <MainComponent
         menu={menuItems}
         loginComponent={<CustomLoginForm />}
         customMenuLogo={<img src="/logo.png" alt="Logo" />}
         appInitCallback={() => console.log("Initialization complete")}
       />
-    </Provider>
+    </TConfigProvider>
   );
 }
 
@@ -1208,12 +1241,19 @@ function App() {
   const loginStrategy = new SampleLoginStrategyByHttpOnlyCookie();
 
   return (
-    <Provider store={store}>
+    <TConfigProvider
+        select={{
+            showSearch: true
+        }}
+        input={{
+            autoComplete:"off"
+        }}
+    >
       <MainComponent 
         menu={menuItems} 
         loginComponent={<TSampleLoginForm loginStrategy={loginStrategy} />}
       />
-    </Provider>
+    </TConfigProvider>
   );
 }
 
@@ -2243,6 +2283,142 @@ import { TInput, TSelect, TDatePicker } from "tsb-fontos-ui";
   foreColor="#333"
 />
 ```
+
+---
+
+## 4.20 TConfigProvider
+
+`TConfigProvider` is a wrapper component around Ant Design's `ConfigProvider` that provides global configuration settings for all Ant Design components in your application. It extends the base `ConfigProvider` functionality with a default `componentSize` of `"small"` to maintain consistency across the framework.
+
+### Purpose
+
+`TConfigProvider` allows you to:
+- Set global component size defaults (defaults to `"small"`)
+- Configure locale settings for internationalization
+- Set layout direction (LTR/RTL)
+- Configure popup container for modals, dropdowns, etc.
+- Apply global form validation messages
+- Customize empty state rendering
+- Configure other Ant Design global settings
+
+### Basic Usage
+
+Wrap your application root (typically `MainComponent`) with `TConfigProvider`:
+
+```typescript
+import { TConfigProvider, MainComponent } from "tsb-fontos-ui";
+import menuItems from "./Menu";
+
+function App() {
+  return (
+    <TConfigProvider>
+      <MainComponent menu={menuItems} />
+    </TConfigProvider>
+  );
+}
+
+export default App;
+```
+
+### Props
+
+`TConfigProvider` accepts all props from Ant Design's `ConfigProvider`. The most commonly used props are:
+
+**componentSize** (default: `"small"`)
+- Sets the default size for all Ant Design components
+- Values: `"small"` | `"middle"` | `"large"`
+- If not specified, defaults to `"small"` (unlike Ant Design's default `"middle"`)
+
+**locale**
+- Sets the locale/language for Ant Design components
+- Example: `import locale from 'antd/locale/en_US'`
+
+**direction**
+- Sets the layout direction
+- Values: `"ltr"` | `"rtl"`
+
+**getPopupContainer**
+- Function that returns the container element for popup-based components (Select, Tooltip, Menu, Modal, etc.)
+- Default: `() => document.body`
+
+**form**
+- Global form configuration
+- Can include `validateMessages` and `requiredMark` settings
+
+### Complete Example
+
+```typescript
+import React from "react";
+import { TConfigProvider, MainComponent } from "tsb-fontos-ui";
+import locale from "antd/locale/en_US";
+import menuItems from "./Menu";
+
+function App() {
+  return (
+    <TConfigProvider
+      componentSize="small"  // Default, can be omitted
+      locale={locale}
+      direction="ltr"
+      getPopupContainer={(triggerNode) => triggerNode?.parentElement || document.body}
+      form={{
+        validateMessages: {
+          required: "This field is required",
+          types: {
+            email: "Invalid email format",
+            number: "Must be a number",
+          },
+        },
+        requiredMark: true,
+      }}
+      select={{
+        showSearch: true,
+      }}
+      input={{
+        autoComplete: "off",
+      }}
+    >
+      <MainComponent menu={menuItems} />
+    </TConfigProvider>
+  );
+}
+
+export default App;
+```
+
+### Component-Specific Configuration
+
+You can also configure specific component types globally:
+
+```typescript
+<TConfigProvider
+  select={{
+    showSearch: true,
+    filterOption: (input, option) =>
+      (option?.label ?? "").toLowerCase().includes(input.toLowerCase()),
+  }}
+  input={{
+    autoComplete: "off",
+  }}
+  datePicker={{
+    format: "YYYY-MM-DD",
+  }}
+>
+  {/* Your app */}
+</TConfigProvider>
+```
+
+### Key Differences from Ant Design ConfigProvider
+
+1. **Default componentSize**: `TConfigProvider` defaults to `"small"` instead of Ant Design's default `"middle"`. This ensures consistency across the framework where smaller components are preferred.
+
+2. **Framework Integration**: `TConfigProvider` is designed to work seamlessly with other `tsb-fontos-ui` components and follows the framework's design patterns.
+
+### Notes
+
+- You can wrap your layout with `TConfigProvider` or the root component (`MainComponent`)
+- All Ant Design components within the provider will inherit the global configuration
+- Component-specific props will override global settings
+- The provider uses React Context, so it must wrap components that need access to the configuration
 
 ---
 
