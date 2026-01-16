@@ -60,8 +60,11 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 7.2 [Grid Schema](#72-grid-schema)
      - 7.2.1 [ColorRuleType Configuration](#721-colorruletype-configuration)
    - 7.3 [Grid Events](#73-grid-events)
-     - 7.3.1 [Data Source Events](#data-source-events)
-     - 7.3.2 [Focus Change Events](#focus-change-events)
+     - 7.3.1 [Basic Tui-Grid Event Handlers](#731-basic-tui-grid-event-handlers)
+     - 7.3.2 [TSpreadGrid Customized Event Handlers](#732-tspreadgrid-customized-event-handlers)
+       - 7.3.2.1 [Data Source Events](#7321-data-source-events)
+       - 7.3.2.2 [Focus Change Events](#7322-focus-change-events)
+       - 7.3.2.3 [Row Range Change Event](#7323-row-range-change-event)
    - 7.4 [Data Binding](#74-data-binding)
      - 7.4.1 [Binding Data to Grid](#741-binding-data-to-grid)
      - 7.4.2 [Getting Selected Row](#742-getting-selected-row)
@@ -82,7 +85,6 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
      - 7.8.2 [Scroll Event](#782-scroll-event)
    - 7.9 [Grid Export and Dialog Methods](#79-grid-export-and-dialog-methods)
      - 7.9.1 [Export Methods](#791-export-methods)
-     - 7.9.2 [Dialog Methods](#792-dialog-methods)
    - 7.10 [Additional Grid Props](#710-additional-grid-props)
      - 7.10.1 [Scroll Buffer](#7101-scroll-buffer)
      - 7.10.2 [Move Direction on Enter](#7102-move-direction-on-enter)
@@ -104,8 +106,8 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 8.5 [BaseCompositeComponent](#85-basecompositecomponent)
    - 8.6 [CustomContainerComponent](#86-customcontainercomponent)
    - 8.7 [Common Features](#87-common-features)
-     - 8.7.1 [UI Authentication](#ui-authentication)
-     - 8.7.2 [Data Synchronization](#data-synchronization)
+     - 8.7.1 [UI Authentication](#871-ui-authentication)
+     - 8.7.2 [Data Synchronization](#872-data-synchronization)
 9. [Menu System](#9-menu-system)
    - 9.1 [MainLayout](#91-mainlayout)
    - 9.2 [Menu Configuration](#92-menu-configuration)
@@ -3481,21 +3483,152 @@ if (valueDisplayType === ValueDisplayTypes.CODE) {
 
 ### 7.3 Grid Events
 
-#### Data Source Events
+`TSpreadGrid` supports various event handlers that map React prop names to Toast UI Grid event names. The framework uses `EventNameMapping` type to define these mappings.
+
+#### 7.3.1 Basic Tui-Grid Event Handlers
+
+The following event handlers are available on `Tui-Grid`:
+
+**Mouse Events:**
+- `onClick`: Cell click event (`"click"`)
+- `onDblclick`: Cell double-click event (`"dblclick"`)
+- `onMousedown`: Mouse down event (`"mousedown"`)
+- `onMouseover`: Mouse over event (`"mouseover"`)
+- `onMouseout`: Mouse out event (`"mouseout"`)
+
+**Focus Events:**
+- `onFocusChange`: Focus change event (`"focusChange"`)
+
+**Column Events:**
+- `onColumnResize`: Column resize event (`"columnResize"`)
+
+**Checkbox Events:**
+- `onCheck`: Row checkbox checked event (`"check"`)
+- `onUncheck`: Row checkbox unchecked event (`"uncheck"`)
+- `onCheckAll`: All rows checked event (`"checkAll"`)
+- `onUncheckAll`: All rows unchecked event (`"uncheckAll"`)
+
+**Selection Events:**
+- `onSelection`: Selection change event (`"selection"`)
+
+**Editing Events:**
+- `onEditingStart`: Cell editing start event (`"editingStart"`)
+- `onEditingFinish`: Cell editing finish event (`"editingFinish"`)
+
+**Data Operation Events:**
+- `onSort`: Column sort event (`"sort"`)
+- `onFilter`: Column filter event (`"filter"`)
+- `onAfterChange`: After data change event (`"afterChange"`)
+
+**Scroll Events:**
+- `onScrollEnd`: Scroll end event - fires when scroll reaches the edge (`"scrollEnd"`)
+
+**Request/Response Events:**
+- `onBeforeRequest`: Before HTTP request event (`"beforeRequest"`)
+- `onResponse`: Response event (`"response"`)
+- `onSuccessResponse`: Success response event (`"successResponse"`)
+- `onFailResponse`: Fail response event (`"failResponse"`)
+- `onErrorResponse`: Error response event (`"errorResponse"`)
+
+**Example Usage:**
+
+```typescript
+import { TSpreadGrid, TSpreadGridEventArgs } from "tsb-fontos-ui";
+
+<TSpreadGrid
+  ref={this.grd_MyGrid}
+  onClick={(e: TSpreadGridEventArgs) => {
+    console.log("Cell clicked:", e.rowKey, e.columnName);
+  }}
+  onDblclick={(e: TSpreadGridEventArgs) => {
+    // Handle double-click
+  }}
+  onCheck={(e: TSpreadGridEventArgs) => {
+    console.log("Row checked:", e.rowKey);
+  }}
+  onSort={(e: TSpreadGridEventArgs) => {
+    console.log("Column sorted:", e.columnName);
+  }}
+  onScrollEnd={(e: TSpreadGridEventArgs) => {
+    // Load more data when scroll reaches end
+    this.loadMoreData();
+  }}
+  onEditingFinish={(e: TSpreadGridEventArgs) => {
+    console.log("Value changed:", e.prevValue, "->", e.currValue);
+  }}
+/>
+```
+
+**Event Handler Type:**
+
+Toast UI Grid event handlers receive a `TuiGridEvent` object. The `TuiGridEvent` contains a `props` property of type `GridEventProps` with the following properties:
+
+**Core Properties:**
+- `rowKey`: Current row key (`RowKey | null`)
+- `prevRowKey`: Previous row key (`RowKey | null`)
+- `rowKeys`: Array of row keys (`RowKey[] | null`)
+- `columnName`: Current column name (`string | null`)
+- `prevColumnName`: Previous column name (`string | null`)
+- `targetRowKey`: Target row key (`RowKey | null`)
+- `targetColumnName`: Target column name (`string | null`)
+
+**Value Properties:**
+- `value`: Current cell value (`CellValue`)
+- `prevValue`: Previous cell value (`CellValue`)
+- `nextValue`: Next cell value (`CellValue`)
+
+**Selection and Range:**
+- `range`: Selection range (`SelectionRange | null`)
+
+**Event Objects:**
+- `event`: Mouse event (`MouseEvent`)
+- `keyboardEvent`: Keyboard event (`KeyboardEvent | null`)
+
+**Data Operation Properties:**
+- `sortState`: Sort state (`SortState`)
+- `filterState`: Filter state (`Filter[] | null`)
+- `columnFilterState`: Column filter state (`FilterState[]`)
+- `resizedColumns`: Resized columns (`ResizedColumn[]`)
+- `changes`: Cell changes array (`CellChange[]`)
+
+**Request/Response Properties:**
+- `xhr`: XMLHttpRequest object (`XMLHttpRequest`)
+
+**Pagination:**
+- `page`: Page number (`number`)
+
+**Export Properties:**
+- `exportFormat`: Export format (`ExportFormat`)
+- `exportOptions`: Export options (`OptExport`)
+- `data`: Export data (`string[][]`)
+- `complexHeaderData`: Complex header data (`string[][] | null`)
+- `exportFn`: Export function (`(data: string[][]) => void`)
+
+**Other Properties:**
+- `ascending`: Sort ascending flag (`boolean`)
+- `multiple`: Multiple selection flag (`boolean`)
+- `origin`: Change origin (`"paste" | "cell" | "delete"`)
+- `appended`: Appended flag (`boolean`)
+- `save`: Save flag (`boolean`)
+- `triggeredByKey`: Triggered by key flag (`boolean`)
+- `floatingRow`: Floating row element (`HTMLElement`)
+- `floatingColumn`: Floating column element (`HTMLElement`)
+
+**TuiGridEvent Methods:**
+
+- `stop()`: Stop event propagation
+- `isStopped()`: Check if event propagation is stopped
+- `assignData(data: GridEventProps)`: Assign data to event
+- `setInstance(instance: TuiGrid)`: Set grid instance
+
+#### 7.3.2 TSpreadGrid Customized Event Handlers
+
+`TSpreadGrid` provides customized event handlers that extend the base Toast UI Grid events with framework-specific functionality. These events use `TSpreadGridEventArgs` which provides additional properties beyond the standard `TuiGridEvent`.
+
+##### 7.3.2.1 Data Source Events
 
 ```typescript
 import { TSpreadGridEventArgs } from "tsb-fontos-ui";
-
-// After data source add
-private grid_onAfterDataSourceAdd(e: TSpreadGridEventArgs) {
-  try {
-    if (this.onAfterDataSourceAdd !== null) {
-      this.onAfterDataSourceAdd(e);
-    }
-  } catch (ex) {
-    GeneralLogger.error(ex);
-  }
-}
 
 // After data source change
 private grid_onAfterDataSourceChange(e: TSpreadGridEventArgs) {
@@ -3516,7 +3649,7 @@ private grid_onAfterDataSourceRemove(e: TSpreadGridEventArgs) {
 />
 ```
 
-#### Focus Change Events
+##### 7.3.2.2 Focus Change Events
 
 ```typescript
 import { TSpreadGridEventArgs } from "tsb-fontos-ui";
@@ -3530,7 +3663,50 @@ private grid_onBeforeFocusChange(e: TSpreadGridEventArgs) {
 private grid_onAfterFocusChange(e: TSpreadGridEventArgs) {
   // Handle after focus change
 }
+
+// Bind events
+<TSpreadGrid
+  onBeforeFocusChange={this.grid_onBeforeFocusChange.bind(this)}
+  onAfterFocusChange={this.grid_onAfterFocusChange.bind(this)}
+/>
 ```
+
+##### 7.3.2.3 Row Range Change Event
+
+The `onAfterRowRangeChange` event fires when the visible row range in the viewport changes (e.g., when scrolling). This event is useful for implementing virtual scrolling or lazy loading of data.
+
+**Event Handler Signature:**
+
+```typescript
+onAfterRowRangeChange?: (e: ViewPortRowRangeEventArgs) => void;
+```
+
+**ViewPortRowRangeEventArgs Properties:**
+- `rowRange`: A tuple `[number, number]` representing the start and end row indices of the visible range in the viewport
+
+**Example Usage:**
+
+```typescript
+import { TSpreadGrid, ViewPortRowRangeEventArgs } from "tsb-fontos-ui";
+
+// Handle row range change
+private grid_onAfterRowRangeChange(e: ViewPortRowRangeEventArgs) {
+  const [startIndex, endIndex] = e.rowRange;
+  console.log(`Visible rows: ${startIndex} to ${endIndex}`);
+}
+
+// Bind event
+<TSpreadGrid
+  ref={this.grd_MyGrid}
+  onAfterRowRangeChange={this.grid_onAfterRowRangeChange.bind(this)}
+/>
+```
+
+**Use Cases:**
+- Virtual scrolling: Load data only for visible rows
+- Performance optimization: Update only visible cells
+- Analytics: Track which rows are being viewed
+- Lazy loading: Load additional data when scrolling to the end
 
 ### 7.4 Data Binding
 
@@ -3589,12 +3765,12 @@ async componentDidMount(): Promise<void> {
     // Create custom pagination
     this.grd_ADM_NewsList.current!.createCustomPagination(
       this._container.current!,
-      { totalCount: 1 }
+      { totalCount: 1 } // Intialiaze essential property
     );
     
     // Handle page move event
     this.grd_ADM_NewsList.current!.getCustomPagination()!.on('afterMove', (e) => {
-      this.button_onClick(e.page);
+      this._controller.retrieveData(e.page);
     });
   } catch (ex) {
     GeneralLogger.error(ex);
@@ -3604,41 +3780,81 @@ async componentDidMount(): Promise<void> {
 ```
 
 // In Controller - return page information
-import { BaseItemList, JsonMapperBindingUtil, TRestResponsePage } from "tsb-fontos-core";
+<img width="541" height="335" alt="Image" src="https://github.com/user-attachments/assets/d384fa0b-3bde-443e-8174-232774dab4ec" />
 
-private async doRetrieveData(pageNum: number): Promise<TRestResponsePage | null> {
-  let result = await this._service.inquiryList(searchParam, pageNum);
-  
-  if (result && result.resultObject) {
-    let itemList = JsonMapperBindingUtil.deserialize(
-      BaseItemList<MyItem>,
-      result.resultObject
-    );
-    
-    this.gridCtrl.bindListAsGridDataSource(itemList);
-    
-    return {
-      pageNum: pageNum,
-      totalCount: result.totalCount || 0
-    };
-  }
-  
-  return null;
+```typescript
+import { BaseItemList, TRestResponsePage } from "tsb-fontos-core";
+
+async retrieveData(pageNum: number) {
+  if (!this.grid) return;
+  if (!this.singleGridCompRef.current?.checkMandatory()) return;
+
+  this.grid!.current?.setLoadingState("LOADING");
+
+  const boardService: ISingleGridServie = BizServiceLocator.getService<ISingleGridServie>(SampleServiceName.SAMPLE_SINGLE_GRID_SVR);
+
+  const param = this.getSearchConditions(pageNum);
+
+  await boardService
+  .select(param)
+  .then((res: TRestResponsePage) => {
+    this.grid!.current?.bindListAsGridDataSource(new BaseItemList(res.dataItems, true), { pageState: { page: pageNum, totalCount: res.pageInfo.total! }});
+    this.grid!.current?.setLoadingState("DONE");
+  })
+  .catch((e) => {
+    this.grid!.current?.setLoadingState("DONE");
+  });
 }
 ```
 
 ### 7.6 Context Menu
 
+The Context Menu feature allows you to display a custom menu when users right-click on a grid cell. The context menu handler receives information about the clicked cell (row key and column name) and can return menu items with actions.
+
+**How It Works:**
+- When a user right-clicks on a grid cell, the `contextMenu` handler function is called
+- The handler receives `params` containing `rowKey` and `columnName` of the clicked cell
+- The handler returns an array of menu groups, where each group is an array of menu items
+- Each menu item can have a label and an action function that executes when clicked
+
 ```typescript
-import { BaseBizRule } from "tsb-fontos-ui";
+import { CreateMenuGroups } from "tsb-fontos-ui";
+import { CTGridBizRule } from "tsb-catos-ui"; // Extends BaseBizRule in tsb-fontos-ui
+
+private createContextMenu = (params: {
+  rowKey: RowKey;
+  columnName: string;
+}) => {
+  if (this._grid.current?.bizRule?.handleGridBizRule(this._grid.current, Number(params.rowKey), params.columnName)) {
+    return [];
+  } else {
+    return [
+      [
+        {
+          name: "find",
+          label: "Find",
+          action: () => {
+            this._grid.current?.openFindDialog();
+          },
+        },
+        {
+          name: "columnSetting",
+          label: "ColumnSetting",
+          action: () => {
+            this._grid.current?.openColumnSettingDialog();
+          },
+        },
+      ],
+    ];
+  }
+};
+
+private createContextMenuFn: CreateMenuGroups | any = this.createContextMenu
 
 <TSpreadGrid
-  ref={this.grd_MyGrid}
-  contextMenu={BaseBizRule.createContextMenuHandler(
-    this.grd_MyGrid,
-    BaseBizRule.createCommonContextMenuItemList()
-  )}
-  bizRule={BaseBizRule}
+  contextMenu={this.createContextMenuFn}
+  bizRule={CTGridBizRule}
+  // ... other props
 />
 ```
 
@@ -4154,51 +4370,12 @@ private createContextMenu = (params: {
 };
 ```
 
-#### 7.9.2 Dialog Methods
-
-```typescript
-// Open Find Dialog
-this.grd_MyGrid.current?.openFindDialog();
-
-// Open Column Setting Dialog
-this.grd_MyGrid.current?.openColumnSettingDialog();
-```
-
-**Example: Dialog in Context Menu**
-
-```typescript
-private createContextMenu = (params: {
-  rowKey: RowKey;
-  columnName: string;
-}) => {
-  return [
-    [
-      {
-        name: "find",
-        label: "Find",
-        action: () => {
-          this._grid.current?.openFindDialog();
-        },
-      },
-      {
-        name: "columnSetting",
-        label: "ColumnSetting",
-        action: () => {
-          this._grid.current?.openColumnSettingDialog();
-        },
-      },
-    ],
-  ];
-};
-```
-
 ### 7.10 Additional Grid Props
 
 #### 7.10.1 Scroll Buffer
 
 ```typescript
 <TSpreadGrid
-  ref={this.grd_MyGrid}
   scrollXBuffer={500} // px unit, default: 1000
   // ... other props
 />
@@ -4211,7 +4388,6 @@ private createContextMenu = (params: {
 
 ```typescript
 <TSpreadGrid
-  ref={this.grd_MyGrid}
   moveDirectionOnEnter="down" // "down" | "right" | "none"
   // ... other props
 />
@@ -5242,7 +5418,7 @@ interface AuthorInfoItem {
 - Use consistent `className` values for grid components to enable proper authorization matching
 - Ensure your security service implementation properly handles authorization data from your backend
 
-#### Data Synchronization
+#### 8.7.2 Data Synchronization
 
 The framework provides a **Data Synchronization** mechanism that allows multiple controllers/components to stay synchronized when data changes occur. This is useful for scenarios where:
 - A detail screen needs to update when data changes in a list screen
