@@ -78,8 +78,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
      - 7.7.5 [Column Methods](#775-column-methods)
      - 7.7.6 [Layout and Display Methods](#776-layout-and-display-methods)
      - 7.7.7 [Validation Methods](#777-validation-methods)
-     - 7.7.8 [Pagination Methods](#778-pagination-methods)
-     - 7.7.9 [Complete Example: Master-Detail Grid](#779-complete-example-master-detail-grid)
+     - 7.7.8 [Complete Example: Master-Detail Grid](#778-complete-example-master-detail-grid)
    - 7.8 [Grid Event Handling (on method)](#78-grid-event-handling-on-method)
      - 7.8.1 [Cell Click Event](#781-cell-click-event)
      - 7.8.2 [Scroll Event](#782-scroll-event)
@@ -2741,25 +2740,26 @@ private grd_ADM_NewsList = React.createRef<TSpreadGrid>();
 // Render grid
 <TSpreadGrid
   ref={this.grd_ADM_NewsList}
-  width={"auto"}
-  bodyHeight={"fitToParent"}
-  header={{ height: 30 }}
-  minRowHeight={25}
-  rowHeaders={["rowNum"]}
-  columns={[]}
+  width={"auto"} // Sets grid width to automatically fit the container
+  bodyHeight={"fitToParent"} // Adjusts the grid body height to match its parent element
+  header={{ height: 30 }} // Defines the height of the header row as 30px
+  minRowHeight={25} // Sets the minimum height for each data row to 25px
+  rowHeaders={["rowNum"]} // Displays row numbers in the header column
+  columns={[]} // Array defining the columns to be rendered in the grid
   columnOptions={{
-    resizable: true,
-    wordwrap: true,
+    resizable: true, // Enables users to manually resize column widths
+    wordwrap: true, // Enables automatic text wrapping within cells
   }}
-  specifiedSchemaFileName="grd_ADM_NewsList_Schema"
-  onAfterDataSourceRemove={this.grid_onAfterDataSourceRemove.bind(this)}
+  specifiedSchemaFileName="grd_ADM_NewsList_Schema" // Specifies the external schema file for column layout and configuration
+  onAfterDataSourceRemove={this.grid_onAfterDataSourceRemove.bind(this)} // Event handler triggered after data source removal
   contextMenu={BaseBizRule.createContextMenuHandler(
     this.grd_ADM_NewsList,
     BaseBizRule.createCommonContextMenuItemList()
-  )}
-  bizRule={BaseBizRule}
-  showTotalCount={true}
-  selectionUnit="row"
+  )} // Configures the right-click context menu and its associated handlers
+  bizRule={BaseBizRule} // Assigns common business logic rules to the grid
+  showTotalCount={true} // Displays the total number of data records at the bottom
+  selectionUnit="row" // Sets the selection unit to the entire row
+  useLookup={true} // Create a map by copying the source list for fast indexing. (Performance improvement, Memory usage increase)
 />
 ```
 
@@ -3780,10 +3780,22 @@ async componentDidMount(): Promise<void> {
 ```
 
 // In Controller - return page information
+
 <img width="541" height="335" alt="Image" src="https://github.com/user-attachments/assets/d384fa0b-3bde-443e-8174-232774dab4ec" />
 
 ```typescript
 import { BaseItemList, TRestResponsePage } from "tsb-fontos-core";
+
+getSearchConditions(pageNum: number): GridParam {
+  const param: GridParam = {
+    pageNum = pageNum;
+    pageSize = 30;
+    paging = true;
+    sortColumns = this._grid.current?.getSortState().columns;
+  };
+
+  return param;
+}
 
 async retrieveData(pageNum: number) {
   if (!this.grid) return;
@@ -3808,6 +3820,8 @@ async retrieveData(pageNum: number) {
 ```
 
 ### 7.6 Context Menu
+
+<img width="473" height="328" alt="Image" src="https://github.com/user-attachments/assets/c54eaa4b-efc9-4e06-8b78-3bd9c962c29f" />
 
 The Context Menu feature allows you to display a custom menu when users right-click on a grid cell. The context menu handler receives information about the clicked cell (row key and column name) and can return menu items with actions.
 
@@ -3895,6 +3909,9 @@ const value = this.grd_MyGrid.current?.getValue(rowKey, columnName);
 
 // Set cell value
 this.grd_MyGrid.current?.setValue(rowKey, columnName, newValue);
+
+// Insert a new row through UI dialog
+this.grd_MyGrid.current?.insertRow(newRow);
 
 // Append new row
 const newRow = { field1: 'value1', field2: 'value2' };
@@ -4043,15 +4060,16 @@ const mandatoryField = this.grd_MyGrid.current?.checkMandatory();
 **Example: Using column schema**
 
 ```typescript
+import { CodeManager, CodeDataItem } from "tsb-fontos-core";
+
 // In event handler
 private async doAfterDataSourceChange(e: TSpreadGridEventArgs): Promise<void> {
   try {
-    let columnSchema = this.gridCtrl.getColumnSchema(e.columnSchema.key);
+    const columnSchema = this.gridCtrl.getColumnSchema(e.columnName);
     
-    if (e.columnSchema.key === 'userID') {
-      // Handle userID change
-      let allRows = e.sender.getData();
-      // ... validation logic
+    if (columnSchema.CodeType) {
+        const codeList = (await CodeManager.getCodes(columnSchema.CodeType)) as CodeDataItem[];
+        // Do something with codeList...
     }
   } catch (ex) {
     GeneralLogger.error(ex);
@@ -4075,18 +4093,40 @@ this.grd_MyGrid.current?.setHeight(500);
 **Example: Refreshing layout after data changes**
 
 ```typescript
-// In Controller
-private async doAfterDataUpdate(): Promise<void> {
+private splitter_onResize(sizes: number[]) {
   try {
-    // Update data
-    await this.updateData();
-    
-    // Refresh layout
-    this.gridCtrl.refreshLayout();
-  } catch (ex) {
+    if (this.grd_PLG_MultiGridMain.current) {
+        this.grd_PLG_MultiGridMain.current.refreshLayout();
+    }
+
+    if (this.grd_PLG_MultiGridSub.current) {
+        this.grd_PLG_MultiGridSub.current.refreshLayout();
+    }
+  }
+  catch(ex) {
     GeneralLogger.error(ex);
+    throw ex;
   }
 }
+
+<TSplitter 
+    layout="vertical"
+    onResize={this.splitter_onResize.bind(this)}
+>
+    <TSplitter.Panel>
+        <TSpreadGrid
+            ref={this.grd_PLG_MultiGridMain}
+            // ... other props
+        />
+    </TSplitter.Panel>
+
+    <TSplitter.Panel>
+        <TSpreadGrid
+            ref={this.grd_PLG_MultiGridSub}
+            // ... other props
+        />
+    </TSplitter.Panel>
+</TSplitter>
 ```
 
 #### 7.7.7 Validation Methods
@@ -4103,6 +4143,42 @@ if (mandatoryField) {
     buttons: 'OK' 
   });
 }
+```
+
+**Example: Setting column`s validation property for the validate function**
+```typescript
+<TSpreadGrid
+  columns={[
+    {
+      header: 'Name',
+      name: 'name',
+      editor: 'text',
+      // for validate()
+      validation: {
+        required: true
+      }
+    },
+    {
+      header: 'Age',
+      name: 'age',
+      editor: 'text',
+      validation: {
+        dataType: 'number',
+        min: 1,
+        max: 120
+      }
+    },
+    {
+      header: 'E-Mail',
+      name: 'email',
+      editor: 'text',
+      validation: {
+        regExp: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+      }
+    }
+  ]}
+  // ... other props
+/>
 ```
 
 **Example: Validation before focus change**
@@ -4127,47 +4203,7 @@ private async doBeforeFocusChange(e: TSpreadGridEventArgs): Promise<void> {
 }
 ```
 
-#### 7.7.8 Pagination Methods
-
-```typescript
-// Get custom pagination instance
-const pagination = this.grd_MyGrid.current?.getCustomPagination();
-
-// Create custom pagination
-this.grd_MyGrid.current?.createCustomPagination(
-  containerElement,
-  { totalCount: 100 }
-);
-
-// Handle pagination events
-pagination?.on('afterMove', (e) => {
-  this.handlePageChange(e.page);
-});
-```
-
-**Example: Custom pagination setup**
-
-```typescript
-// In View componentDidMount
-async componentDidMount(): Promise<void> {
-  try {
-    // Create custom pagination
-    this.grd_MyGrid.current!.createCustomPagination(
-      this._paginationContainer.current!,
-      { totalCount: 1 }
-    );
-    
-    // Handle page move event
-    this.grd_MyGrid.current!.getCustomPagination()!.on('afterMove', (e) => {
-      this.controller.handlePageChange(e.page);
-    });
-  } catch (ex) {
-    GeneralLogger.error(ex);
-  }
-}
-```
-
-#### 7.7.9 Complete Example: Master-Detail Grid
+#### 7.7.8 Complete Example: Master-Detail Grid
 
 ```typescript
 // In Controller
@@ -5131,7 +5167,7 @@ All UI template components (`BaseSingleGridComponent`, `BaseMultiGridComponent`,
 The `setAuthControls()` method (`/src/ui-templates/BaseComponent.tsx`) is automatically called in `componentDidMount()` and performs the following:
 
 1. **Retrieves Authorization Information**: Calls `ISecurityService.inquiryAuthorityControls()` with the current `menuId` and user information
-2. **Applies Controls to Grid Columns**: For grid columns (identified by `targetTypeId === "Column"`), it:
+2. **Applies Controls to Grid Columns**: For grid columns (identified by `targetId === "Column"`), it:
    - Hides columns if `visibleYN === false`
    - Disables columns if `enableYN === false` (removes editor, sets locked flag)
 3. **Applies Controls to UI Elements**: For other UI elements (identified by `className`), it:
