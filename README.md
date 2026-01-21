@@ -1266,7 +1266,7 @@ The recommended initialization order is:
 
 The core components in `tsb-fontos-ui` are built on top of **Ant Design (antd)**, providing enhanced functionality and consistent styling. You can visit [https://ant.design/components/overview/] for more details.
 
-All components extend Ant Design's base components with additional features like resource key support, CommonProps, and FontosCls integration.
+All components extend Ant Design's base components with additional features like localization with resource key support, CommonProps, and FontosCls integration.
 
 ### 4.1 CommonProps and FontosCls
 
@@ -1468,7 +1468,6 @@ import { TLabel } from "tsb-fontos-ui";
 
 **Props:**
 - `textResourceKey`: Resource key for label text
-- `className`: CSS class name
 - `required`: Show required indicator
 
 ### 4.5 TDatePicker
@@ -1683,7 +1682,6 @@ import { TCollapse } from "tsb-fontos-ui";
 **Props:**
 - `defaultActiveKey`: Default active panel keys
 - `onChange`: Panel change handler
-- **CommonProps**: All CommonProps are supported
 
 ### 4.9 TModal
 
@@ -1914,7 +1912,6 @@ import { TUpload, UploadFile, UploadOutlined } from "tsb-fontos-ui";
 - `accept`: Accepted file types
 - `maxCount`: Maximum number of files
 - `multiple`: Allow multiple files
-- **CommonProps**: All CommonProps are supported
 
 **Example:**
 
@@ -1980,7 +1977,6 @@ import { TTooltip } from "tsb-fontos-ui";
 - `title`: Tooltip text
 - `placement`: Tooltip placement (`top`, `bottom`, `left`, `right`, etc.)
 - `trigger`: Trigger action (`hover`, `focus`, `click`)
-- **CommonProps**: All CommonProps are supported
 
 **Example:**
 
@@ -2012,7 +2008,6 @@ import { TDivider } from "tsb-fontos-ui";
 - `dashed`: Use dashed line
 - `plain`: Plain text style
 - `type`: Divider type (`horizontal`, `vertical`)
-- **CommonProps**: All CommonProps are supported
 
 **Example:**
 
@@ -2053,7 +2048,6 @@ import { TList } from "tsb-fontos-ui";
 - `pagination`: Pagination configuration
 - `size`: List size (`default`, `large`, `small`)
 - `bordered`: Show border
-- **CommonProps**: All CommonProps are supported
 
 **Example:**
 
@@ -2105,7 +2099,6 @@ import { TTabs } from "tsb-fontos-ui";
 - `type`: Tab type (`line`, `card`, `editable-card`)
 - `size`: Tab size (`large`, `small`, `middle`)
 - `tabPosition`: Tab position (`top`, `bottom`, `left`, `right`)
-- **CommonProps**: All CommonProps are supported
 
 **Example:**
 
@@ -2179,7 +2172,6 @@ import { TTree } from "tsb-fontos-ui";
 - `showLine`: Show line
 - `checkable`: Show checkbox
 - `multiple`: Allow multiple selection
-- **CommonProps**: All CommonProps are supported
 
 **Example:**
 
@@ -2233,18 +2225,20 @@ const treeRef = createRef<TreeRef>();
 
 **Important:** Not all components support CommonProps. CommonProps are only available on Ant Design components that provide ref forwarding support. Components that typically support CommonProps include:
 
-- `TInput`, `TInputNumber`, `TTextArea`
-- `TSelect`, `TCascader`, `TTreeSelect`
-- `TDatePicker`, `TTimePicker`
+- `TInput`, `TInputNumber`, `TInputFuncs`
+- `TSelect`
+- `TCheckbox`, `TCheckboxGroup`
+- `TRadio`, `TRadioGroup`, `TRadioButton`
+- `TDatePicker`
 - `TButton`
 - `TModal`
-- `TCard`, `TCollapse`
+- `TFlex`, `TSpace`
 - And other components that wrap Ant Design components with ref support
 
 **Components that do NOT support CommonProps:**
 - Components that don't forward refs
 - Custom components that don't extend Ant Design base components
-- Some layout components like `TLayout`, `TFlex` (they have their own props)
+- Some layout components like `TLayout` (they have their own props)
 
 **Example of using CommonProps:**
 
@@ -2331,7 +2325,7 @@ private createMainComponent(): JSX.Element {
 
 ### 5.2 TFlex
 
-Flexbox layout component.
+Flexbox layout component. Smiliar with <div></div>.
 
 ```typescript
 import { TFlex } from "tsb-fontos-ui";
@@ -2353,6 +2347,7 @@ import { TFlex } from "tsb-fontos-ui";
 - `width`: Width (number or string)
 - `gap`: Gap between items
 - `align`: Alignment (`"start"`, `"end"`, `"center"`, `"stretch"`)
+- **CommonProps**: All CommonProps are supported
 
 **Example:**
 
@@ -2391,7 +2386,7 @@ import { TSplitter } from "tsb-fontos-ui";
 
 ### 5.4 TSpace
 
-Space component for spacing between components, based on Ant Design's Space component.
+Space component for spacing between components, based on Ant Design's Space component. Smiliar with <span></span>.
 
 ```typescript
 import { TSpace } from "tsb-fontos-ui";
@@ -2675,7 +2670,7 @@ private form_onValuesChange(
   allValues: BindParam
 ) {
   try {
-    if (this.onFormValueChanged !== null && this.onFormValueChanged !== undefined) {
+    if (this.onFormValueChanged) {
       this.onFormValueChanged();
     }
   } catch (ex) {
@@ -2868,6 +2863,8 @@ The framework will automatically load the schema file from `public/grid/grd_ADM_
 - `Width`: Column width
 - `Visible`: Visibility (`"Y"` / `"N"`)
 - `Lock`: Lock status (`"Y"` / `"N"`)
+- `CellInput`: Determines the input method and behavior for grid cells (see [CellInput Configuration](#cellinput-configuration) below)
+- `CellDisplay`, `ValueDisplay`: Control how code values are displayed in different contexts (see [CellDisplay and ValueDisplay Configuration](#celldisplay-and-valuedisplay-configuration) below)
 - `ColorRuleType`: Determines how cell colors (foreground and background) are calculated and applied (see [ColorRuleType Configuration](#colorruletype-configuration) below)
 
 **DBField and Item Binding:**
@@ -3224,7 +3221,7 @@ If `columnSchema.refDBField` and `columnSchema.refCodeType` are specified, an ad
 - Use `NONE` (or omit) for standard color behavior based on cell properties
 - Consider using `refDBField` and `refCodeType` for conditional coloring based on related data
 
-**CellInput Configuration:**
+#### CellInput Configuration:
 
 The `CellInput` property (mapped to `CellInputType` in the schema) determines the input method and behavior for grid cells. This property uses the `CellInputTypes` enum (`/src/grid/type/CellInputTypes.ts`) to specify how users interact with cells.
 
@@ -3257,18 +3254,15 @@ The following input types are available (defined in `CellInputTypes.ts`):
 
 **CodeValueModal Behavior:**
 
-When a cell uses a `CellInput` type that contains `"CODE"`, clicking on the cell will open the `CodeValueModal` dialog instead of allowing direct text input. The modal behavior depends on the specific `CellInput` type:
+When a cell uses a `CellInput` type that contains `"CODE"`, with cell editing would like be grid mouse event handler -> bizrule -> `CodeValueModal` dialog instead of click -> direct text input. The modal behavior depends on the specific `CellInput` type:
 
 1. **List Types** (`CODE_VALUE_LIST`, `CODE_NULLVALUE_LIST`, etc.):
    - Opens a modal with a searchable list of code values
    - Single selection mode
-   - Users can search and select one value
    - Double-click or Enter key confirms selection
 
 2. **Checkbox Types** (`CODE_VALUE_CHECKBOX`, `CODE_ALLVALUES_CHECKBOX`, etc.):
    - Opens a modal with checkboxes for multiple selection
-   - Multiple selection mode
-   - Users can select multiple values
    - "Check All" / "Uncheck All" buttons available
    - When all items are selected, returns `"*"` (or `"%"` for PERCENT types) depending on the type
 
@@ -3323,11 +3317,12 @@ When a cell uses a `CellInput` type that contains `"CODE"`, clicking on the cell
 
 The `CodeValueModal` (`/src/grid/modals/CodeValueModal.tsx`) is automatically invoked when:
 
-1. A cell with a `CODE`-based `CellInput` type is clicked
-2. **Code List Retrieval**: The modal retrieves code data using the `BaseCodeHandler` implementation registered in [3.5 Code Manager Initialization](#35-code-manager-initialization). The `CodeType` specified in the column schema is passed to `CodeManager.getInstance().getCodes<CodeDataItem>(codeType)` which internally calls the registered `BaseCodeHandler.getCodes()` method to fetch the code list from your data source (API, database, etc.)
-3. The modal displays codes based on the `ValueDisplay` setting (see ValueDisplay section below)
-4. Users can search, filter, and select code values
-5. Selected values are returned and stored in the cell
+1. A mouse event occurred on a cell with a `CODE`-based `CellInput` type and handle with a bizrule.
+2. Open the `CodeValueModal` modal through bizrule.
+3. **Code List Retrieval**: The `CodeValueModal` modal retrieves code data using the `BaseCodeHandler` implementation registered in [3.5 Code Manager Initialization](#35-code-manager-initialization). The `CodeType` specified in the column schema is passed to `CodeManager.getInstance().getCodes<CodeDataItem>(codeType)` which internally calls the registered `BaseCodeHandler.getCodes()` method to fetch the code list from your data source (API, database, etc.).
+4. The modal displays codes based on the `ValueDisplay` setting (see ValueDisplay section below)
+5. Users can search, filter, and select code values
+6. Selected values are returned and stored in the cell
 
 **Code List Loading Flow:**
 
@@ -3371,7 +3366,7 @@ Code list is displayed in CodeValueModal
 - Always specify `CodeType` in the schema when using CODE-based input types
 - Consider user experience: list types are better for single selection, checkbox types for multiple selection
 
-**CellDisplay and ValueDisplay Configuration:**
+#### CellDisplay and ValueDisplay Configuration:
 
 The `CellDisplay` and `ValueDisplay` properties control how code values are displayed in different contexts. These properties use the `ValueDisplayTypes` enum (`/src/grid/type/ValueDisplayTypes.ts`) to specify the display format.
 
@@ -3462,16 +3457,16 @@ if (valueDisplayType === ValueDisplayTypes.CODE) {
 **Use Cases:**
 
 - **CellDisplay = "M" (CODE_NAME), ValueDisplay = "F" (CODE:CODE_NAME)**:
-  - Grid cell shows: `"Code"` (user-friendly name)
-  - Modal shows: `"Code:CodeName"` (code and name for clarity)
+  - Grid cell shows: `"Active"` (user-friendly name)
+  - Modal shows: `"001:Active"` (code and name for clarity)
 
 - **CellDisplay = "C" (CODE), ValueDisplay = "M" (CODE_NAME)**:
-  - Grid cell shows: `"Code"` (compact code)
-  - Modal shows: `"CodeName"` (readable name)
+  - Grid cell shows: `"001"` (compact code)
+  - Modal shows: `"Active"` (readable name)
 
 - **CellDisplay = "S" (CODE_NAME:CODE), ValueDisplay = "S" (CODE_NAME:CODE)**:
-  - Grid cell shows: `"CodeName:Code"`
-  - Modal shows: `"CodeName:Code"` (consistent format)
+  - Grid cell shows: `"Active:001"`
+  - Modal shows: `"Active:001"` (consistent format)
 
 **Best Practices:**
 
@@ -3721,7 +3716,7 @@ private async doRetrieveData(): Promise<void> {
     let searchParam = this.view.getSearchParam();
     let itemList = await this._service.inquiryList(searchParam);
     
-    if (itemList === null || itemList === undefined) {
+    if (!itemList) {
       itemList = new BaseItemList<MyItem>();
     }
     
@@ -3743,7 +3738,7 @@ import { GeneralLogger } from "tsb-fontos-core";
 private getSelectedRowItem(): MyItem | null {
   try {
     let selectedRow = this.gridCtrl.getSelectedRow();
-    if (selectedRow === null || selectedRow === undefined) {
+    if (!selectedRow) {
       return null;
     }
     
@@ -3833,7 +3828,7 @@ The Context Menu feature allows you to display a custom menu when users right-cl
 
 ```typescript
 import { CreateMenuGroups } from "tsb-fontos-ui";
-import { CTGridBizRule } from "tsb-catos-ui"; // Extends BaseBizRule in tsb-fontos-ui
+import { CTGridBizRule } from "tsb-catos-ui"; // Extends the BaseBizRule from tsb-fontos-ui
 
 private createContextMenu = (params: {
   rowKey: RowKey;
@@ -3963,7 +3958,7 @@ this.grd_MyGrid.current?.insertSourceItem(newItem, rowIndex);
 private async doRetrieveData(): Promise<void> {
   try {
     let itemList = await this._service.inquiryList(searchParam);
-    this.gridCtrl.bindListAsGridDataSource(itemList);
+    this.gridCtrl.bindListAsGridDataSource(itemList); // Generate source item list
   } catch (ex) {
     GeneralLogger.error(ex);
     throw ex;
@@ -3979,7 +3974,7 @@ private async doDataSync(syncItem: MyItem): Promise<void> {
     let itemList = this.gridCtrl.getSourceItemList() as BaseItemList<MyItem>;
     let item = itemList.find((p) => p.getKey() === syncItem.getKey());
     
-    if (item !== null && item !== undefined) {
+    if (item) {
       let rowIdx = this.gridCtrl.getRowIndex(item);
       this.gridCtrl.removeSourceItem(item);
       this.gridCtrl.insertSourceItem(syncItem, rowIdx);
@@ -4002,8 +3997,8 @@ const selectionRange = this.grd_MyGrid.current?.getSelectionRange();
 
 // Set selection range
 this.grd_MyGrid.current?.setSelectionRange({ 
-  start: [rowKey, 0], 
-  end: [rowKey, 0] 
+  start: [rowKey, 0],
+  end: [rowKey, 0]
 });
 
 // Get focused cell
@@ -4028,15 +4023,15 @@ const uncheckedRows = this.grd_MyGrid.current?.getUncheckedRows();
 ```typescript
 // In Controller
 private selectRow(selectedItem: MyItem) {
-  if (selectedItem != null) {
-    const allRows = this.gridCtrl.getData();
+  if (selectedItem) {
+    const allRows = this.gridCtrl.getData(); // As Row[]
     const rowIndex = this.gridCtrl.getRowIndex(selectedItem);
     
-    if (rowIndex !== -1) {
+    if (rowIndex > -1) {
       const rowKey = allRows[rowIndex].rowKey as number;
       this.gridCtrl.setSelectionRange({ 
-        start: [rowKey, 0], 
-        end: [rowKey, 0] 
+        start: [rowKey, 0],
+        end: [rowKey, 0]
       });
     }
   }
@@ -4096,11 +4091,11 @@ this.grd_MyGrid.current?.setHeight(500);
 private splitter_onResize(sizes: number[]) {
   try {
     if (this.grd_PLG_MultiGridMain.current) {
-        this.grd_PLG_MultiGridMain.current.refreshLayout();
+      this.grd_PLG_MultiGridMain.current.refreshLayout();
     }
 
     if (this.grd_PLG_MultiGridSub.current) {
-        this.grd_PLG_MultiGridSub.current.refreshLayout();
+      this.grd_PLG_MultiGridSub.current.refreshLayout();
     }
   }
   catch(ex) {
@@ -4110,22 +4105,22 @@ private splitter_onResize(sizes: number[]) {
 }
 
 <TSplitter 
-    layout="vertical"
-    onResize={this.splitter_onResize.bind(this)}
+  layout="vertical"
+  onResize={this.splitter_onResize.bind(this)}
 >
-    <TSplitter.Panel>
-        <TSpreadGrid
-            ref={this.grd_PLG_MultiGridMain}
-            // ... other props
-        />
-    </TSplitter.Panel>
+  <TSplitter.Panel>
+    <TSpreadGrid
+      ref={this.grd_PLG_MultiGridMain}
+      // ... other props
+    />
+  </TSplitter.Panel>
 
-    <TSplitter.Panel>
-        <TSpreadGrid
-            ref={this.grd_PLG_MultiGridSub}
-            // ... other props
-        />
-    </TSplitter.Panel>
+  <TSplitter.Panel>
+    <TSpreadGrid
+      ref={this.grd_PLG_MultiGridSub}
+      // ... other props
+    />
+  </TSplitter.Panel>
 </TSplitter>
 ```
 
@@ -4153,7 +4148,7 @@ if (mandatoryField) {
       header: 'Name',
       name: 'name',
       editor: 'text',
-      // for validate()
+      // for validate function
       validation: {
         required: true
       }
@@ -4245,7 +4240,10 @@ private doAddDetailRow(): void {
   try {
     const masterItem = this.grdMaster.current?.getActiveSourceItem() as MasterItem | null;
     if (!masterItem) {
-      await TMessageManager.warning({ textResourceKey: 'MSG_SELECT_MASTER', buttons: 'OK' });
+      await TMessageManager.warning({
+        textResourceKey: 'MSG_CTCM_00109',
+        buttons: 'OK'
+      }); // An error occurred during a extract item list.
       return;
     }
     
@@ -4757,7 +4755,7 @@ When the `ProductView` becomes active, the framework automatically enables the R
 - `gridRef`: Reference to TSpreadGrid component
 - `rootRef`: Reference to root container element
 - `resizeValue`: Resize value for grid height calculation (default: 0)
-  - **Height Calculation**: `Current docking form's height - resizeValue = Drawing area height`
+  - **Height Calculation**: `Current docking form's height - resizeValue = Grid area height`
   - This value accounts for other UI elements above the grid
 - `mandatoryFieldMap`: Map of mandatory fields for validation (optional)
 
@@ -4861,7 +4859,7 @@ class SingleGridController extends BaseSingleGridController<SingleGridView> {
 - `gridRefs`: Array of references to TSpreadGrid components
 - `rootRef`: Reference to root container element
 - `resizeValues`: Array of resize values for each grid (default: [0, 0])
-  - **Height Calculation**: `Current docking form's height - resizeValue - (former grid's resizeValue) = Drawing area height`
+  - **Height Calculation**: `Current docking form's height - resizeValue - (former grid's resizeValue) = Grid area height`
   - Each value in the array corresponds to a grid in `gridRefs` array
   - For subsequent grids, the calculation subtracts all previous grids' resize values
 - `horizontal`: Whether grids are arranged horizontally (default: false)
