@@ -1,4 +1,4 @@
-# tsb-fontos-ui Developer Guide
+# [tsb-fontos-ui] Developer Guide
 
 <img width="1918" height="956" alt="Image" src="https://github.com/user-attachments/assets/2bca3fce-e033-417c-bcda-d029c7c256cb" />
 
