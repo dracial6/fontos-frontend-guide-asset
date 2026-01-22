@@ -1266,7 +1266,7 @@ The recommended initialization order is:
 
 The core components in `tsb-fontos-ui` are built on top of **Ant Design (antd)**, providing enhanced functionality and consistent styling. You can visit [https://ant.design/components/overview/] for more details.
 
-All components extend Ant Design's base components with additional features like localization with resource key support, CommonProps, and FontosCls integration.
+Most of components extend Ant Design's base components with additional features like localization with resource key support, CommonProps, and FontosCls integration.
 
 ### 4.1 CommonProps and FontosCls
 
@@ -1316,7 +1316,7 @@ import { TInput } from "tsb-fontos-ui";
 
 ### 4.2 TButton
 
-Button component with enhanced features, based on Ant Design's Button component.
+Button component with enhanced features, based on Ant Design's Button component. (https://ant.design/components/button)
 
 ```typescript
 import { TButton } from "tsb-fontos-ui";
@@ -1354,7 +1354,7 @@ import { TButton, TButtonEventArgs } from "tsb-fontos-ui";
 
 ### 4.3 TInput
 
-Enhanced input component, based on Ant Design's Input component.
+Enhanced input component, based on Ant Design's Input component. (https://ant.design/components/input)
 
 ```typescript
 import { TInput } from "tsb-fontos-ui";
@@ -1472,7 +1472,7 @@ import { TLabel } from "tsb-fontos-ui";
 
 ### 4.5 TDatePicker
 
-Date picker component, based on Ant Design's DatePicker component.
+Date picker component, based on Ant Design's DatePicker component. (https://ant.design/components/date-picker)
 
 ```typescript
 import { TDatePicker } from "tsb-fontos-ui";
@@ -1536,7 +1536,7 @@ const datePickerRef = createRef<RefSelectProps>();
 
 ### 4.6 TSelect
 
-Select dropdown component, based on Ant Design's Select component.
+Select dropdown component, based on Ant Design's Select component. (https://ant.design/components/select)
 
 ```typescript
 import { TSelect } from "tsb-fontos-ui";
@@ -1599,7 +1599,7 @@ const selectRef = createRef<RefSelectProps>();
 
 ### 4.7 TCheckbox
 
-Checkbox component, based on Ant Design's Checkbox component.
+Checkbox component, based on Ant Design's Checkbox component. (https://ant.design/components/checkbox)
 
 ```typescript
 import { TCheckbox } from "tsb-fontos-ui";
@@ -1657,7 +1657,7 @@ const checkboxRef = createRef<CheckboxRef>();
 
 ### 4.8 TCollapse
 
-Collapsible panel component, based on Ant Design's Collapse component.
+Collapsible panel component, based on Ant Design's Collapse component. (https://ant.design/components/collapse)
 
 ```typescript
 import { TCollapse } from "tsb-fontos-ui";
@@ -1685,7 +1685,7 @@ import { TCollapse } from "tsb-fontos-ui";
 
 ### 4.9 TModal
 
-Modal dialog component, based on Ant Design's Modal component.
+Modal dialog component, based on Ant Design's Modal component. (https://ant.design/components/modal)
 
 ```typescript
 import { TModal } from "tsb-fontos-ui";
@@ -1761,7 +1761,7 @@ import { TModal } from "tsb-fontos-ui";
 
 ### 4.11 TInputNumber
 
-Number input component, based on Ant Design's InputNumber component.
+Number input component, based on Ant Design's InputNumber component. (https://ant.design/components/input-number)
 
 ```typescript
 import { TInputNumber } from "tsb-fontos-ui";
@@ -1828,7 +1828,7 @@ const inputNumberRef = createRef<InputNumberRef>();
 
 ### 4.12 TRadio
 
-Radio button component, based on Ant Design's Radio component.
+Radio button component, based on Ant Design's Radio component. (https://ant.design/components/radio)
 
 ```typescript
 import { TRadio, TRadioEventArgs } from "tsb-fontos-ui";
@@ -1888,7 +1888,7 @@ const radioRef = createRef<RadioRef>();
 
 ### 4.13 TUpload
 
-File upload component, based on Ant Design's Upload component.
+File upload component, based on Ant Design's Upload component. (https://ant.design/components/upload)
 
 ```typescript
 import { TUpload, UploadFile, UploadOutlined } from "tsb-fontos-ui";
@@ -1963,7 +1963,7 @@ const uploadRef = createRef<UploadRef>();
 
 ### 4.14 TTooltip
 
-Tooltip component, based on Ant Design's Tooltip component.
+Tooltip component, based on Ant Design's Tooltip component. (https://ant.design/components/tooltip)
 
 ```typescript
 import { TTooltip } from "tsb-fontos-ui";
@@ -1993,7 +1993,7 @@ import { TTooltip } from "tsb-fontos-ui";
 
 ### 4.15 TDivider
 
-Divider component, based on Ant Design's Divider component.
+Divider component, based on Ant Design's Divider component. (https://ant.design/components/divider)
 
 ```typescript
 import { TDivider } from "tsb-fontos-ui";
@@ -2024,7 +2024,7 @@ import { TDivider } from "tsb-fontos-ui";
 
 ### 4.16 TList
 
-List component, based on Ant Design's List component.
+List component, based on Ant Design's List component. (https://ant.design/components/list)
 
 ```typescript
 import { TList } from "tsb-fontos-ui";
@@ -2075,7 +2075,7 @@ const data = [
 
 ### 4.17 TTabs
 
-Tabs component, based on Ant Design's Tabs component.
+Tabs component, based on Ant Design's Tabs component. (https://ant.design/components/tabs)
 
 ```typescript
 import { TTabs } from "tsb-fontos-ui";
@@ -2151,7 +2151,7 @@ const tabsRef = createRef<TabsRef>();
 
 ### 4.18 TTree
 
-Tree component, based on Ant Design's Tree component.
+Tree component, based on Ant Design's Tree component. (https://ant.design/components/tree)
 
 ```typescript
 import { TTree } from "tsb-fontos-ui";
@@ -2272,7 +2272,7 @@ import { TInput, TSelect, TDatePicker } from "tsb-fontos-ui";
 
 ### 5.1 TLayout
 
-Layout component with Header, Content, and Footer.
+Layout component with Header, Content, and Footer. Based on Ant Design's Layout component (https://ant.design/components/layout)
 
 ```typescript
 import { TLayout } from "tsb-fontos-ui";
@@ -2325,7 +2325,7 @@ private createMainComponent(): JSX.Element {
 
 ### 5.2 TFlex
 
-Flexbox layout component. Smiliar with <div></div>.
+Flexbox layout component. Smiliar with <div></div>. Based on Ant Design's Flex component (https://ant.design/components/flex)
 
 ```typescript
 import { TFlex } from "tsb-fontos-ui";
@@ -2369,7 +2369,7 @@ import { TFlex } from "tsb-fontos-ui";
 
 ### 5.3 TSplitter
 
-Splitter panel component for resizable layouts.
+Splitter panel component for resizable layouts. Based on Ant Design's Splitter component (https://ant.design/components/splitter)
 
 ```typescript
 import { TSplitter } from "tsb-fontos-ui";
@@ -2386,7 +2386,7 @@ import { TSplitter } from "tsb-fontos-ui";
 
 ### 5.4 TSpace
 
-Space component for spacing between components, based on Ant Design's Space component. Smiliar with <span></span>.
+Space component for spacing between components. Smiliar with <span></span>. Based on Ant Design's Space component (https://ant.design/components/space)
 
 ```typescript
 import { TSpace } from "tsb-fontos-ui";
@@ -2425,7 +2425,7 @@ import { TSpace, TButton, TLabel } from "tsb-fontos-ui";
 
 ### 5.5 TConfigProvider
 
-`TConfigProvider` is a wrapper component around Ant Design's `ConfigProvider` that provides global configuration settings for all Ant Design components in your application. It extends the base `ConfigProvider` functionality with a default `componentSize` of `"small"` to maintain consistency across the framework.
+`TConfigProvider` is a wrapper component around Ant Design's `ConfigProvider` that provides global configuration settings for all Ant Design components in your application. It extends the base `ConfigProvider` functionality with a default `componentSize` of `"small"` to maintain consistency across the framework. (https://ant.design/components/config-provider)
 
 #### Purpose
 
@@ -2563,7 +2563,7 @@ You can also configure specific component types globally:
 
 ### 6.1 TForm
 
-Enhanced form component with Ant Design Form integration.
+Enhanced form component with Ant Design Form integration. Based on Ant Design's Form component (https://ant.design/components/form)
 
 ```typescript
 import { TForm, FormInstance } from "tsb-fontos-ui";
@@ -2640,6 +2640,33 @@ const formRef = createRef<TForm<FormData>>();
 
 // Access form instance
 const formInstance = formRef.current?.getFormInstance();
+if (formInstance) {
+  // Form instance provides access to form methods
+  const values = formInstance.getFieldsValue();
+  formInstance.setFieldsValue({ userName: "John" });
+}
+```
+
+Or you can just use `useFormInstance()` static method to get the Ant Design Form instance. This use [Context API] in React, so `useFormInstance()` founds a nearest form from where you call it:
+
+```typescript
+import { TForm, FormInstance } from "tsb-fontos-ui";
+
+type FormData = {
+  userName: string;
+  email: string;
+};
+
+<TForm<FormData>
+  initialValues={{ userName: "", email: "" }}
+>
+  <TForm.Item name="userName">
+    <TInput />
+  </TForm.Item>
+</TForm>
+
+// Access form instance
+const formInstance = TForm.useFormInstance();
 if (formInstance) {
   // Form instance provides access to form methods
   const values = formInstance.getFieldsValue();
@@ -2760,7 +2787,7 @@ private grd_ADM_NewsList = React.createRef<TSpreadGrid>();
 
 ### 7.2 Grid Schema
 
-Grid schemas are defined in JSON files located in `public/grid/` directory.
+Grid schemas define informations of column header in JSON files located in `public/grid/` directory.
 
 **Using Grid Schema:**
 
@@ -2769,6 +2796,7 @@ To use a grid schema, specify the schema file name (without the `.json` extensio
 ```typescript
 <TSpreadGrid
   ref={this.grd_ADM_NewsList}
+  columns={[]} // When grid use [specifiedSchemaFileName] props with schema.json, set [columns] props as empty
   specifiedSchemaFileName="grd_ADM_NewsList_Schema"
   // ... other props
 />
@@ -4479,7 +4507,7 @@ import { TSpreadGrid, OpCodeRenderer } from "tsb-fontos-ui";
 />
 ```
 
-**OpCodeRenderer** is a custom renderer that displays operation codes (INSERT, UPDATE, DELETE) in the checkbox header, useful for tracking row modifications.
+**OpCodeRenderer** is a custom renderer that displays operation codes (INSERT, UPDATE, DELETE) in the checkbox rowheader, useful for tracking row modifications.
 
 ### 7.12 Grid Information Methods
 
@@ -4660,7 +4688,7 @@ The MVP (Model-View-Presenter) pattern separates concerns into three distinct la
   - Coordinates data retrieval from Model/Service layer
   - Transforms data for View consumption
   - Manages application state
-  - Handles data synchronization between multiple views
+  - Handles data synchronization between multiple views(`DataSyncAgent`)
   - Controls toolbar menu activation based on view state
 - **Characteristics**:
   - Contains business logic
@@ -4718,7 +4746,7 @@ The Presenter (Controller) uses `ControllerToolbarSet` decorators to register me
 import { TEventArgs } from "tsb-fontos-core";
 import { ControllerToolbarSet, BaseSingleGridController } from "tsb-fontos-ui";
 
-class ProductController extends BaseSingleGridController<ProductView> {
+class ProductController extends BaseSingleGridController {
   // This method will be called when the "Refresh" toolbar button is clicked
   @(ControllerToolbarSet.getInstance().RefreshDecorator())
   public async menuRefresh(): Promise<void> {
@@ -4757,7 +4785,7 @@ When the `ProductView` becomes active, the framework automatically enables the R
 - `resizeValue`: Resize value for grid height calculation (default: 0)
   - **Height Calculation**: `Current docking form's height - resizeValue = Grid area height`
   - This value accounts for other UI elements above the grid
-- `mandatoryFieldMap`: Map of mandatory fields for validation (optional)
+- `mandatoryFieldMap`: Map of mandatory fields for validation in controller(optional)
 
 **Example:**
 
@@ -4814,10 +4842,9 @@ class SingleGridView extends React.Component<ViewProps, {}> {
 **Controller Example:**
 
 ```typescript
-import { BaseSingleGridController } from "tsb-fontos-ui";
-import { BaseSingleGridComponent, BaseSingleGridProps } from "tsb-fontos-ui";
+import { BaseSingleGridComponent, BaseSingleGridController, BaseSingleGridProps } from "tsb-fontos-ui";
 
-class SingleGridController extends BaseSingleGridController<SingleGridView> {
+class SingleGridController extends BaseSingleGridController {
   constructor(
     componentRef: RefObject<BaseSingleGridComponent<BaseSingleGridProps, {}>>
   ) {
@@ -4938,10 +4965,9 @@ class MultiGridView extends React.PureComponent<ViewProps, {}> {
 **Controller Example:**
 
 ```typescript
-import { BaseMultiGridController } from "tsb-fontos-ui";
-import { BaseMultiGridComponent, BaseMultiGridProps } from "tsb-fontos-ui";
+import { BaseMultiGridComponent, BaseMultiGridController, BaseMultiGridProps } from "tsb-fontos-ui";
 
-class MultiGridController extends BaseMultiGridController<MultiGridView> {
+class MultiGridController extends BaseMultiGridController {
   constructor(
     componentRef: RefObject<BaseMultiGridComponent<BaseMultiGridProps, {}>>
   ) {
@@ -4967,7 +4993,7 @@ class MultiGridController extends BaseMultiGridController<MultiGridView> {
 - `mainComponent`: Main content component (JSX.Element)
 - `drawContainerRef`: Reference to drawing container element
 - `rootRef`: Reference to root container element
-- `resizeValue`: Resize value for drawing container height calculation (default: 0)
+- `drawResizeValue`: Resize value for drawing container height calculation (default: 0)
   - **Height Calculation**: `Current docking form's height - resizeValue = Drawing area height`
   - This value accounts for other UI elements above the drawing area
 
@@ -5036,13 +5062,21 @@ class DamageCheckView extends React.PureComponent {
 
 ### 8.5 BaseCompositeComponent
 
-`BaseCompositeComponent` is used for complex screens that combine grids, forms, and other components. It provides flexible layout management.
+`BaseCompositeComponent` is used for complex screens that combine a grid, a draw component, and other components. It provides flexible layout management.
 
 **Props:**
 - `menuId`: Menu ID for the screen
 - `controller`: Controller instance (extends `BaseCompositeController`)
 - `mainComponent`: Main content component (JSX.Element)
 - `rootRef`: Reference to root container element
+- `drawContainerRef`: Reference to drawing container element
+- `drawResizeValue`: Resize value for drawing container height calculation (default: 0)
+  - **Height Calculation**: `Current docking form's height - resizeValue = Drawing area height`
+  - This value accounts for other UI elements above the drawing area
+- `gridRef`: Reference to TSpreadGrid component
+- `gridResizeValue`: Resize value for grid height calculation (default: 0)
+  - **Height Calculation**: `Current docking form's height - drawResizeValue - resizeValue = Grid area height`
+  - This value accounts for other UI elements above the grid
 
 **Example:**
 
@@ -5059,29 +5093,69 @@ import {
 class CompositeView extends React.Component<ViewProps, {}> {
   private _rootRef = React.createRef<HTMLDivElement>();
   private _grid = React.createRef<TSpreadGrid>();
-  private _form = React.createRef<TForm>();
+  private _drawContainer = React.createRef<YBayView>();
+  private _compositComponent: RefObject<BaseCompositeComponent<BaseCompositeProps, {}>> = React.createRef();
 
   render() {
+    const childrenMap = new Map<PanelPosition, React.ReactNode[]>();
+    childrenMap.set("top", [
+      <div ref={this._drawContainer}>
+        <YBayView ref={this._yBayViewRef} />
+      </div>
+    ]);
+
+    childrenMap.set("center", [
+      <div>
+        <TSpreadGrid
+          ref={this._grid}
+          /*//@ts-ignore*/
+          columns={this.columns}
+          width={"auto"}
+          rowHeaders={[
+            {
+              type: "checkbox",
+              header: `<span></span>`,
+              renderer: {
+                type: CheckboxRenderer,
+              },
+            },
+            {
+              type: "rowNum",
+            },
+          ]}
+          pageOptions={{
+            useClient: true,
+            perPage: 10,
+          }}
+          bodyHeight={200} // page grid에서 지정하지않으면 페이지 변경에 따라 행 갯수가 바뀔때 높이가 재계산 되어버린다. gridResizeValue 와 동일한 값을 주면 된다.
+          contextMenu={this.createContextMenuFn}
+          data={this.state.data}
+          header={{ height: 60 }}
+          columnOptions={{ resizable: true }}
+        />
+      </div>,
+    ]);
+
     const main = (
       <div ref={this._rootRef}>
-        <TLayout>
-          <TLayout.Sider width={300}>
-            <TForm ref={this._form}>
-              {/* Form content */}
-            </TForm>
-          </TLayout.Sider>
-          <TLayout.Content>
-            <TSpreadGrid ref={this._grid} />
-          </TLayout.Content>
-        </TLayout>
+        <TResizePanel
+          menuId={this.props.menuId}
+          childrenMap={childrenMap}
+          parentBaseComponent={this._compositComponent}
+        />
       </div>
     );
 
     return (
       <BaseCompositeComponent
-        menuId={this.props.menuId}
-        mainComponent={main}
+        ref={this._compositComponent}
         rootRef={this._rootRef}
+        menuId={this.props.menuId}
+        drawContainerRef={this._drawContainer}
+        mainComponent={main}
+        drawResizeValue={500}
+        gridResizeValue={210}
+        gridRef={this._grid}
       />
     );
   }
@@ -5692,7 +5766,7 @@ Menus are configured in `public/environment/menuitem.json`:
 
 #### 9.2.1 Registering Screens in Menu.tsx
 
-To register a screen in the menu system, you need to create a `Menu.tsx` file (typically in `src/Menu.tsx`) that exports a `MenuType[]` array. Each menu item maps to a screen component.
+To register a screen in the menu system, you need to create a module(file or function) (typically in `src/Menu.tsx`) that exports a `MenuType[]` array. Each menu item maps to a screen component.
 
 **Step 1: Import View Components**
 
@@ -5921,7 +5995,7 @@ export default App;
 
 ### 9.3 GlobalDockTabAgent
 
-The `GlobalDockTabAgent` provides programmatic control over dock tabs, allowing you to dynamically add, remove, and manage tabs at runtime. This is useful for creating custom tabs from user interactions (e.g., opening a print preview, detail view, or modal dialog as a tab).
+The `GlobalDockTabAgent` provides programmatic control over dock tabs, allowing you to dynamically add, remove, and manage tabs at runtime. This is useful when you need to open a view not by side menu interaction and for creating custom tabs from user interactions (e.g., opening a print preview, detail view, or modal dialog as a tab).
 
 #### 9.3.1 Adding Custom Tab Menu
 
@@ -6224,6 +6298,7 @@ class GridView extends React.Component {
         id: tabId,
         title: "Print Preview",
         resizable: true,
+        disableDock: true,
         content: (
           <div className="ft-root-wrapper">
             <PrintView
@@ -6288,8 +6363,7 @@ MainLayout.setCustomCommonToolbars([
 Message manager for displaying alerts, confirmations, and notifications.
 
 ```typescript
-import { TMessageManager } from "tsb-fontos-ui";
-import { TMessageBoxParam, TMessageBoxResult } from "tsb-fontos-ui";
+import { TMessageManager, TMessageBoxParam, TMessageBoxResult } from "tsb-fontos-ui";
 
 // Info message
 await TMessageManager.info({ 
@@ -6317,7 +6391,7 @@ if (msgResult === 'Ok') {
 
 ### 10.2 MaskHandler
 
-Loading mask handler.
+Loading mask handler for UI block.
 
 ```typescript
 import { MaskHandler } from "tsb-fontos-ui";
@@ -6341,7 +6415,7 @@ Toolbar decorator for controllers.
 import { ControllerToolbarSet, BaseSingleGridController } from "tsb-fontos-ui";
 import { TEventArgs } from "tsb-fontos-core";
 
-class MyController extends BaseSingleGridController<MyView> {
+class MyController extends BaseSingleGridController {
   @(ControllerToolbarSet.getInstance().SaveDecorator())
   public async menuSave() {
     // Save logic
@@ -6370,11 +6444,11 @@ Grid utility functions.
 ```typescript
 import { SpreadGridUtil } from "tsb-fontos-ui";
 
-// Get grid instance
-const grid = SpreadGridUtil.getGridInstance(ref);
+// Get data index by rowkey
+const index = SpreadGridUtil.getDataRowIndexFromViewRow(gridInstance, rowKey);
 
-// Get selected rows
-const selectedRows = SpreadGridUtil.getSelectedRows(grid);
+// Get business cell colors
+const selectedRows = SpreadGridUtil.getCellColor(grid);
 ```
 
 ---
@@ -6386,8 +6460,7 @@ const selectedRows = SpreadGridUtil.getSelectedRows(grid);
 Organize your components with clear regions:
 
 ```typescript
-import { BaseSingleGridComponent, TSpreadGridEventArgs } from "tsb-fontos-ui";
-import type { BaseSingleGridProps } from "tsb-fontos-ui";
+import { BaseSingleGridComponent, BaseSingleGridProps, TSpreadGridEventArgs } from "tsb-fontos-ui";
 
 interface MyViewProps {
   menuId: string;
