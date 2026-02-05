@@ -132,6 +132,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
     - 11.5 [Grid Schema Naming](#115-grid-schema-naming)
     - 11.6 [Component Refs](#116-component-refs)
     - 11.7 [Async Operations](#117-async-operations)
+    - 11.8 [UI Styling Security Best Practices](#118-ui-styling-security-best-practices)
 12. [Appendix](#12-appendix)
     - 12.1 [Available Components](#121-available-components)
     - 12.2 [Dependencies](#122-dependencies)
@@ -1272,7 +1273,8 @@ Most of components extend Ant Design's base components with additional features 
 
 #### CommonProps
 
-`CommonProps` is a set of common properties available on components that support ref forwarding from Ant Design. **Note: CommonProps are only available on Ant Design components that provide ref support.**
+`CommonProps` is a set of common properties available on components that support ref forwarding from Ant Design for satisfing XSS security issues.
+**Note: CommonProps are only available on Ant Design components that provide ref support.**
 
 CommonProps provides the following properties:
 
@@ -6622,6 +6624,25 @@ private async doRetrieveData(): Promise<void> {
     MaskHandler.enableMask(false);
   }
 }
+```
+
+### 11.8 UI Styling Security Best Practices
+
+Specifying optional or dynamic functional values directly in the inline style attribute can lead to security vulnerabilities. Please refer to the guidelines below.
+
+|Scenario|Recommended Method|Risk Level|Reason|
+|------|---|---|---|
+|Pure Values (Simple metrics / Colors)|Inline Styles (style={{...}})|Low|React automatically escapes values. Simple data (e.g., #FFFFFF, 10px) is difficult to exploit for breaking CSS structures.|
+|Predefined Options (Choice from a set)|CSS Classes|Lowest|Even with malicious input, it won't match your predefined whitelist in the CSS file. The most secure approach.|
+|url() Functions (External resources)|Strict Validation or CSS Classes|High|These carry the highest risk of XSS via javascript: schemas or CSS Injection. Isolation is highly recommended.|
+
+
+```typescript
+<div style={{ width: `${userSize}px`, color: userColor }} /> // Safe. Use for dynamic values that are strictly numeric or hex codes, such as slider positions or color pickers
+
+<div className={isDarkMode ? 'theme-dark' : 'theme-light'} /> // Safe. Use for toggleable states or predefined themes. This prevents users from injecting arbitrary CSS properties
+
+<div style={{ backgroundImage: `url(${validatedUrl})` }} /> // Not safe. Isolation is highly recommended
 ```
 
 ---
