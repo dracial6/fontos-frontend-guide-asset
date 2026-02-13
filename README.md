@@ -201,6 +201,19 @@ The `MainComponent` is the root component of your client application. It serves 
 
 #### 3.1.1 MainComponent Props
 
+```mermaid
+graph TD
+    Start([App Start]) --> LoadConfig[1. Load properties.json]
+    LoadConfig --> InitConfig[Initialize AppConfig Singleton]
+    InitConfig --> Auth[2. Load Security/Authority Info]
+    Auth --> Menu[3. Load & Process menuitem.json]
+    Menu --> i18n[4. Load i18n Resources & Set Localization]
+    i18n --> Theme[5. Apply Theme & Grid Cell Styles]
+    Theme --> Render{6. Check Login Status}
+    Render -- No --> Login[Render Login Form]
+    Render -- Yes --> Layout[Render Main Layout]
+```
+
 The `MainComponent` accepts the following props:
 
 ```typescript
