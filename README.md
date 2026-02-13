@@ -3556,7 +3556,7 @@ sequenceDiagram
     Note over G: Phase 4: Destruction (Memory Cleanup)
     U->>G: Component Unmount
     G->>G: Clear Event Listeners
-    U->>U: gridRef.current = null (Explicit Cleanup)
+    U->>U: gridRef = null (Explicit Cleanup)
 ```
 
 The following event handlers are available on `Tui-Grid`:
