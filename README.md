@@ -3525,6 +3525,40 @@ if (valueDisplayType === ValueDisplayTypes.CODE) {
 
 #### 7.3.1 Basic Tui-Grid Event Handlers
 
+```mermaid
+sequenceDiagram
+    participant U as User/View
+    participant G as TSpreadGrid
+    participant B as CTGridBizRule
+    participant D as DataSource (BaseItemList)
+
+    Note over G: Phase 1: Initialization & Binding
+    U->>G: Set DataSource (BindParam)
+    G->>G: onBeforeDataSourceBinded
+    G->>D: Process Data Mapping
+    G->>G: onAfterDataSourceBinded
+    Note right of G: Grid is now visible with data
+
+    Note over G: Phase 2: User Interaction
+    U->>G: Click Cell
+    G->>G: onBeforeClick / onClick
+    U->>G: Edit Cell Value
+    G->>B: Validate via BizRule
+    B-->>G: Validation Result
+    G->>G: onAfterChange (ChangeStatus updated)
+
+    Note over G: Phase 3: Data Retrieval & Refresh
+    U->>G: Call inquiryList()
+    G->>G: onBeforeRetrieve
+    G-->>U: Updated Data Binding
+    G->>G: onAfterRetrieve
+
+    Note over G: Phase 4: Destruction (Memory Cleanup)
+    U->>G: Component Unmount
+    G->>G: Clear Event Listeners
+    U->>U: gridRef.current = null (Explicit Cleanup)
+```
+
 The following event handlers are available on `Tui-Grid`:
 
 **Mouse Events:**
@@ -4676,6 +4710,20 @@ downloadExcelFrontendSetDataAtServer = async () => {
 ---
 
 ## 8. UI Templates
+
+```mermaid
+sequenceDiagram
+    participant V as UserDetailView (View)
+    participant C as UserDetailController (Presenter)
+    participant S as Service (Model)
+
+    V->>C: Request Data (onRetrieveData)
+    C->>S: Call API Service
+    S-->>C: Return Data Result
+    C->>V: Bind to Form/Grid (setFieldsValue)
+    Note over V: Component Unmounts
+    V->>V: Set ref = null (Explicit Cleanup)
+```
 
 The framework provides several base component templates that follow the MVP (Model-View-Presenter) pattern. These templates handle common functionality like layout management, resize handling, and controller integration.
 
@@ -6600,6 +6648,19 @@ Follow consistent naming for grid schemas:
 - Example: `grd_ADM_NewsList_Schema.json`
 
 ### 11.6 Component Refs
+
+```mermaid
+stateDiagram-v2
+    [*] --> Initialized: Component Created
+    Initialized --> Mounted: componentDidMount (Ref Connected)
+    Mounted --> Working: Business Logic Execution
+    Working --> Unmounting: Component Destruction Starts
+    Unmounting --> RefReleased: componentWillUnmount (Ref = null)
+    RefReleased --> [*]: Garbage Collection (GC) Complete
+    
+    Working --> MemoryLeak: Missing Cleanup (Reference Retained)
+    MemoryLeak --> [*]: Sustained Memory Pressure (Risk)
+```
 
 Always use refs for accessing component instances:
 
