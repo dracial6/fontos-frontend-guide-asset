@@ -3529,7 +3529,7 @@ if (valueDisplayType === ValueDisplayTypes.CODE) {
 sequenceDiagram
     participant U as User/View
     participant G as TSpreadGrid
-    participant B as CTGridBizRule
+    participant B as GridBizRule
     participant D as DataSource (BaseItemList)
 
     Note over G: Phase 1: Initialization & Binding
