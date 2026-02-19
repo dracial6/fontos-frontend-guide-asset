@@ -2587,11 +2587,15 @@ import { TForm, FormInstance } from "tsb-fontos-ui";
 type BindParam = Pick<NewsParam, keyof NewsParam>;
 
 // In component
-private frmFilterOption = React.createRef<TForm<BindParam>>();
+private frmFilterOption? = React.createRef<TForm<BindParam>>();
+
+componentWillUnmount() {
+  (this.frmFilterOption as any).current = null;
+}
 
 // Render form
 <TForm<BindParam>
-  ref={this.frmFilterOption}
+  ref={this.frmFilterOption!}
   className="detail-form"
   initialValues={this.getInitialBindParm()}
   onValuesChange={this.form_onValuesChange.bind(this)}
@@ -2642,10 +2646,14 @@ type FormData = {
   email: string;
 };
 
-const formRef = createRef<TForm<FormData>>();
+private formRef? = createRef<TForm<FormData>>();
+
+componentWillUnmount() {
+  (this.formRef as any).current = null;
+}
 
 <TForm<FormData>
-  ref={formRef}
+  ref={formRef!}
   initialValues={{ userName: "", email: "" }}
 >
   <TForm.Item name="userName">
@@ -3556,7 +3564,7 @@ sequenceDiagram
     Note over G: Phase 4: Destruction (Memory Cleanup)
     U->>G: Component Unmount
     G->>G: Clear Event Listeners
-    U->>U: gridRef = null (Explicit Cleanup)
+    U->>U: gridRef.current = null (Explicit Cleanup)
 ```
 
 The following event handlers are available on `Tui-Grid`:
@@ -4722,7 +4730,7 @@ sequenceDiagram
     S-->>C: Return Data Result
     C->>V: Bind to Form/Grid (setFieldsValue)
     Note over V: Component Unmounts
-    V->>V: Set ref = null (Explicit Cleanup)
+    V->>V: Set ref.current = null (Explicit Cleanup)
 ```
 
 The framework provides several base component templates that follow the MVP (Model-View-Presenter) pattern. These templates handle common functionality like layout management, resize handling, and controller integration.
@@ -6655,7 +6663,7 @@ stateDiagram-v2
     Initialized --> Mounted: componentDidMount (Ref Connected)
     Mounted --> Working: Business Logic Execution
     Working --> Unmounting: Component Destruction Starts
-    Unmounting --> RefReleased: componentWillUnmount (Ref = null)
+    Unmounting --> RefReleased: componentWillUnmount (Ref.current = null)
     RefReleased --> [*]: Garbage Collection (GC) Complete
     
     Working --> MemoryLeak: Missing Cleanup (Reference Retained)
@@ -6665,12 +6673,16 @@ stateDiagram-v2
 Always use refs for accessing component instances:
 
 ```typescript
-private grd_MyGrid = React.createRef<TSpreadGrid>();
+private grd_MyGrid? = React.createRef<TSpreadGrid>();
 
 // Access grid
-const grid = this.grd_MyGrid.current;
+const grid = this.grd_MyGrid?.current;
 if (grid) {
   // Use grid
+}
+
+componentWillUnmount() {
+  (this.grd_MyGrid as any).current = null;
 }
 ```
 
