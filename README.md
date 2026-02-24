@@ -133,6 +133,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
     - 11.6 [Component Refs](#116-component-refs)
     - 11.7 [Async Operations](#117-async-operations)
     - 11.8 [UI Styling Security Best Practices](#118-ui-styling-security-best-practices)
+    - 11.9 [Performance and Memory Management](#119-performance-and-memory-management)
 12. [Appendix](#12-appendix)
     - 12.1 [Available Components](#121-available-components)
     - 12.2 [Dependencies](#122-dependencies)
@@ -6729,6 +6730,52 @@ Specifying optional or dynamic functional values directly in the inline style at
 <div className={isDarkMode ? 'theme-dark' : 'theme-light'} /> // Safe. Use for toggleable states or predefined themes. This prevents users from injecting arbitrary CSS properties
 
 <div style={{ backgroundImage: `url(${validatedUrl})` }} /> // Not safe. Isolation is highly recommended
+```
+
+### 11.9 Performance and Memory Management
+
+When a component unmounts, you must explicitly cut off the connection between instance member variables and the DOM.
+1. Reference Release: In componentWillUnmount, set this.props, this.el, and this.ref.current to null. This is especially critical in High-Order Component (HOC) environments using connect, as it prevents the Store from being retained in memory.
+2. Event Listener Symmetry: Any global listeners registered to document or window must be removed using removeEventListener during unmount.
+
+```typescript
+// Never use () => {} function. It creates a instance which would not be collected by GC by each every call.
+private handleDocumentMouseDown() {
+  // ...do something
+}
+
+constructor(props: any) {
+  super(props);
+  this.handleDocumentMouseDown = this.handleDocumentMouseDown.bind(this); // Use same name for bind if you need.
+}
+
+
+// Good Example: Severing all connections during component destruction
+componentWillUnmount() {
+  // 1. Remove global listeners
+  document.removeEventListener("mousedown", this.handleDocumentMouseDown);
+  
+  // 2. Eradicate references to instance methods and props (Release 'this')
+  (this as any).handleDocumentMouseDown = null;
+  (this as any).props = null; 
+  
+  // 3. Release DOM and Ref references
+  if (this.ref) (this.ref as any).current = null;
+  (this as any).el = null;
+}
+```
+
+Expand dispose() function if you need release references.
+
+```typescript
+// It would be called by core when it`s view is closed.
+dispose(): void {
+  super.dispose();
+  
+  (this as any).view = null;
+  (this as any).gridCtrl = null;
+  (this as any).componentRef = null;
+}
 ```
 
 ---
