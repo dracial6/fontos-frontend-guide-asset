@@ -3850,9 +3850,10 @@ async componentDidMount(): Promise<void> {
     );
     
     // Handle page move event
-    this.grd_ADM_NewsList.current!.getCustomPagination()!.on('afterMove', (e) => {
+    private handlePageMove(e) {
       this._controller.retrieveData(e.page);
-    });
+    }
+    this.grd_ADM_NewsList.current!.getCustomPagination()!.on('afterMove', this.handlePageMove);
   } catch (ex) {
     GeneralLogger.error(ex);
     throw ex;
@@ -4390,19 +4391,20 @@ private async doSave(): Promise<void> {
 #### 7.8.1 Cell Click Event
 
 ```typescript
+private handleMouseDown(ev: any) {
+  const columnName = ev?.columnName;
+  const rowData = grid!.getRow(ev?.rowKey);
+  
+  if (columnName === "download" && rowData) {
+    let param = new InvoiceDownloadParam();
+    param.invNo = rowData!.invNo?.toString() ?? "";
+    this.onPrintData(param);
+  }
+}
+
 componentDidMount() {
   const grid = this.grdList.current;
-  
-  grid!.on('mousedown', (ev: any) => {
-    const columnName = ev?.columnName;
-    const rowData = grid!.getRow(ev?.rowKey);
-    
-    if (columnName === "download" && rowData) {
-      let param = new InvoiceDownloadParam();
-      param.invNo = rowData!.invNo?.toString() ?? "";
-      this.onPrintData(param);
-    }
-  });
+  grid!.on('mousedown', this.handleMouseDown);
 }
 ```
 
@@ -4410,22 +4412,28 @@ componentDidMount() {
 
 ```typescript
 // Synchronize scroll between two grids
-componentDidMount() {
-  this._grid1?.current?.on("scroll", () => {
-    setTimeout(() => {
-      this._grid2?.current?.setScrollPosition(
-        this._grid1.current!.getScrollTop(),
-        this._grid1.current!.getScrollLeft()
-      );
-    });
+private handleGrid1Scroll() {
+  setTimeout(() => {
+    this._grid2?.current?.setScrollPosition(
+      this._grid1.current!.getScrollTop(),
+      this._grid1.current!.getScrollLeft()
+    );
   });
-  
-  this._grid2?.current?.on("scroll", () => {
+}
+
+private handleGrid2Scroll() {
+  setTimeout(() => {
     this._grid1?.current?.setScrollPosition(
       this._grid2.current!.getScrollTop(),
       this._grid2.current!.getScrollLeft()
     );
   });
+}
+
+
+componentDidMount() {
+  this._grid1?.current?.on("scroll", this.handleGrid1Scroll);
+  this._grid2?.current?.on("scroll", this.handleGrid2Scroll);
 }
 ```
 
@@ -6130,30 +6138,32 @@ import PrintView from "./PrintView";
 class SingleGridView extends React.Component {
   private _grid = createRef<TSpreadGrid>();
 
+  private handleClick(e: any) {
+    if (e.columnName === "print") {
+      GlobalDockTabAgent.addCustomTabMenu(
+        {
+          id: "printView",
+          title: "Print",
+          resizable: false,
+          content: (
+            <div className="ft-root-wrapper">
+              <PrintView htmlContent={this.generatePrintContent()} />
+            </div>
+          ),
+          floatPosition: { // If you set this param, position param would be ignored.
+            left: 50,
+            top: 50,
+            width: 1205,
+            height: 332
+          }
+        },
+        "float"
+      );
+    }
+  }
+
   componentDidMount() {
-    this._grid.current?.on("click", (e: any) => {
-      if (e.columnName === "print") {
-        GlobalDockTabAgent.addCustomTabMenu(
-          {
-            id: "printView",
-            title: "Print",
-            resizable: false,
-            content: (
-              <div className="ft-root-wrapper">
-                <PrintView htmlContent={this.generatePrintContent()} />
-              </div>
-            ),
-            floatPosition: { // If you set this param, position param would be ignored.
-              left: 50,
-              top: 50,
-              width: 1205,
-              height: 332
-            }
-          },
-          "float"
-        );
-      }
-    });
+    this._grid.current?.on("click", this.handleClick);
   }
 
   render() {
@@ -6314,17 +6324,19 @@ import PrintView from "./PrintView";
 class GridView extends React.Component {
   private _grid = createRef<TSpreadGrid>();
 
-  componentDidMount() {
-    this._grid.current?.on("click", (e: any) => {
-      const rowKey = e.rowKey;
-      const columnName = e.columnName;
+  private handleClick(e: any) {
+    const rowKey = e.rowKey;
+    const columnName = e.columnName;
 
-      if (columnName === "detail") {
-        this.openDetailView(rowKey);
-      } else if (columnName === "print") {
-        this.openPrintPreview(rowKey);
-      }
-    });
+    if (columnName === "detail") {
+      this.openDetailView(rowKey);
+    } else if (columnName === "print") {
+      this.openPrintPreview(rowKey);
+    }
+  }
+
+  componentDidMount() {
+    this._grid.current?.on("click", this.handleClick);
   }
 
   private openDetailView = (rowKey: number) => {
@@ -6737,8 +6749,11 @@ Specifying optional or dynamic functional values directly in the inline style at
 When a component unmounts, you must explicitly cut off the connection between instance member variables and the DOM.
 1. Reference Release: In componentWillUnmount, set this.props, this.el, and this.ref.current to null. This is especially critical in High-Order Component (HOC) environments using connect, as it prevents the Store from being retained in memory.
 2. Event Listener Symmetry: Any global listeners registered to document or window must be removed using removeEventListener during unmount.
+3. setTimeout callback would hold references and remains in memory. All need to be clear.
 
 ```typescript
+private _timers: any[] = [];
+
 // Never use () => {} function. It creates a instance which would not be collected by GC by each every call.
 private handleDocumentMouseDown() {
   // ...do something
@@ -6747,6 +6762,14 @@ private handleDocumentMouseDown() {
 constructor(props: any) {
   super(props);
   this.handleDocumentMouseDown = this.handleDocumentMouseDown.bind(this); // Use same name for bind if you need.
+}
+
+componentDidMount() {
+  document.addEventListener("mousedown", this.handleDocumentMouseDown);
+
+  this._timers.push(setTimeout(() => {
+    // ...do something
+  }));
 }
 
 
@@ -6762,6 +6785,9 @@ componentWillUnmount() {
   // 3. Release DOM and Ref references
   if (this.ref) (this.ref as any).current = null;
   (this as any).el = null;
+
+  this._timers.forEach(timer => clearTimeout(timer));
+  this._timers = [];
 }
 ```
 
