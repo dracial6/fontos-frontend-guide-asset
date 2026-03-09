@@ -1,3 +1,4919 @@
+# [tsb-fontos-core] Developer Guide
+
+This guide is for developers who want to use the `tsb-fontos-core` framework to build TypeScript applications with core utilities, data management, and service layer functionality.
+
+## Table of Contents
+
+1. [Introduction](#1-introduction)
+2. [Installation](#2-installation)
+3. [GUID Types](#3-guid-types)
+4. [Utilities](#4-utilities)
+   - 4.1 [DateFormatter](#41-dateformatter)
+   - 4.2 [ArrayUtil](#42-arrayutil)
+   - 4.3 [StringUtil](#43-stringutil)
+   - 4.4 [ConvertUtil](#44-convertutil)
+   - 4.5 [CheckUtils](#45-checkutils)
+   - 4.6 [DownloadUtils](#46-downloadutils)
+   - 4.7 [CookieUtil](#47-cookieutil)
+   - 4.8 [PriorityQueue](#48-priorityqueue)
+   - 4.9 [SortedMap](#49-sortedmap)
+   - 4.10 [CallbackManager](#410-callbackmanager)
+5. [Events](#5-events)
+   - 5.1 [TEvent](#51-tevent)
+   - 5.2 [TEventArgs](#52-teventargs)
+   - 5.3 [TPropertyChangedEvent](#53-tpropertychangedevent)
+6. [Common Structures](#6-common-structures)
+   - 6.1 [DayOfWeek](#61-dayofweek)
+   - 6.2 [OpCodes](#62-opcodes)
+7. [Data Items](#7-data-items)
+   - 7.1 [IDataItem](#71-idataitem)
+   - 7.2 [BaseDataItem](#72-basedataitem)
+   - 7.3 [BaseItemList](#73-baseitemlist)
+8. [Commands](#8-commands)
+   - 8.1 [CommandUndoManager](#81-commandundomanager)
+   - 8.2 [ActionCommand](#82-actioncommand)
+   - 8.3 [CommandAdd](#83-commandadd)
+   - 8.4 [CommandDelete](#84-commanddelete)
+9. [JSON Mapping](#9-json-mapping)
+   - 9.1 [JsonMapper](#91-jsonmapper)
+   - 9.2 [JsonMapperBindingUtil](#92-jsonmapperbindingutil)
+   - 9.3 [MapDecoratorMetaData](#93-mapdecoratormetadata)
+   - 9.4 [ArrayMetaData](#94-arraymetadata)
+   - 9.5 [DimensionalArrayMetaData](#95-dimensionalarraymetadata)
+10. [Logger](#10-logger)
+    - 10.1 [GeneralLogger](#101-generallogger)
+    - 10.2 [FrontendLogService](#102-frontendlogservice)
+11. [Environments](#11-environments)
+    - 11.1 [AppConfig](#111-appconfig)
+    - 11.2 [Localization](#112-localization)
+    - 11.3 [LoginedUserInfo](#113-logineduserinfo)
+    - 11.4 [AppConstant](#114-appconstant)
+12. [DAO (Data Access Object)](#12-dao-data-access-object)
+    - 12.1 [BaseDaoSupport](#121-basedaosupport)
+    - 12.2 [HttpWebDaoSupport](#122-httpwebdaosupport)
+    - 12.3 [HttpWebDaoBindingSupport](#123-httpwebdaobindingsupport)
+    - 12.4 [IRemoteServerDaoSupport](#124-iremoteserverdaosupport)
+13. [Exception Handling](#13-exception-handling)
+    - 13.1 [AppNormanErrorBoundary](#131-appnormanerrorboundary)
+    - 13.2 [BizError](#132-bizerror)
+    - 13.3 [HttpErrorsHandler](#133-httperrorshandler)
+14. [Remote Server](#14-remote-server)
+    - 14.1 [BaseRemoteServerKeys](#141-baseremoteserverkeys)
+    - 14.2 [RemoteServerCfgProvider](#142-remoteservercfgprovider)
+    - 14.3 [RemoteServerCfgHdl](#143-remoteservercfghdl)
+    - 14.4 [TRemoteConfig](#144-tremoteconfig)
+    - 14.5 [TRemoteServerConfig](#145-tremoteserverconfig)
+15. [HTTP Handlers](#15-http-handlers)
+    - 15.1 [HttpBaseRequestHandler](#151-httpbaserequesthandler)
+    - 15.2 [HttpWebRequestHandler](#152-httpwebrequesthandler)
+    - 15.3 [IRemoteRequestHandler](#153-iremoterequesthandler)
+    - 15.4 [TRequest](#154-trequest)
+    - 15.5 [TResponse](#155-tresponse)
+    - 15.6 [TRestResponse](#156-trestresponse)
+16. [Services](#16-services)
+    - 16.1 [BaseService](#161-baseservice)
+    - 16.2 [BizServiceLocator](#162-bizservicelocator)
+    - 16.3 [BizServiceProvider](#163-bizserviceprovider)
+    - 16.4 [BizServiceProxy](#164-bizserviceproxy)
+    - 16.5 [BizServiceProxyFactory](#165-bizserviceproxyfactory)
+17. [Cache Management](#17-cache-management)
+    - 17.1 [CacheManager](#171-cachemanager)
+    - 17.2 [GeneralCacheProvider](#172-generalcacheprovider)
+    - 17.3 [ICacheProvider](#173-icacheprovider)
+    - 17.4 [ICacheDataProvider](#174-icachedataprovider)
+18. [Code Management](#18-code-management)
+    - 18.1 [CodeManager](#181-codemanager)
+    - 18.2 [CodeDataItem](#182-codedataitem)
+    - 18.3 [CodeDataItemList](#183-codedataitemlist)
+    - 18.4 [CodeDataParam](#184-codedataparam)
+    - 18.5 [BaseCodeDataService](#185-basecodedataservice)
+    - 18.6 [CodeCacheDataProvider](#186-codecachedataprovider)
+    - 18.7 [CodeBindTypes](#187-codebindtypes)
+    - 18.8 [CodeGroupTypes](#188-codegrouptypes)
+19. [Security](#19-security)
+    - 19.1 [BaseUserInfo](#191-baseuserinfo)
+    - 19.2 [BaseUserToken](#192-baseusertoken)
+    - 19.3 [ISecurityDao](#193-isecuritydao)
+    - 19.4 [ISecurityService](#194-isecurityservice)
+    - 19.5 [AuthorInfoItem](#195-authorinfoitem)
+    - 19.6 [AuthorRuleScopeTypes](#196-authorrulescopetypes)
+    - 19.7 [AuthorTargetTypes](#197-authortargettypes)
+    - 19.8 [AuditUtil](#198-auditutil)
+    - 19.9 [DefaultLoginStrategy](#199-defaultloginstrategy)
+    - 19.10 [ILoginStrategy](#1910-iloginstrategy)
+20. [Observer Pattern](#20-observer-pattern)
+    - 20.1 [DataSyncAgent](#201-datasyncagent)
+    - 20.2 [DataSyncManager](#202-datasyncmanager)
+    - 20.3 [DataSyncNotifiedEventArgs](#203-datasyncnotifiedeventargs)
+21. [Export Utilities](#21-export-utilities)
+    - 21.1 [ExportGridItem](#211-exportgriditem)
+    - 21.2 [ExportGridCellItem](#212-exportgridcellitem)
+    - 21.3 [ExportGridHeaderItem](#213-exportgridheaderitem)
+    - 21.4 [ExportGridComplexHeader](#214-exportgridcomplexheader)
+    - 21.5 [FileExportParm](#215-fileexportparm)
+    - 21.6 [FileExportConstants](#216-fileexportconstants)
+    - 21.7 [IExportGridDataService](#217-iexportgriddataservice)
+22. [Common Types](#22-common-types)
+    - 22.1 [TPageInfo](#221-tpageinfo)
+    - 22.2 [ExceptionItem](#222-exceptionitem)
+    - 22.3 [TErrorMsgItem](#223-terrormsgitem)
+    - 22.4 [TRestErrorResponseItem](#224-tresterrorresponseitem)
+    - 22.5 [DownloadFileItem](#225-downloadfileitem)
+    - 22.6 [IPageParam](#226-ipageparam)
+23. [Constants](#23-constants)
+    - 23.1 [CoreServerName](#231-coreservername)
+24. [Best Practices](#24-best-practices)
+25. [Appendix](#25-appendix)
+
+---
+
+## 1. Introduction
+
+`tsb-fontos-core` is a comprehensive core framework library that provides essential utilities, data management, service layer functionality, and infrastructure components for building TypeScript applications. It serves as the foundation layer for the Fontos Framework ecosystem.
+
+### Key Features
+
+- **Utility Functions**: Date formatting, array manipulation, string operations, type conversion, and validation utilities
+- **Event System**: Type-safe event handling with property change notifications
+- **Data Management**: Base classes for data items, lists, and collections
+- **Command Pattern**: Undo/redo functionality with command pattern implementation
+- **JSON Mapping**: Object-to-JSON and JSON-to-object mapping with decorator support
+- **Service Layer**: Service locator pattern, dependency injection, and service proxies
+- **DAO Layer**: Data access abstraction for HTTP-based remote services
+- **Cache Management**: Generic caching system with providers
+- **Code Management**: Centralized code/constant management system
+- **Security**: Authentication, authorization, and audit utilities
+- **Observer Pattern**: Data synchronization and notification system
+- **Export Utilities**: Grid data export functionality
+- **Logger**: Logging infrastructure for frontend applications
+
+### Architecture
+
+The framework follows a layered architecture:
+
+```
+tsb-fontos-core/
+├── utils/              # Utility functions
+├── common/             # Common structures and items
+├── dao/                # Data Access Object layer
+├── service/            # Service layer
+├── remote/             # Remote server configuration
+├── caches/             # Cache management
+├── codes/              # Code management
+├── security/           # Security and authentication
+├── observer/           # Observer pattern implementation
+├── logger/             # Logging infrastructure
+└── environments/       # Application environment configuration
+```
+
+---
+
+## 2. Installation
+
+### Prerequisites
+
+- Node.js 16+
+- TypeScript 5.5.4+
+- reflect-metadata (for decorator support)
+
+### Install from Workspace
+
+If you're working in a monorepo workspace:
+
+```json
+{
+  "dependencies": {
+    "tsb-fontos-core": "^1.0.0",
+    "guid-typescript": "^1.0.9",
+    "dayjs": "^1.10.7",
+    "reflect-metadata": "^0.1.13"
+  }
+}
+```
+
+---
+
+## 3. GUID Types
+
+The framework re-exports all types from `guid-typescript` for generating and working with GUIDs.
+
+```typescript
+import { Guid } from "tsb-fontos-core";
+
+// Generate a new GUID
+const id = Guid.newGuid();
+
+// Parse a GUID string
+const guid = Guid.parse("550e8400-e29b-41d4-a716-446655440000");
+
+// Check if a string is a valid GUID
+const isValid = Guid.isGuid("550e8400-e29b-41d4-a716-446655440000");
+```
+
+---
+
+## 4. Utilities
+
+### 4.1 DateFormatter
+
+Utility class for formatting dates and performing date calculations using dayjs.
+
+**Static Properties:**
+
+- `InitialDate: Date` - Initial date constant (new Date(0))
+
+**Methods:**
+
+```typescript
+import { DateFormatter } from "tsb-fontos-core";
+
+// Format date string with format string
+const formatted = DateFormatter.format("2024-01-15", "YYYY-MM-DD"); // "2024-01-15"
+const customFormat = DateFormatter.format("2024-01-15T10:30:00", "DD/MM/YYYY HH:mm:ss"); // "15/01/2024 10:30:00"
+
+// Subtract two dates (returns milliseconds)
+const date1 = new Date(2024, 0, 15);
+const date2 = new Date(2024, 0, 10);
+const diffMs = DateFormatter.subtract(date1, date2); // milliseconds difference
+
+// Sum two dates (returns milliseconds)
+const sumMs = DateFormatter.sum(date1, date2);
+
+// Add days to a date
+const newDate = DateFormatter.addDays(new Date(), 7); // 7 days from now
+
+// Add hours to a date
+const futureTime = DateFormatter.addHours(new Date(), 2); // 2 hours from now
+
+// Add minutes to a date
+const laterTime = DateFormatter.addMinutes(new Date(), 30); // 30 minutes from now
+
+// Convert milliseconds to years
+const years = DateFormatter.getTotalYears(31536000000); // 1 year
+
+// Convert milliseconds to days
+const days = DateFormatter.getTotalDays(86400000); // 1 day
+
+// Convert milliseconds to hours
+const hours = DateFormatter.getTotalHours(3600000); // 1 hour
+
+// Convert milliseconds to minutes
+const minutes = DateFormatter.getTotalMinutes(60000); // 1 minute
+```
+
+**Note:** The `subtract` method returns the difference in milliseconds. You can calculate days, hours, and minutes using the conversion methods or by dividing:
+- Days: `diffMs / 86400000`
+- Hours: `Math.floor((diffMs % 86400000) / 3600000)`
+- Minutes: `Math.round(((diffMs % 86400000) % 3600000) / 60000)`
+
+### 4.2 ArrayUtil
+
+A collection of utility functions for array operations.
+
+```typescript
+import { ArrayUtil } from "tsb-fontos-core";
+
+// Group array items by a key, returns a Map
+const grouped = ArrayUtil.groupBy(items, "category");
+
+// Select values for a specific key in every array item
+const names = ArrayUtil.select(items, "name");
+
+// Get the maximum value from a number array
+const maxVal = ArrayUtil.max([1, 5, 3, 8]);
+
+// Get the maximum value for a given key (number)
+const maxScore = ArrayUtil.maxNumber(users, "score");
+
+// Get the maximum value for a given key (string, lexicographical)
+const maxName = ArrayUtil.maxString(users, "name");
+
+// Get the minimum value from a number array
+const minVal = ArrayUtil.min([7, 3, 12]);
+
+// Check if all elements match a predicate
+const allAdults = ArrayUtil.all(users, user => user.age >= 18);
+
+// Check if any element matches a predicate
+const hasMinor = ArrayUtil.any(users, user => user.age < 18);
+
+// Sum values for a specific key
+const totalScore = ArrayUtil.sum(users, "score");
+```
+
+API List:
+
+- `groupBy(list: any[], key: string): Map<any, any>`
+- `select(list: any[], key: string): any[]`
+- `max(list: number[]): number`
+- `maxNumber(list: any[], key: string): number`
+- `maxString(list: any[], key: string): string`
+- `min(list: number[]): number`
+- `all(list: any[], predicate: (element: any) => boolean): boolean`
+- `any(list: any[], predicate: (element: any) => boolean): boolean`
+- `sum(list: any[], key: string): number`
+
+Utility functions for array operations.
+
+
+### 4.3 StringUtil
+
+String manipulation and validation utilities. Provides static methods for checking string states, joining/splitting strings, and extracting substrings.
+
+**Static Properties:**
+
+- `Empty: string` - Empty string constant ("")
+
+**Methods:**
+
+#### Null/Empty Checks
+
+```typescript
+import { StringUtil } from "tsb-fontos-core";
+
+// Check if value is null or undefined
+const isNull = StringUtil.isNull(null); // true
+const isNull2 = StringUtil.isNull(""); // false
+
+// Check if string is null or empty
+const isEmpty = StringUtil.isNullOrEmpty(null); // true
+const isEmpty2 = StringUtil.isNullOrEmpty(""); // true
+const isEmpty3 = StringUtil.isNullOrEmpty("text"); // false
+
+// Check if string is null, empty, or whitespace only
+const isWhitespace = StringUtil.isNullOrWhiteSpace("   "); // true
+const isWhitespace2 = StringUtil.isNullOrWhiteSpace(""); // true
+const isWhitespace3 = StringUtil.isNullOrWhiteSpace("text"); // false
+
+// Check if string is blank (empty or only whitespace)
+const isBlank = StringUtil.isBlank("   "); // true
+const isBlank2 = StringUtil.isBlank(""); // true
+const isBlank3 = StringUtil.isBlank("text"); // false
+
+// Check if any of the provided strings is blank
+const hasBlank = StringUtil.hasBlank("Hello", null, "", "  "); // true
+const hasBlank2 = StringUtil.hasBlank("Hello", "World"); // false
+```
+
+#### String Length
+
+```typescript
+// Get string length (returns 0 for null/undefined)
+const len1 = StringUtil.strLength("hello"); // 5
+const len2 = StringUtil.strLength(null); // 0
+const len3 = StringUtil.strLength(undefined); // 0
+```
+
+#### String Joining and Splitting
+
+```typescript
+// Join strings with a delimiter
+const joined = StringUtil.join(",", ["a", "b", "c"]); // "a,b,c"
+const joined2 = StringUtil.join("-", ["hello", "world"]); // "hello-world"
+const joined3 = StringUtil.join(",", []); // ""
+
+// Split string into array
+const array = StringUtil.toArray(",", "a,b,c"); // ["a", "b", "c"]
+const array2 = StringUtil.toArray("-", "hello-world"); // ["hello", "world"]
+```
+
+#### String Extraction
+
+```typescript
+// Extract substring between two strings
+const between = StringUtil.substringBetween("wx[b]yz", "[", "]"); // "b"
+const between2 = StringUtil.substringBetween("yabcz", "y", "z"); // "abc"
+const between3 = StringUtil.substringBetween("yabczyabcz", "y", "z"); // "abc" (first match only)
+const between4 = StringUtil.substringBetween("text", "[", "]"); // null (no match)
+```
+
+#### String Combination
+
+```typescript
+// Combine strings with dot separator
+const combined = StringUtil.combineDot("a", "b", "c"); // "a.b.c"
+const combined2 = StringUtil.combineDot("com", "example", "app"); // "com.example.app"
+const combined3 = StringUtil.combineDot("key"); // "key"
+```
+
+#### Utility Methods
+
+```typescript
+// Get newline character
+const newline = StringUtil.newLine(); // "\n"
+
+// Check if all values are not null
+const allNotNull = StringUtil.allNotNull("a", "b", "c"); // true
+const allNotNull2 = StringUtil.allNotNull("a", null, "c"); // false
+const allNotNull3 = StringUtil.allNotNull(null); // false
+```
+
+**Complete Example:**
+
+```typescript
+import { StringUtil } from "tsb-fontos-core";
+
+// Validation
+function validateInput(input: string | null | undefined): boolean {
+  if (StringUtil.isNullOrWhiteSpace(input)) {
+    return false;
+  }
+  return true;
+}
+
+// String manipulation
+function processData(data: string[]): string {
+  // Filter out empty strings
+  const filtered = data.filter(s => !StringUtil.isNullOrEmpty(s));
+  
+  // Join with comma
+  return StringUtil.join(",", filtered);
+}
+
+// Extract key from nested structure
+function extractKey(fullKey: string): string | null {
+  // Extract "key" from "prefix.key.suffix"
+  return StringUtil.substringBetween(fullKey, "prefix.", ".suffix");
+}
+
+// Build resource key
+function buildResourceKey(module: string, component: string, key: string): string {
+  return StringUtil.combineDot(module, component, key);
+  // Returns: "module.component.key"
+}
+```
+
+### 4.4 ConvertUtil
+
+Utility class for converting OLE color values to RGB/RGBA color strings.
+
+```typescript
+import { ConvertUtil } from "tsb-fontos-core";
+
+// Convert OLE color (number) to RGBA string
+const rgba1 = ConvertUtil.oleToRGB(16711680); // "rgba(0,0,255)" - blue
+const rgba2 = ConvertUtil.oleToRGB(255); // "rgba(255,0,0)" - red
+const rgba3 = ConvertUtil.oleToRGB(65280); // "rgba(0,255,0)" - green
+
+// Convert OLE color (string) to RGBA string
+const rgba4 = ConvertUtil.oleToRGB("16711680"); // "rgba(0,0,255)"
+
+// Returns empty string for invalid input
+const empty = ConvertUtil.oleToRGB(null); // ""
+const empty2 = ConvertUtil.oleToRGB(undefined); // ""
+```
+
+**OLE Color Format:**
+
+OLE colors are stored as numbers where:
+- Red component: `value % 256`
+- Green component: `Math.floor((value / 256) % 256)`
+- Blue component: `Math.floor((value / 65536) % 256)`
+
+### 4.5 CheckUtils
+
+Validation and checking utilities for various data types.
+
+```typescript
+import { CheckUtils } from "tsb-fontos-core";
+
+// Check if object is empty (undefined or null)
+const isEmptyObj = CheckUtils.isEmptyByObj(null); // true
+const isEmptyObj2 = CheckUtils.isEmptyByObj(undefined); // true
+const isEmptyObj3 = CheckUtils.isEmptyByObj({}); // false
+
+// Check if string is blank (null, empty, or whitespace only)
+const isBlank = CheckUtils.isBlank(""); // true
+const isBlank2 = CheckUtils.isBlank("   "); // true
+const isBlank3 = CheckUtils.isBlank("text"); // false
+const isBlank4 = CheckUtils.isBlank(null); // true
+
+// Check if value is empty (supports multiple types)
+const isEmpty1 = CheckUtils.isEmpty(null); // true
+const isEmpty2 = CheckUtils.isEmpty(undefined); // true
+const isEmpty3 = CheckUtils.isEmpty(""); // true
+const isEmpty4 = CheckUtils.isEmpty("   "); // true (whitespace only)
+const isEmpty5 = CheckUtils.isEmpty([]); // true (empty array)
+const isEmpty6 = CheckUtils.isEmpty({}); // true (empty object)
+const isEmpty7 = CheckUtils.isEmpty("text"); // false
+const isEmpty8 = CheckUtils.isEmpty([1, 2, 3]); // false
+
+// Check if value is not empty (opposite of isEmpty)
+const isNotEmpty = CheckUtils.isNotEmpty("text"); // true
+const isNotEmpty2 = CheckUtils.isNotEmpty(null); // false
+
+// Check if string is not blank
+const isNotBlank = CheckUtils.isNotBlank("text"); // true
+const isNotBlank2 = CheckUtils.isNotBlank("   "); // false
+const isNotBlank3 = CheckUtils.isNotBlank(""); // false
+```
+
+### 4.6 DownloadUtils
+
+Utility class for downloading files from Blob data in the browser.
+
+```typescript
+import { DownloadUtils } from "tsb-fontos-core";
+
+// Download file from Blob
+const fileData = new Blob(["Hello, World!"], { type: "text/plain" });
+DownloadUtils.downloadFile("hello.txt", fileData);
+
+// Download PDF file
+const pdfBlob = new Blob([pdfData], { type: "application/pdf" });
+DownloadUtils.downloadFile("document.pdf", pdfBlob);
+
+// Download Excel file
+const excelBlob = new Blob([excelData], { 
+  type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" 
+});
+DownloadUtils.downloadFile("report.xlsx", excelBlob);
+
+// Download image
+const imageBlob = new Blob([imageData], { type: "image/png" });
+DownloadUtils.downloadFile("image.png", imageBlob);
+```
+
+**How it works:**
+
+The method creates a temporary URL from the Blob, creates an anchor element, sets the download attribute, programmatically clicks it, and then cleans up by removing the element and revoking the URL.
+
+### 4.7 CookieUtil
+
+Utility class for handling browser cookies.
+
+```typescript
+import { CookieUtil } from "tsb-fontos-core";
+
+// Get cookie value (returns null if not found)
+const username = CookieUtil.getCookie("username"); // "john" or null
+
+// Get cookie value (returns empty string if not found)
+const token = CookieUtil.getCookieByString("token"); // "abc123" or ""
+
+// Set cookie with default path ("/")
+CookieUtil.setCookie("username", "john");
+
+// Set cookie with max age (in seconds)
+CookieUtil.setCookie("session", "abc123", 3600); // expires in 1 hour
+
+// Set cookie with custom path
+CookieUtil.setCookie("pref", "dark", 86400, "/settings"); // expires in 1 day, path /settings
+
+// Set secure cookie (HTTPS only)
+CookieUtil.setCookie("token", "secret", 3600, "/", true);
+
+// Delete cookie
+CookieUtil.deleteCookie("username");
+
+// Delete cookie with custom path
+CookieUtil.deleteCookie("pref", "/settings");
+```
+
+**Methods:**
+
+- `getCookie(name: string): string | null` - Get cookie value, returns null if not found
+- `getCookieByString(name: string): string` - Get cookie value, returns empty string if not found
+- `setCookie(name: string, value: string, maxAgeSeconds?: number, path?: string, secure?: boolean): void` - Set cookie
+- `deleteCookie(name: string, path?: string): void` - Delete cookie by setting max-age to 0
+
+### 4.8 PriorityQueue
+
+Priority queue implementation where elements are ordered by priority (lower numbers = higher priority).
+
+```typescript
+import { PriorityQueue } from "tsb-fontos-core";
+
+// Create priority queue
+const queue = new PriorityQueue<string>();
+
+// Enqueue items with priority (lower number = higher priority)
+queue.enqueue("high priority", 1);
+queue.enqueue("medium priority", 5);
+queue.enqueue("low priority", 10);
+queue.enqueue("very high priority", 0);
+
+// Get front element (highest priority, without removing)
+const front = queue.front(); // "very high priority"
+
+// Get rear element (lowest priority, without removing)
+const rear = queue.rear(); // "low priority"
+
+// Dequeue (remove and get highest priority element)
+const item1 = queue.dequeue(); // "very high priority"
+const item2 = queue.dequeue(); // "high priority"
+
+// Check if queue is empty
+const isEmpty = queue.isEmpty(); // false
+
+// Get queue length
+const length = queue.length; // 2
+
+// Print queue (for debugging)
+const queueStr = queue.printPQueue(); // "medium priority low priority "
+```
+
+**Properties:**
+
+- `items: Entry<T>[]` - Array of queue entries (internal)
+
+**Methods:**
+
+- `enqueue(element: T, priority: number): void` - Add element with priority (lower = higher priority)
+- `dequeue(): T | undefined` - Remove and return highest priority element
+- `isEmpty(): boolean` - Check if queue is empty
+- `front(): T | undefined` - Get highest priority element without removing
+- `rear(): T | undefined` - Get lowest priority element without removing
+- `printPQueue(): string` - Return string representation of queue
+- `get length(): number` - Get number of elements in queue
+
+### 4.9 SortedMap
+
+Map implementation that automatically maintains sorted order of entries by key. Extends the native `Map<K, V>` class.
+
+```typescript
+import { SortedMap } from "tsb-fontos-core";
+
+// Create sorted map
+const map = new SortedMap<string, number>();
+
+// Add entries (automatically sorted by key)
+map.set("zebra", 100);
+map.set("apple", 200);
+map.set("banana", 300);
+
+// Entries are automatically sorted
+for (const [key, value] of map) {
+  console.log(key, value);
+}
+// Output:
+// apple 200
+// banana 300
+// zebra 100
+
+// Get value
+const value = map.get("apple"); // 200
+
+// All Map methods are available
+map.has("banana"); // true
+map.delete("zebra");
+map.size; // 2
+map.clear();
+```
+
+**Note:** The map is sorted whenever a new entry is added via `set()`. The sorting is based on the natural order of keys (using `Array.sort()`).
+
+### 4.10 CallbackManager
+
+Static utility class for managing callback functions with registration and invocation by key.
+
+```typescript
+import { CallbackManager } from "tsb-fontos-core";
+
+// Register callback with a key
+CallbackManager.registerCallback("onSave", () => {
+  console.log("Save button clicked");
+});
+
+CallbackManager.registerCallback("onDelete", () => {
+  console.log("Delete operation");
+});
+
+// Invoke callback by key
+CallbackManager.doCallback("onSave"); // "Save button clicked"
+CallbackManager.doCallback("onDelete"); // "Delete operation"
+
+// If callback doesn't exist, nothing happens (no error)
+CallbackManager.doCallback("nonExistent"); // (no output)
+```
+
+**Methods:**
+
+- `registerCallback(key: string, callback: Function): void` - Register a callback function with a key
+- `doCallback(key: string): void` - Invoke the callback registered with the given key (does nothing if key doesn't exist)
+
+**Note:** This is a static class that maintains a global map of callbacks. All callbacks are stored in memory and can be invoked from anywhere in the application.
+
+---
+
+## 5. Events
+
+### 5.1 TEvent
+
+Generic event class for type-safe event handling.
+
+```typescript
+import { TEvent, TEventHandler } from "tsb-fontos-core";
+
+// Create event
+const event = new TEvent<string>();
+
+// Subscribe to event
+const handler: TEventHandler<string> = (sender, args) => {
+  console.log("Event fired:", args);
+};
+event.subscribe(handler);
+
+// Fire event
+event.fire(this, "event data");
+
+// Unsubscribe
+event.unsubscribe(handler);
+```
+
+### 5.2 TEventArgs
+
+Base class for event arguments.
+
+```typescript
+import { TEventArgs } from "tsb-fontos-core";
+
+// Create custom event args
+class CustomEventArgs extends TEventArgs {
+  constructor(public data: string) {
+    super();
+  }
+}
+
+// Use in event
+const event = new TEvent<CustomEventArgs>();
+event.fire(this, new CustomEventArgs("test"));
+```
+
+### 5.3 TPropertyChangedEvent
+
+Event for property change notifications.
+
+```typescript
+import {
+  TPropertyChangedEvent,
+  TPropertyChangedEventArgs
+} from "tsb-fontos-core";
+
+class MyClass {
+  private _name: string = "";
+  public readonly propertyChanged = new TPropertyChangedEvent();
+
+  get name(): string {
+    return this._name;
+  }
+
+  set name(value: string) {
+    if (this._name !== value) {
+      const oldValue = this._name;
+      this._name = value;
+      this.propertyChanged.fire(
+        this,
+        new TPropertyChangedEventArgs("name", oldValue, value)
+      );
+    }
+  }
+}
+
+// Subscribe to property changes
+const obj = new MyClass();
+obj.propertyChanged.subscribe((sender, args) => {
+  console.log(`Property ${args.propertyName} changed from ${args.oldValue} to ${args.newValue}`);
+});
+```
+
+---
+
+## 6. Common Structures
+
+### 6.1 DayOfWeek
+
+Enumeration for days of the week. Values correspond to JavaScript Date.getDay() return values (0 = Sunday, 6 = Saturday).
+
+```typescript
+import { DayOfWeek } from "tsb-fontos-core";
+
+// Use day of week
+const today = new Date().getDay();
+const day = DayOfWeek[today]; // DayOfWeek.Monday, etc.
+
+// Check specific day
+if (day === DayOfWeek.Monday) {
+  console.log("It's Monday!");
+}
+
+// Check if weekend
+const isWeekend = day === DayOfWeek.Saturday || day === DayOfWeek.Sunday;
+
+// Enum values
+DayOfWeek.Sunday; // 0
+DayOfWeek.Monday; // 1
+DayOfWeek.Tuesday; // 2
+DayOfWeek.Wednesday; // 3
+DayOfWeek.Thursday; // 4
+DayOfWeek.Friday; // 5
+DayOfWeek.Saturday; // 6
+```
+
+### 6.2 OpCodes
+
+Enumeration for operation codes used to track data item CRUD states and operations.
+
+```typescript
+import { OpCodes } from "tsb-fontos-core";
+
+// Use operation codes
+const createOp = OpCodes.CREATE; // "CREATE"
+const readOp = OpCodes.READ; // "READ"
+const updateOp = OpCodes.UPDATE; // "UPDATE"
+const deleteOp = OpCodes.DELETE; // "DELETE"
+const errorOp = OpCodes.ERROR; // "ERROR"
+const noOp = OpCodes.NONE; // "NONE"
+
+// Check operation code
+if (item.opCode === OpCodes.CREATE) {
+  // Handle new item
+} else if (item.opCode === OpCodes.UPDATE) {
+  // Handle updated item
+} else if (item.opCode === OpCodes.DELETE) {
+  // Handle deleted item
+}
+```
+
+**Enum Values:**
+
+- `CREATE = "CREATE"` - Item is newly created
+- `READ = "READ"` - Item is being read
+- `UPDATE = "UPDATE"` - Item is being updated
+- `DELETE = "DELETE"` - Item is marked for deletion
+- `ERROR = "ERROR"` - Operation resulted in error
+- `NONE = "NONE"` - No operation (default state)
+
+---
+
+## 7. Data Items
+
+### 7.1 IDataItem
+
+Interface for data items with operation tracking.
+
+```typescript
+import type { IDataItem } from "tsb-fontos-core";
+
+class MyDataItem implements IDataItem {
+  opCode: string = OpCodes.None;
+  // ... other properties
+}
+```
+
+### 7.2 BaseDataItem
+
+Base class for data items with property change events and change tracking. **This class is designed to be extended by client applications when creating custom data item classes.** It provides automatic GUID generation, operation code tracking, property change notifications, and backup functionality.
+
+**Properties:**
+
+- `guid: Guid` - Unique identifier automatically generated using `Guid.create()` when the item is instantiated
+- `opCode: OpCodes` - Operation code indicating the current state of the item (NONE, CREATE, READ, UPDATE, DELETE, ERROR). Automatically changes to UPDATE when properties are modified (if not READ or DELETE state)
+- `key?: string` - Optional key identifier for the item. Defaults to `"NOT_ASSIGNED_KEY"` in constructor. Mapped to JSON property `"Key"` when serializing
+- `lockNotifyPropertyChanged: boolean` - Flag to lock/unlock property change notifications. When `true`, property changes won't trigger notifications or opCode changes. Defaults to `true`
+- `backupItem: BaseDataItem | undefined` - Backup copy of the item for undo/rollback operations. Created using `makeBackupItem()`
+
+**Methods:**
+
+- `notifyPropertyChanged(propertyName: string): void` - Notifies that a property has changed. Automatically changes opCode to UPDATE (unless READ or DELETE). Only works if `lockNotifyPropertyChanged` is `false`
+- `setPropertyChanged(propertyName: string): void` - Directly fires the property changed event if handlers are registered
+- `makeBackupItem(): void` - Creates a deep copy backup of the current item and stores it in `backupItem`. Unlocks property change notifications
+- `addPropertyChangedHandler(eventHandler: TPropertyChangedEventDelegate): void` - Registers a handler for property change events
+- `removePropertyChangedHandler(eventHandler: TPropertyChangedEventDelegate): void` - Unregisters a property change event handler
+
+**Usage Example:**
+
+```typescript
+import { BaseDataItem, OpCodes } from "tsb-fontos-core";
+
+// Extend BaseDataItem to create your custom item class
+class ProductItem extends BaseDataItem {
+  private _name: string = "";
+  private _price: number = 0;
+
+  get name(): string {
+    return this._name;
+  }
+
+  set name(value: string) {
+    if (this._name !== value) {
+      this._name = value;
+      // Notify property change (unlocks notifications first)
+      this.notifyPropertyChanged("name");
+    }
+  }
+
+  get price(): number {
+    return this._price;
+  }
+
+  set price(value: number) {
+    if (this._price !== value) {
+      this._price = value;
+      this.notifyPropertyChanged("price");
+    }
+  }
+}
+
+// Usage
+const product = new ProductItem();
+console.log(product.guid); // Automatically generated GUID
+console.log(product.key); // "NOT_ASSIGNED_KEY"
+console.log(product.opCode); // OpCodes.NONE
+
+// Set key
+product.key = "PROD-001";
+
+// Modify properties (automatically changes opCode to UPDATE)
+product.lockNotifyPropertyChanged = false; // Unlock notifications
+product.name = "Product 1"; // opCode changes to UPDATE
+product.price = 100;
+
+// Mark as new item
+product.opCode = OpCodes.CREATE;
+
+// Create backup for undo functionality
+product.makeBackupItem();
+product.name = "Product 2"; // Modify after backup
+// product.backupItem.name is still "Product 1"
+
+// Subscribe to property changes
+product.addPropertyChangedHandler((event) => {
+  console.log(`Property ${event.propertyName} changed on item ${event.item.key}`);
+});
+
+// When properties change, handler is called
+product.price = 200; // Handler fires
+```
+
+**Key Points:**
+
+1. **Client applications should extend this class** to create their own data item types
+2. Property change notifications are locked by default (`lockNotifyPropertyChanged = true`)
+3. When `notifyPropertyChanged()` is called, opCode automatically changes to UPDATE (unless it's READ or DELETE)
+4. The `key` property is used for identification and is mapped to JSON property `"Key"` during serialization
+5. Backup functionality allows for undo/rollback operations by storing a copy of the item before changes
+6. GUID is automatically generated for each instance, providing a unique identifier
+
+### 7.3 BaseItemList
+
+Base class for collections of data items. Extends JavaScript's native `Array` class and provides additional functionality for managing collections of data items.
+
+**Important:** The generic type parameter `T` must extend `IDataItem` interface. **Client applications can use classes that inherit from `BaseDataItem` as the generic type.**
+
+**Properties:**
+
+- `isChangedList: boolean` (protected) - Indicates if the list has been modified
+- `isBackupRequired: boolean` - Whether backup items should be created automatically when items are added
+
+**Methods:**
+
+- `getItem(key: string): T | undefined` - Get item by key
+- `getItemBySortedMap<TKey>(key: TKey): T | undefined` - Get item using sorted map lookup
+- `getSortedMap<TKey>(sample?: TKey): Map<TKey, T>` - Get sorted map of items by key
+- `getItemByProp(propName: string, compareValue: any): T | undefined` - Get item by property value
+- `addEntry(key: string, item: T): boolean` - Add item with a key
+- `removeEntry(key: string): boolean` - Remove item by key
+- `containsKey(key: string): boolean` - Check if key exists in the list
+- `clear(): void` - Clear all items
+- `setChangedStatus(isChanged: boolean): void` - Set changed status
+- `getList(propName: string, compareValue: string): T[]` - Get filtered list by property value
+
+**Usage:**
+
+```typescript
+import { BaseItemList, BaseDataItem, OpCodes } from "tsb-fontos-core";
+
+// First, create a data item class extending BaseDataItem
+class ProductItem extends BaseDataItem {
+  private _name: string = "";
+  private _price: number = 0;
+
+  get name(): string {
+    return this._name;
+  }
+
+  set name(value: string) {
+    if (this._name !== value) {
+      this._name = value;
+      this.notifyPropertyChanged("name");
+    }
+  }
+
+  get price(): number {
+    return this._price;
+  }
+
+  set price(value: number) {
+    if (this._price !== value) {
+      this._price = value;
+      this.notifyPropertyChanged("price");
+    }
+  }
+}
+
+// Create list class - generic type must extend BaseDataItem
+class ProductList extends BaseItemList<ProductItem> {
+  constructor(list?: ProductItem[], isBackupRequired?: boolean) {
+    super(list, isBackupRequired);
+  }
+
+  // Add custom methods
+  findByPrice(minPrice: number): ProductItem[] {
+    return this.filter(item => item.price >= minPrice);
+  }
+}
+
+// Usage
+const products = new ProductList();
+
+// Create items
+const product1 = new ProductItem();
+product1.key = "PROD-001";
+product1.name = "Product 1";
+product1.price = 100;
+
+const product2 = new ProductItem();
+product2.key = "PROD-002";
+product2.name = "Product 2";
+product2.price = 200;
+
+// Add items using addEntry (sets key automatically)
+products.addEntry("PROD-001", product1);
+products.addEntry("PROD-002", product2);
+
+// Or use native array methods
+products.push(product1);
+products.push(product2);
+
+// Access items
+const firstProduct = products[0];
+const itemByKey = products.getItem("PROD-001");
+
+// Check if key exists
+const exists = products.containsKey("PROD-001"); // true
+
+// Get sorted map
+const sortedMap = products.getSortedMap<string>();
+
+// Get item by property
+const foundProduct = products.getItemByProp("name", "Product 1");
+
+// Filter by property
+const expensiveProducts = products.getList("price", "200");
+
+// Iterate (native array methods work)
+for (const product of products) {
+  console.log(product.name, product.price);
+}
+
+// Use custom method
+const highPriceProducts = products.findByPrice(150);
+```
+
+**Key Points:**
+
+1. **The generic type `T` must be a class that extends `IDataItem`**
+2. Extends native `Array<T>`, so all array methods (push, pop, filter, map, etc.) are available
+3. Provides key-based lookup and sorted map functionality
+4. Supports automatic backup creation when `isBackupRequired` is `true`
+5. Tracks change status for efficient updates
+
+---
+
+## 8. Commands
+
+### 8.1 CommandUndoManager
+
+Manages undo/redo operations for commands.
+
+```typescript
+import { CommandUndoManager, ActionCommand } from "tsb-fontos-core";
+
+// Create undo manager
+const undoManager = new CommandUndoManager();
+
+// Execute command
+const command = new ActionCommand(
+  () => console.log("Do"),
+  () => console.log("Undo")
+);
+undoManager.execute(command);
+
+// Undo last command
+undoManager.undo();
+
+// Redo last undone command
+undoManager.redo();
+
+// Check if undo/redo is available
+const canUndo = undoManager.canUndo();
+const canRedo = undoManager.canRedo();
+```
+
+### 8.2 ActionCommand
+
+Command implementation for actions with undo support.
+
+```typescript
+import { ActionCommand } from "tsb-fontos-core";
+
+// Create command with do/undo actions
+const command = new ActionCommand(
+  () => {
+    // Execute action
+    item.opCode = OpCodes.Add;
+  },
+  () => {
+    // Undo action
+    item.opCode = OpCodes.None;
+  }
+);
+
+// Execute command
+command.execute();
+
+// Undo command
+command.undo();
+```
+
+### 8.3 CommandAdd
+
+Command for adding items to collections.
+
+```typescript
+import { CommandAdd } from "tsb-fontos-core";
+
+// Create add command
+const command = new CommandAdd(itemList, newItem);
+
+// Execute
+command.execute(); // Adds item to list
+
+// Undo
+command.undo(); // Removes item from list
+```
+
+### 8.4 CommandDelete
+
+Command for deleting items from collections.
+
+```typescript
+import { CommandDelete } from "tsb-fontos-core";
+
+// Create delete command
+const command = new CommandDelete(itemList, itemToDelete);
+
+// Execute
+command.execute(); // Removes item from list
+
+// Undo
+command.undo(); // Restores item to list
+```
+
+---
+
+## 9. JSON Mapping
+
+### 9.1 JsonMapperBindingUtil
+
+Utility class for JSON serialization and deserialization with decorator-based property mapping support. **This is the primary utility for JSON mapping in the framework.** It supports property name mapping, nested objects, arrays, and BaseDataItem instances.
+
+**Key Features:**
+
+- Property name mapping using `@JsonMapperProperty` decorator
+- Automatic handling of nested objects and arrays
+- Support for `BaseDataItem` instances
+- Type-safe deserialization with class constructors
+- Recursive serialization/deserialization
+
+**Methods:**
+
+- `serialize(instance: any): any` - Serialize object/instance to JSON
+- `serializeList(instanceList: any): any[]` - Serialize array of objects to JSON array
+- `deserialize<T>(clazz: { new (): T }, obj: any): T` - Deserialize JSON to object instance
+- `deserializeList<T>(clazz: { new (): T }, obj: any): T[]` - Deserialize JSON array to array of object instances
+
+**JsonMapperProperty Decorator:**
+
+The `@JsonMapperProperty` decorator is used to map TypeScript property names to JSON property names and specify nested class types.
+
+```typescript
+import {
+  JsonMapperBindingUtil,
+  JsonMapperProperty
+} from "tsb-fontos-core";
+
+// Simple property name mapping
+class User {
+  @JsonMapperProperty("user_name")
+  public name: string = "";
+
+  @JsonMapperProperty("user_id")
+  public id: number = 0;
+}
+
+// With nested class type
+class Address {
+  @JsonMapperProperty("street_address")
+  public street: string = "";
+
+  @JsonMapperProperty("city_name")
+  public city: string = "";
+}
+
+class Person {
+  @JsonMapperProperty("full_name")
+  public name: string = "";
+
+  @JsonMapperProperty({ name: "home_address", clazz: Address })
+  public address: Address = new Address();
+}
+
+// Serialize to JSON
+const person = new Person();
+person.name = "John Doe";
+person.address.street = "123 Main St";
+person.address.city = "New York";
+
+const json = JsonMapperBindingUtil.serialize(person);
+// Result: { full_name: "John Doe", home_address: { street_address: "123 Main St", city_name: "New York" } }
+
+// Deserialize from JSON
+const jsonData = {
+  full_name: "Jane Doe",
+  home_address: {
+    street_address: "456 Oak Ave",
+    city_name: "Los Angeles"
+  }
+};
+
+const person2 = JsonMapperBindingUtil.deserialize(Person, jsonData);
+console.log(person2.name); // "Jane Doe"
+console.log(person2.address.city); // "Los Angeles"
+```
+
+**Array Serialization/Deserialization:**
+
+```typescript
+class Product extends BaseDataItem {
+  @JsonMapperProperty("product_name")
+  public name: string = "";
+
+  @JsonMapperProperty("product_price")
+  public price: number = 0;
+}
+
+// Serialize array
+const products = [
+  new Product(),
+  new Product()
+];
+products[0].name = "Product 1";
+products[0].price = 100;
+products[1].name = "Product 2";
+products[1].price = 200;
+
+const jsonArray = JsonMapperBindingUtil.serializeList(products);
+// Result: [{ product_name: "Product 1", product_price: 100 }, { product_name: "Product 2", product_price: 200 }]
+
+// Deserialize array
+const jsonData = [
+  { product_name: "Product 3", product_price: 300 },
+  { product_name: "Product 4", product_price: 400 }
+];
+
+const products2 = JsonMapperBindingUtil.deserializeList(Product, jsonData);
+console.log(products2.length); // 2
+console.log(products2[0].name); // "Product 3"
+```
+
+**Nested Arrays:**
+
+```typescript
+class OrderItem {
+  @JsonMapperProperty("item_name")
+  public name: string = "";
+
+  @JsonMapperProperty("quantity")
+  public quantity: number = 0;
+}
+
+class Order {
+  @JsonMapperProperty("order_id")
+  public id: string = "";
+
+  @JsonMapperProperty({ name: "items", clazz: OrderItem })
+  public items: OrderItem[] = [];
+}
+
+// Usage
+const order = new Order();
+order.id = "ORD-001";
+order.items = [
+  { name: "Item 1", quantity: 2 } as OrderItem,
+  { name: "Item 2", quantity: 3 } as OrderItem
+];
+
+const json = JsonMapperBindingUtil.serialize(order);
+// Result: { order_id: "ORD-001", items: [{ item_name: "Item 1", quantity: 2 }, { item_name: "Item 2", quantity: 3 }] }
+```
+
+**BaseDataItem Support:**
+
+`JsonMapperBindingUtil` automatically handles `BaseDataItem` instances:
+
+```typescript
+class ProductItem extends BaseDataItem {
+  @JsonMapperProperty("name")
+  private _name: string = "";
+
+  get name(): string {
+    return this._name;
+  }
+
+  set name(value: string) {
+    this._name = value;
+    this.notifyPropertyChanged("name");
+  }
+}
+
+// BaseDataItem instances are automatically serialized recursively
+const product = new ProductItem();
+product.key = "PROD-001";
+product.name = "Product";
+
+const json = JsonMapperBindingUtil.serialize(product);
+// Includes all BaseDataItem properties (guid, opCode, key, etc.)
+```
+
+**Complete Example:**
+
+```typescript
+import {
+  JsonMapperBindingUtil,
+  JsonMapperProperty,
+  BaseDataItem
+} from "tsb-fontos-core";
+
+// Define nested classes
+class Category extends BaseDataItem {
+  @JsonMapperProperty("category_name")
+  public name: string = "";
+}
+
+class Product extends BaseDataItem {
+  @JsonMapperProperty("product_name")
+  public name: string = "";
+
+  @JsonMapperProperty("product_price")
+  public price: number = 0;
+
+  @JsonMapperProperty({ name: "product_category", clazz: Category })
+  public category: Category = new Category();
+
+  @JsonMapperProperty({ name: "tags", clazz: String })
+  public tags: string[] = [];
+}
+
+// Serialize
+const product = new Product();
+product.name = "Laptop";
+product.price = 999;
+product.category.name = "Electronics";
+product.tags = ["computer", "portable"];
+
+const json = JsonMapperBindingUtil.serialize(product);
+console.log(JSON.stringify(json, null, 2));
+/*
+{
+  "product_name": "Laptop",
+  "product_price": 999,
+  "product_category": {
+    "category_name": "Electronics",
+    "guid": "...",
+    "opCode": "NONE",
+    "key": "NOT_ASSIGNED_KEY"
+  },
+  "tags": ["computer", "portable"],
+  "guid": "...",
+  "opCode": "NONE",
+  "key": "NOT_ASSIGNED_KEY"
+}
+*/
+
+// Deserialize
+const jsonData = {
+  product_name: "Smartphone",
+  product_price: 599,
+  product_category: {
+    category_name: "Electronics"
+  },
+  tags: ["mobile", "smart"]
+};
+
+const product2 = JsonMapperBindingUtil.deserialize(Product, jsonData);
+console.log(product2.name); // "Smartphone"
+console.log(product2.category.name); // "Electronics"
+console.log(product2.tags); // ["mobile", "smart"]
+```
+
+**Key Points:**
+
+1. **Use `@JsonMapperProperty` decorator** to map property names and specify nested types
+2. **For simple property mapping**, use string: `@JsonMapperProperty("json_name")`
+3. **For nested objects/arrays**, use object: `@JsonMapperProperty({ name: "json_name", clazz: ClassType })`
+4. **BaseDataItem instances** are automatically handled recursively
+5. **Arrays** are automatically serialized/deserialized when using `serializeList`/`deserializeList`
+6. **Null/undefined values** are handled gracefully
+7. **Requires `reflect-metadata`** to be imported for decorator support
+
+### 9.3 MapDecoratorMetaData
+
+Metadata class for mapping `Map<K, V>` type properties to/from JSON. When serializing to JSON, Map objects are converted to arrays, and when deserializing, arrays are converted back to Map objects. This metadata provides the necessary information for this conversion process.
+
+**Constructor Parameters:**
+
+- `jsonPropertyName: string` - The name of the property in JSON
+- `valueClass: Class` - The class type for Map values
+
+**Usage:**
+
+`MapDecoratorMetaData` is used with `@JsonMapperProperty` decorator to specify how Map properties should be serialized/deserialized.
+
+```typescript
+import { MapDecoratorMetaData, JsonMapperProperty } from "tsb-fontos-core";
+
+class YBayItem {
+  // ... properties
+}
+
+class BlockItem {
+  // Map property with MapDecoratorMetaData
+  @JsonMapperProperty(new MapDecoratorMetaData<YBayItem>("bayList", YBayItem))
+  private _bayList!: Map<number, YBayItem>;
+  
+  public get bayList(): Map<number, YBayItem> {
+    return this._bayList;
+  }
+  
+  public set bayList(value: Map<number, YBayItem>) {
+    this._bayList = value;
+  }
+}
+
+// When serializing to JSON:
+// Map<number, YBayItem> -> JSON array
+// { bayList: [{...}, {...}] }
+
+// When deserializing from JSON:
+// JSON array -> Map<number, YBayItem>
+// [{...}, {...}] -> Map with proper YBayItem instances
+```
+
+**Complete Example:**
+
+```typescript
+import { MapDecoratorMetaData, JsonMapperProperty, JsonMapperBindingUtil } from "tsb-fontos-core";
+
+class ProductItem {
+  id: number = 0;
+  name: string = "";
+}
+
+class OrderItem {
+  @JsonMapperProperty(new MapDecoratorMetaData<ProductItem>("products", ProductItem))
+  private _products!: Map<number, ProductItem>;
+  
+  get products(): Map<number, ProductItem> {
+    return this._products;
+  }
+  
+  set products(value: Map<number, ProductItem>) {
+    this._products = value;
+  }
+}
+
+// Usage with JsonMapperBindingUtil
+const order = new OrderItem();
+const product1 = new ProductItem();
+product1.id = 1;
+product1.name = "Product 1";
+
+const product2 = new ProductItem();
+product2.id = 2;
+product2.name = "Product 2";
+
+order.products = new Map([
+  [1, product1],
+  [2, product2]
+]);
+
+// Serialize to JSON - Map becomes array
+const json = JsonMapperBindingUtil.serialize(order);
+// Result: { products: [{ id: 1, name: "Product 1" }, { id: 2, name: "Product 2" }] }
+
+// Deserialize from JSON - Array becomes Map
+const restoredOrder = JsonMapperBindingUtil.deserialize<OrderItem>(OrderItem, json);
+// restoredOrder.products is now Map<number, ProductItem>
+```
+
+**Key Points:**
+
+- Map keys are typically preserved as object properties or array indices
+- Map values are converted to/from the specified class type
+- The JSON property name can differ from the TypeScript property name
+- Supports nested Map structures when combined with other metadata types
+
+### 9.4 ArrayMetaData
+
+Metadata class for mapping array type properties (`T[]`) to/from JSON. Used with `@JsonMapperProperty` decorator to specify how array properties should be serialized/deserialized. This is for **regular arrays** (one-dimensional arrays).
+
+**Constructor Parameters:**
+
+- `name: string` - The name of the property in JSON
+- `type: { new (): T }` - The class type for array elements
+
+**Usage:**
+
+`ArrayMetaData` is used with `@JsonMapperProperty` decorator to specify how array properties should be serialized/deserialized.
+
+```typescript
+import { ArrayMetaData, JsonMapperProperty, JsonMapperBindingUtil } from "tsb-fontos-core";
+
+class ProductItem {
+  id: number = 0;
+  name: string = "";
+}
+
+class OrderItem {
+  @JsonMapperProperty(new ArrayMetaData<ProductItem>("products", ProductItem))
+  private _products!: ProductItem[];
+  
+  get products(): ProductItem[] {
+    return this._products;
+  }
+  
+  set products(value: ProductItem[]) {
+    this._products = value;
+  }
+}
+
+// Usage with JsonMapperBindingUtil
+const order = new OrderItem();
+const product1 = new ProductItem();
+product1.id = 1;
+product1.name = "Product 1";
+
+const product2 = new ProductItem();
+product2.id = 2;
+product2.name = "Product 2";
+
+order.products = [product1, product2];
+
+// Serialize to JSON - Array stays as array
+const json = JsonMapperBindingUtil.serialize(order);
+// Result: { products: [{ id: 1, name: "Product 1" }, { id: 2, name: "Product 2" }] }
+
+// Deserialize from JSON - Array becomes typed array
+const jsonData = {
+  products: [
+    { id: 3, name: "Product 3" },
+    { id: 4, name: "Product 4" }
+  ]
+};
+
+const restoredOrder = JsonMapperBindingUtil.deserialize<OrderItem>(OrderItem, jsonData);
+// restoredOrder.products is now ProductItem[]
+console.log(restoredOrder.products[0].name); // "Product 3"
+```
+
+**Complete Example:**
+
+```typescript
+import { ArrayMetaData, JsonMapperProperty, JsonMapperBindingUtil } from "tsb-fontos-core";
+
+class TagItem {
+  @JsonMapperProperty("tag_name")
+  public name: string = "";
+}
+
+class Product extends BaseDataItem {
+  @JsonMapperProperty("product_name")
+  public name: string = "";
+
+  @JsonMapperProperty(new ArrayMetaData<TagItem>("tags", TagItem))
+  public tags: TagItem[] = [];
+}
+
+// Serialize
+const product = new Product();
+product.name = "Laptop";
+product.tags = [
+  { name: "electronics" } as TagItem,
+  { name: "portable" } as TagItem
+];
+
+const json = JsonMapperBindingUtil.serialize(product);
+// Result: { product_name: "Laptop", tags: [{ tag_name: "electronics" }, { tag_name: "portable" }] }
+
+// Deserialize
+const jsonData = {
+  product_name: "Smartphone",
+  tags: [
+    { tag_name: "mobile" },
+    { tag_name: "smart" }
+  ]
+};
+
+const product2 = JsonMapperBindingUtil.deserialize<Product>(Product, jsonData);
+// product2.tags is ProductItem[] with proper instances
+```
+
+**Key Points:**
+
+- Used for **regular arrays** (`T[]`) - one-dimensional arrays
+- Array elements are converted to/from the specified class type
+- The JSON property name can differ from the TypeScript property name
+- Supports nested object arrays when combined with other metadata types
+
+### 9.5 DimensionalArrayMetaData
+
+Metadata class for mapping multi-dimensional array type properties (`T[][]`) to/from JSON. Used with `@JsonMapperProperty` decorator to specify how multi-dimensional array properties should be serialized/deserialized. This is for **multi-dimensional arrays** (arrays of arrays).
+
+**Constructor Parameters:**
+
+- `name: string` - The name of the property in JSON
+- `type: { new (): T }` - The class type for array elements
+
+**Usage:**
+
+`DimensionalArrayMetaData` is used with `@JsonMapperProperty` decorator to specify how multi-dimensional array properties should be serialized/deserialized.
+
+```typescript
+import { DimensionalArrayMetaData, JsonMapperProperty, JsonMapperBindingUtil } from "tsb-fontos-core";
+
+class CellItem {
+  value: number = 0;
+  color: string = "";
+}
+
+class GridItem {
+  @JsonMapperProperty(new DimensionalArrayMetaData<CellItem>("cells", CellItem))
+  private _cells!: CellItem[][];
+  
+  get cells(): CellItem[][] {
+    return this._cells;
+  }
+  
+  set cells(value: CellItem[][]) {
+    this._cells = value;
+  }
+}
+
+// Usage with JsonMapperBindingUtil
+const grid = new GridItem();
+
+// Create 2D array
+const row1 = [
+  { value: 1, color: "red" } as CellItem,
+  { value: 2, color: "blue" } as CellItem
+];
+const row2 = [
+  { value: 3, color: "green" } as CellItem,
+  { value: 4, color: "yellow" } as CellItem
+];
+
+grid.cells = [row1, row2];
+
+// Serialize to JSON - 2D array stays as 2D array
+const json = JsonMapperBindingUtil.serialize(grid);
+// Result: { 
+//   cells: [
+//     [{ value: 1, color: "red" }, { value: 2, color: "blue" }],
+//     [{ value: 3, color: "green" }, { value: 4, color: "yellow" }]
+//   ]
+// }
+
+// Deserialize from JSON - 2D array becomes typed 2D array
+const jsonData = {
+  cells: [
+    [{ value: 5, color: "purple" }, { value: 6, color: "orange" }],
+    [{ value: 7, color: "pink" }, { value: 8, color: "cyan" }]
+  ]
+};
+
+const restoredGrid = JsonMapperBindingUtil.deserialize<GridItem>(GridItem, jsonData);
+// restoredGrid.cells is now CellItem[][]
+console.log(restoredGrid.cells[0][0].value); // 5
+console.log(restoredGrid.cells[1][1].color); // "cyan"
+```
+
+**Complete Example:**
+
+```typescript
+import { DimensionalArrayMetaData, JsonMapperProperty, JsonMapperBindingUtil } from "tsb-fontos-core";
+
+class SeatItem {
+  @JsonMapperProperty("seat_number")
+  public number: string = "";
+
+  @JsonMapperProperty("is_occupied")
+  public occupied: boolean = false;
+}
+
+class Theater extends BaseDataItem {
+  @JsonMapperProperty("theater_name")
+  public name: string = "";
+
+  @JsonMapperProperty(new DimensionalArrayMetaData<SeatItem>("seats", SeatItem))
+  public seats: SeatItem[][] = []; // 2D array: rows of seats
+}
+
+// Serialize
+const theater = new Theater();
+theater.name = "Main Theater";
+theater.seats = [
+  // Row 1
+  [
+    { number: "A1", occupied: false } as SeatItem,
+    { number: "A2", occupied: true } as SeatItem,
+    { number: "A3", occupied: false } as SeatItem
+  ],
+  // Row 2
+  [
+    { number: "B1", occupied: true } as SeatItem,
+    { number: "B2", occupied: true } as SeatItem,
+    { number: "B3", occupied: false } as SeatItem
+  ]
+];
+
+const json = JsonMapperBindingUtil.serialize(theater);
+// Result: {
+//   theater_name: "Main Theater",
+//   seats: [
+//     [
+//       { seat_number: "A1", is_occupied: false },
+//       { seat_number: "A2", is_occupied: true },
+//       { seat_number: "A3", is_occupied: false }
+//     ],
+//     [
+//       { seat_number: "B1", is_occupied: true },
+//       { seat_number: "B2", is_occupied: true },
+//       { seat_number: "B3", is_occupied: false }
+//     ]
+//   ]
+// }
+
+// Deserialize
+const jsonData = {
+  theater_name: "VIP Theater",
+  seats: [
+    [
+      { seat_number: "V1", is_occupied: false },
+      { seat_number: "V2", is_occupied: true }
+    ],
+    [
+      { seat_number: "V3", is_occupied: false },
+      { seat_number: "V4", is_occupied: false }
+    ]
+  ]
+};
+
+const theater2 = JsonMapperBindingUtil.deserialize<Theater>(Theater, jsonData);
+// theater2.seats is SeatItem[][] with proper instances
+console.log(theater2.seats[0][0].number); // "V1"
+console.log(theater2.seats[1][1].occupied); // false
+```
+
+**Key Points:**
+
+- Used for **multi-dimensional arrays** (`T[][]`) - arrays of arrays
+- Each element in the nested arrays is converted to/from the specified class type
+- The JSON property name can differ from the TypeScript property name
+- Supports nested object arrays in multi-dimensional structures
+- Commonly used for grid/matrix data structures, seating charts, game boards, etc.
+
+---
+
+## 10. Logger
+
+### 10.1 GeneralLogger
+
+Static utility class for application logging. Provides console-based logging methods and remote logging capabilities. All log methods output to the browser console with a prefix indicating the log level.
+
+**Methods:**
+
+- `debug(message: any): void` - Log debug message (prefix: "Debug : ")
+- `info(message: any): void` - Log info message (prefix: "Info : ")
+- `warn(message: any): void` - Log warning message (prefix: "Warn : ")
+- `error(message: any): void` - Log error message (prefix: "Error : ")
+- `fatal(message: any): void` - Log fatal error message (prefix: "Fatal : ")
+- `remoteWriteLog(logLevel: FrontendLogLevel, logItem: any): void` - Write log to remote log service
+
+**Basic Usage:**
+
+```typescript
+import { GeneralLogger } from "tsb-fontos-core";
+
+// Log different levels
+GeneralLogger.debug("Debug information");
+GeneralLogger.info("Information message");
+GeneralLogger.warn("Warning message");
+GeneralLogger.error("Error occurred");
+GeneralLogger.fatal("Fatal error occurred");
+
+// Log with objects/values
+GeneralLogger.info("User logged in: " + userId);
+GeneralLogger.error("Failed to load data: " + JSON.stringify(errorData));
+```
+
+**Error Handling in Try-Catch:**
+
+The most common use case for `GeneralLogger` is logging errors in try-catch blocks:
+
+```typescript
+import { GeneralLogger } from "tsb-fontos-core";
+
+// Basic error handling
+try {
+  // Some operation that might fail
+  const result = await fetchData();
+  GeneralLogger.info("Data fetched successfully");
+} catch (error) {
+  GeneralLogger.error("Failed to fetch data: " + error);
+  // Handle error appropriately
+}
+
+// Error handling with error object details
+try {
+  const response = await apiService.getProducts();
+  GeneralLogger.info("Products loaded: " + response.length + " items");
+} catch (error: any) {
+  GeneralLogger.error("API call failed: " + (error.message || error));
+  GeneralLogger.error("Error stack: " + (error.stack || "No stack trace"));
+  // Re-throw or handle error
+  throw error;
+}
+
+// Error handling with context information
+async function processOrder(orderId: string) {
+  try {
+    GeneralLogger.info("Processing order: " + orderId);
+    const order = await orderService.getOrder(orderId);
+    
+    if (!order) {
+      GeneralLogger.warn("Order not found: " + orderId);
+      return;
+    }
+    
+    await orderService.process(order);
+    GeneralLogger.info("Order processed successfully: " + orderId);
+  } catch (error: any) {
+    GeneralLogger.error("Failed to process order " + orderId + ": " + error);
+    GeneralLogger.error("Error details: " + JSON.stringify(error));
+    
+    // Log to remote service if needed
+    // GeneralLogger.remoteWriteLog(FrontendLogLevel.ERROR, {
+    //   message: "Order processing failed",
+    //   orderId: orderId,
+    //   error: error.toString()
+    // });
+    
+    throw error;
+  }
+}
+
+// Nested try-catch with different log levels
+function complexOperation() {
+  try {
+    GeneralLogger.info("Starting complex operation");
+    
+    try {
+      const data = loadData();
+      GeneralLogger.debug("Data loaded: " + data.length + " items");
+      
+      if (data.length === 0) {
+        GeneralLogger.warn("No data available");
+        return;
+      }
+      
+      processData(data);
+      GeneralLogger.info("Operation completed successfully");
+    } catch (innerError: any) {
+      GeneralLogger.error("Inner operation failed: " + innerError);
+      throw innerError;
+    }
+  } catch (outerError: any) {
+    GeneralLogger.fatal("Complex operation failed: " + outerError);
+    // Critical error handling
+  }
+}
+
+// Error handling in async operations
+async function fetchUserData(userId: string) {
+  try {
+    GeneralLogger.info("Fetching user data for: " + userId);
+    const user = await userService.getUser(userId);
+    
+    if (!user) {
+      GeneralLogger.warn("User not found: " + userId);
+      return null;
+    }
+    
+    GeneralLogger.debug("User data retrieved: " + JSON.stringify(user));
+    return user;
+  } catch (error: any) {
+    GeneralLogger.error("Error fetching user data for " + userId + ": " + error);
+    
+    // Log additional context
+    if (error.response) {
+      GeneralLogger.error("Response status: " + error.response.status);
+      GeneralLogger.error("Response data: " + JSON.stringify(error.response.data));
+    }
+    
+    return null;
+  }
+}
+```
+
+**Remote Logging:**
+
+```typescript
+import { GeneralLogger, FrontendLogLevel } from "tsb-fontos-core";
+
+// Write log to remote service
+try {
+  // Some operation
+  await processData();
+} catch (error: any) {
+  // Log to console
+  GeneralLogger.error("Operation failed: " + error);
+  
+  // Also log to remote service
+  GeneralLogger.remoteWriteLog(FrontendLogLevel.ERROR, {
+    message: "Operation failed",
+    error: error.toString(),
+    timestamp: new Date(),
+    userId: currentUserId,
+    moduleId: "ORDER_MODULE"
+  });
+}
+```
+
+**Best Practices:**
+
+1. **Use appropriate log levels:**
+   - `debug`: Detailed information for debugging
+   - `info`: General informational messages
+   - `warn`: Warning messages for potential issues
+   - `error`: Error messages for caught exceptions
+   - `fatal`: Critical errors that may cause application failure
+
+2. **Include context in error messages:**
+   ```typescript
+   catch (error: any) {
+     GeneralLogger.error("Failed to save order " + orderId + ": " + error);
+   }
+   ```
+
+3. **Log errors before re-throwing:**
+   ```typescript
+   catch (error: any) {
+     GeneralLogger.error("Operation failed: " + error);
+     throw error; // Re-throw after logging
+   }
+   ```
+
+4. **Use remote logging for production errors:**
+   ```typescript
+   catch (error: any) {
+     GeneralLogger.error("Critical error: " + error);
+     GeneralLogger.remoteWriteLog(FrontendLogLevel.FATAL, {
+       message: error.toString(),
+       timestamp: new Date()
+     });
+   }
+   ```
+
+### 10.2 FrontendLogService
+
+Service interface for remote logging.
+
+```typescript
+import type {
+  IFrontendLogService,
+  IFrontendLogItem,
+  FrontendLogLevel,
+  FrontendLogItem
+} from "tsb-fontos-core";
+
+// Create log item
+const logItem: IFrontendLogItem = new FrontendLogItem({
+  level: FrontendLogLevel.ERROR,
+  message: "Error occurred",
+  timestamp: new Date(),
+  userId: "user123",
+  moduleId: "MODULE1"
+});
+
+// Send to log service
+await logService.log(logItem);
+```
+
+---
+
+## 11. Environments
+
+### 11.1 AppConfig
+
+Application configuration manager using singleton pattern. Manages application-wide configuration including language settings, paths, authorization information, and mobile detection.
+
+**Properties:**
+
+- `authMenuInfos?: AuthorInfoItem[]` - Authorization information for menu items
+- `authToolbarInfos?: AuthorInfoItem[]` - Authorization information for toolbar items
+- `language: string` - Application language code (default: "enUS")
+- `language_namespaces: string[] | {}[]` - Language namespace configuration
+- `language_gridnamespace: string | {}` - Grid namespace for localization (default: "grid")
+- `file_menuitem: string` - Menu item file name
+- `path_environment: string` - Environment path
+- `path_grid: string` - Grid schema path
+- `path_log: string` - Log file path
+- `path_styles: string` - Styles path
+- `pgm_code: string` - Program code identifier
+- `pgm_name: string` - Program name identifier
+- `module_id: string` - Module identifier
+- `isMobile: boolean` (readonly) - Whether the application is running on a mobile device
+
+**Methods:**
+
+- `getInstance(): AppConfig` - Get singleton instance
+- `authorityMenuCheck(id: string): boolean` - Check if menu item is authorized
+- `authorityToolbarCheck(menuId: string, toolbarKey: string): boolean` - Check if toolbar is authorized
+
+```typescript
+import { AppConfig } from "tsb-fontos-core";
+
+// Get singleton instance
+const config = AppConfig.getInstance();
+
+// Access configuration properties
+config.language = "koKR";
+config.pgm_code = "WS";
+config.pgm_name = "MyApplication";
+config.module_id = "MODULE1";
+
+// Check if running on mobile device
+if (config.isMobile) {
+  console.log("Running on mobile device");
+}
+
+// Check menu authorization
+const canAccessMenu = config.authorityMenuCheck("menuId");
+
+// Check toolbar authorization
+const canAccessToolbar = config.authorityToolbarCheck("menuId", "toolbarKey");
+
+// Set authorization information
+config.authMenuInfos = [
+  // AuthorInfoItem instances
+];
+
+config.authToolbarInfos = [
+  // AuthorInfoItem instances
+];
+```
+
+**Example: Complete Configuration Setup**
+
+```typescript
+import { AppConfig } from "tsb-fontos-core";
+
+// Get instance
+const appConfig = AppConfig.getInstance();
+
+// Configure application paths
+appConfig.path_environment = "environments";
+appConfig.path_grid = "grid";
+appConfig.path_log = "logs";
+appConfig.path_styles = "styles";
+
+// Configure language
+appConfig.language = "enUS";
+appConfig.language_namespaces = ["grid", "page", "vocabulary"];
+appConfig.language_gridnamespace = "grid";
+
+// Configure program information
+appConfig.pgm_code = "WS";
+appConfig.pgm_name = "MyApplication";
+appConfig.module_id = "MODULE1";
+
+// Configure menu file
+appConfig.file_menuitem = "menuitem";
+```
+
+### 11.2 Localization
+
+Localization and internationalization manager built on top of i18next. Provides vocabulary and message resource management with support for multiple namespaces and dynamic resource loading.
+
+**Properties:**
+
+- `language: string` - Get/set current language code (e.g., "enUS", "koKR")
+- `translator: any` - Get/set translator function (defaults to `i18n.t`)
+
+**Methods:**
+
+- `loadLanguage(): Promise<void>` - Load language resources asynchronously from JSON files
+- `getCommonVocabularyResources(): any` - Get common vocabulary resources
+- `getCommonMessageResources(): any` - Get common message resources
+- `addVocabularyResource(vocabulary: any): void` - Add vocabulary resources dynamically
+- `addMessageResource(message: any): void` - Add message resources dynamically
+- `getVocabulary(resourceKey: string): string` - Get translated vocabulary string by key
+- `getMessage(resourceKey: string, ...args: string[]): string` - Get translated message string by key with parameter substitution
+
+**Basic Usage:**
+
+```typescript
+import { Localization } from "tsb-fontos-core";
+
+// Set language
+Localization.language = "enUS";
+
+// Get current language
+const currentLang = Localization.language; // "enUS"
+
+// Load language resources (must be called after setting language)
+await Localization.loadLanguage();
+
+// Get vocabulary (label/text)
+const label = Localization.getVocabulary("button.save"); // Returns translated label or key if not found
+
+// Get message with parameters
+const message = Localization.getMessage("validation.required", "Email"); 
+// If message is "Field {0} is required", returns "Field Email is required"
+```
+
+**Language Initialization:**
+
+```typescript
+import { Localization, AppConfig } from "tsb-fontos-core";
+
+// Set language in AppConfig first
+const appConfig = AppConfig.getInstance();
+appConfig.language = "enUS";
+appConfig.language_namespaces = ["grid", "page", "vocabulary"];
+
+// Set language in Localization
+Localization.language = appConfig.language;
+
+// Load language resources
+try {
+  await Localization.loadLanguage();
+  console.log("Language loaded successfully");
+} catch (error) {
+  console.error("Failed to load language:", error);
+}
+```
+
+**Getting Vocabulary (Labels):**
+
+```typescript
+import { Localization } from "tsb-fontos-core";
+
+// Get vocabulary - used for UI labels, buttons, etc.
+const saveLabel = Localization.getVocabulary("button.save"); // "Save"
+const cancelLabel = Localization.getVocabulary("button.cancel"); // "Cancel"
+const deleteLabel = Localization.getVocabulary("button.delete"); // "Delete"
+
+// If key doesn't exist, returns the key itself
+const missingKey = Localization.getVocabulary("non.existent.key"); // "non.existent.key"
+
+// Use in components
+function SaveButton() {
+  return <button>{Localization.getVocabulary("button.save")}</button>;
+}
+```
+
+**Getting Messages with Parameters:**
+
+```typescript
+import { Localization } from "tsb-fontos-core";
+
+// Get message without parameters
+const welcomeMsg = Localization.getMessage("welcome.message"); 
+// "Welcome to our application"
+
+// Get message with single parameter
+const validationMsg = Localization.getMessage("validation.required", "Email");
+// If message is "Field {0} is required", returns "Field Email is required"
+
+// Get message with multiple parameters
+const formattedMsg = Localization.getMessage("user.greeting", "John", "Admin");
+// If message is "Hello {0}, you are logged in as {1}", 
+// returns "Hello John, you are logged in as Admin"
+
+// Use in error handling
+function validateEmail(email: string) {
+  if (!email) {
+    const errorMsg = Localization.getMessage("validation.required", "Email");
+    throw new Error(errorMsg);
+  }
+}
+```
+
+**Adding Resources Dynamically:**
+
+```typescript
+import { Localization } from "tsb-fontos-core";
+
+// Add vocabulary resources
+Localization.addVocabularyResource({
+  "custom.button.ok": "OK",
+  "custom.button.close": "Close",
+  "custom.label.status": "Status"
+});
+
+// Now you can use them
+const okLabel = Localization.getVocabulary("custom.button.ok"); // "OK"
+
+// Add message resources
+Localization.addMessageResource({
+  "custom.error.notfound": "Item {0} not found",
+  "custom.success.saved": "Item {0} saved successfully"
+});
+
+// Use with parameters
+const errorMsg = Localization.getMessage("custom.error.notfound", "Product-123");
+// "Item Product-123 not found"
+```
+
+**Complete Example:**
+
+```typescript
+import { Localization, AppConfig } from "tsb-fontos-core";
+
+// Initialize localization
+async function initializeLocalization() {
+  try {
+    // Configure language
+    const appConfig = AppConfig.getInstance();
+    appConfig.language = "enUS";
+    appConfig.language_namespaces = [
+      "grid",
+      "page",
+      { "vocabulary": ["vocabulary", "vocabulary_custom"] }
+    ];
+    
+    // Set language
+    Localization.language = appConfig.language;
+    
+    // Load language resources
+    await Localization.loadLanguage();
+    
+    console.log("Localization initialized:", Localization.language);
+  } catch (error) {
+    console.error("Failed to initialize localization:", error);
+  }
+}
+
+// Use in application
+function MyComponent() {
+  // Get vocabulary for UI elements (using keys from src/resource/locales/enUS/vocabulary.json)
+  const saveLabel = Localization.getVocabulary("WRD_FTCO_Save"); // "Save"
+  const cancelLabel = Localization.getVocabulary("WRD_FTCO_Cancel"); // "Cancel"
+  const deleteLabel = Localization.getVocabulary("WRD_FTCO_Delete"); // "Delete"
+  const newLabel = Localization.getVocabulary("WRD_FTCO_New"); // "New"
+  const okLabel = Localization.getVocabulary("WRD_FTCO_Ok"); // "Ok"
+  
+  // Get messages for notifications (using keys from src/resource/locales/enUS/message.json)
+  const confirmMsg = Localization.getMessage("MSG_FTCO_00005"); // "Are you sure?"
+  const saveConfirmMsg = Localization.getMessage("MSG_FTCO_00004"); // "Do you want to save changes?"
+  const mandatoryMsg = Localization.getMessage("MSG_FTCO_00170", "Email"); // "Mandatory item is not typed in.\n\rEmail"
+  
+  return (
+    <div>
+      <button>{saveLabel}</button>
+      <button>{cancelLabel}</button>
+      <button>{deleteLabel}</button>
+      <button>{newLabel}</button>
+      <div>{confirmMsg}</div>
+      <div>{saveConfirmMsg}</div>
+      <div>{mandatoryMsg}</div>
+    </div>
+  );
+}
+
+// Error handling with localization
+function handleError(error: any, context: string) {
+  try {
+    // Use message key from src/resource/locales/enUS/message.json
+    const errorMessage = Localization.getMessage(
+      "MSG_FTCO_00000", // "{0}" - generic message template
+      context + ": " + error.toString()
+    );
+    console.error(errorMessage);
+    return errorMessage;
+  } catch (ex) {
+    // Fallback if localization fails
+    return `Error in ${context}: ${error}`;
+  }
+}
+
+// Form validation example using actual resource keys
+function validateForm(fieldName: string, value: string) {
+  if (!value || value.trim() === "") {
+    // Use MSG_FTCO_00170 with field name parameter
+    const errorMsg = Localization.getMessage("MSG_FTCO_00170", fieldName);
+    return errorMsg; // "Mandatory item is not typed in.\n\r{fieldName}"
+  }
+  return "";
+}
+
+// Button labels using vocabulary resources
+function Toolbar() {
+  return (
+    <div>
+      <button>{Localization.getVocabulary("WRD_FTCO_New")}</button>
+      <button>{Localization.getVocabulary("WRD_FTCO_Save")}</button>
+      <button>{Localization.getVocabulary("WRD_FTCO_Delete")}</button>
+      <button>{Localization.getVocabulary("WRD_FTCO_Refresh")}</button>
+      <button>{Localization.getVocabulary("WRD_FTCO_Find")}</button>
+    </div>
+  );
+}
+```
+
+**Resource File Structure:**
+
+Language resources are loaded from JSON files located at `./locales/{language}/{namespace}.json`. The framework includes built-in resources in `src/resource/locales/enUS/`:
+
+**Built-in Vocabulary: `src/resource/locales/enUS/vocabulary.json`**
+```json
+{
+  "WRD_FTCO_New": "New",
+  // Vocabulary resources
+}
+```
+
+**Built-in Messages: `src/resource/locales/enUS/message.json`**
+```json
+{
+  "MSG_FTCO_00000": "{0}",
+  // Message resources
+}
+```
+
+**Key Points:**
+
+1. **Language must be set** before calling `loadLanguage()`
+2. **Namespaces are configured** in `AppConfig.language_namespaces`
+3. **Vocabulary** is used for UI labels and static text
+4. **Messages** support parameter substitution using `{0}`, `{1}`, etc.
+5. **Resources can be added dynamically** at runtime
+6. **If a key is not found**, the key itself is returned
+7. **Uses i18next** under the hood for translation management
+8. **Common resources** (vocabulary, message) are automatically loaded from built-in files
+
+### 11.3 LoginedUserInfo
+
+Static utility class for managing logged-in user information and login state. Provides properties for user identification and a callback system for login state changes.
+
+**Properties:**
+
+- `isLogined: boolean` - Get/set login status. When changed, all registered callbacks are invoked
+- `staffCd: string` - Staff code of the logged-in user
+- `userGroup: string` - User group of the logged-in user
+- `roleId: string` (readonly) - Returns `userGroup` if available, otherwise returns `staffCd`
+- `callbacks: Map<string, (isLogined: boolean) => void>` - Map of callback functions to be called when login state changes
+
+**Basic Usage:**
+
+```typescript
+import { LoginedUserInfo } from "tsb-fontos-core";
+
+// Check if user is logged in
+const isLoggedIn = LoginedUserInfo.isLogined; // false
+
+// Set login status
+LoginedUserInfo.isLogined = true;
+
+// Set user information
+LoginedUserInfo.staffCd = "STAFF001";
+LoginedUserInfo.userGroup = "ADMIN";
+
+// Get role ID (returns userGroup if available, otherwise staffCd)
+const roleId = LoginedUserInfo.roleId; // "ADMIN" (if userGroup is set) or "STAFF001"
+
+// Check login status
+if (LoginedUserInfo.isLogined) {
+  console.log("User is logged in");
+  console.log("Staff Code:", LoginedUserInfo.staffCd);
+  console.log("User Group:", LoginedUserInfo.userGroup);
+  console.log("Role ID:", LoginedUserInfo.roleId);
+}
+```
+
+**Login State Change Callbacks:**
+
+Register callbacks to be notified when the login state changes:
+
+```typescript
+import { LoginedUserInfo } from "tsb-fontos-core";
+
+// Register callback for login state changes
+const callbackId = "myLoginCallback";
+LoginedUserInfo.callbacks.set(callbackId, (isLogined: boolean) => {
+  if (isLogined) {
+    console.log("User logged in");
+    // Perform actions when user logs in
+  } else {
+    console.log("User logged out");
+    // Perform actions when user logs out
+  }
+});
+
+// When login state changes, all callbacks are automatically invoked
+LoginedUserInfo.isLogined = true; // All callbacks are called with true
+
+// Remove callback
+LoginedUserInfo.callbacks.delete(callbackId);
+```
+
+**Complete Example:**
+
+```typescript
+import { LoginedUserInfo } from "tsb-fontos-core";
+
+// Login function
+function loginUser(staffCd: string, userGroup?: string) {
+  try {
+    // Set user information
+    LoginedUserInfo.staffCd = staffCd;
+    if (userGroup) {
+      LoginedUserInfo.userGroup = userGroup;
+    }
+    
+    // Set login status (this will trigger all callbacks)
+    LoginedUserInfo.isLogined = true;
+    
+    console.log("User logged in:", LoginedUserInfo.staffCd);
+    console.log("Role ID:", LoginedUserInfo.roleId);
+  } catch (error) {
+    console.error("Login failed:", error);
+  }
+}
+
+// Logout function
+function logoutUser() {
+  try {
+    // Set login status to false (this will trigger all callbacks)
+    LoginedUserInfo.isLogined = false;
+    
+    // Clear user information
+    LoginedUserInfo.staffCd = "";
+    LoginedUserInfo.userGroup = "";
+    
+    console.log("User logged out");
+  } catch (error) {
+    console.error("Logout failed:", error);
+  }
+}
+
+// Register login state change handler
+function setupLoginStateHandler() {
+  const handlerId = "appLoginHandler";
+  
+  LoginedUserInfo.callbacks.set(handlerId, (isLogined: boolean) => {
+    if (isLogined) {
+      // User logged in - initialize user-specific features
+      console.log("Initializing user session for:", LoginedUserInfo.staffCd);
+      console.log("User role:", LoginedUserInfo.roleId);
+      
+      // Load user preferences, permissions, etc.
+      loadUserPreferences();
+    } else {
+      // User logged out - cleanup
+      console.log("Cleaning up user session");
+      clearUserData();
+    }
+  });
+  
+  return handlerId;
+}
+
+// Use in React component
+function UserProfile() {
+  const [isLoggedIn, setIsLoggedIn] = React.useState(LoginedUserInfo.isLogined);
+  
+  React.useEffect(() => {
+    const callbackId = "profileComponent";
+    
+    // Register callback
+    LoginedUserInfo.callbacks.set(callbackId, (isLogined: boolean) => {
+      setIsLoggedIn(isLogined);
+    });
+    
+    // Cleanup on unmount
+    return () => {
+      LoginedUserInfo.callbacks.delete(callbackId);
+    };
+  }, []);
+  
+  if (!isLoggedIn) {
+    return <div>Please log in</div>;
+  }
+  
+  return (
+    <div>
+      <p>Staff Code: {LoginedUserInfo.staffCd}</p>
+      <p>User Group: {LoginedUserInfo.userGroup || "N/A"}</p>
+      <p>Role ID: {LoginedUserInfo.roleId}</p>
+    </div>
+  );
+}
+
+// Check user permissions based on role
+function checkPermission(requiredRole: string): boolean {
+  if (!LoginedUserInfo.isLogined) {
+    return false;
+  }
+  
+  const userRole = LoginedUserInfo.roleId;
+  return userRole === requiredRole || userRole === "ADMIN";
+}
+
+// Usage
+if (checkPermission("MANAGER")) {
+  // Allow access
+} else {
+  // Deny access
+}
+```
+
+**Key Points:**
+
+1. **Login state is managed** through the `isLogined` property
+2. **Callbacks are automatically invoked** when `isLogined` changes
+3. **roleId** returns `userGroup` if set, otherwise `staffCd`
+4. **Callbacks should be cleaned up** when components unmount or handlers are no longer needed
+5. **User information** (`staffCd`, `userGroup`) should be set before or when setting `isLogined = true`
+6. **Static class** - all properties and methods are static
+7. **Callback system** allows multiple components to react to login state changes
+
+### 11.4 AppConstant
+
+Static class containing global constants used throughout the application, particularly for authentication and single sign-on (SSO) operations.
+
+**Constants:**
+
+- `AUTH_SCHEME_BEARER: string` - Authentication scheme: Bearer (standard scheme for API authentication with JWT tokens)
+- `AUTH_SCHEME_MBEARER: string` - Authentication scheme: MBearer (custom scheme, typically used for mobile client authentication)
+- `TOKEN_REFRESH_HEADER: string` - HTTP header name for refreshed access tokens (`"x-access-token"`)
+- `SSO_COOKIE_NAME_JWT: string` - Cookie name for storing the SSO JWT token (`"SSO_TOKEN"`)
+- `SSO_COOKIE_NAME_USERID: string` - Cookie name for storing the SSO user ID (`"SSO_USERID"`)
+- `APP_COOKIE_NAME_JWT: string` - Cookie name for storing the application JWT token (`"APP_TOKEN"`)
+- `APP_COOKIE_NAME_USERID: string` - Cookie name for storing the application user ID (`"APP_USERID"`)
+
+**Usage:**
+
+```typescript
+import { AppConstant } from "tsb-fontos-core";
+
+// Use authentication scheme constants
+const authHeader = `${AppConstant.AUTH_SCHEME_BEARER} ${token}`;
+// Result: "Bearer <token>"
+
+// For mobile clients
+const mobileAuthHeader = `${AppConstant.AUTH_SCHEME_MBEARER} ${token}`;
+// Result: "MBearer <token>"
+
+// Check for token refresh header in response
+const response = await fetch(url);
+const refreshedToken = response.headers.get(AppConstant.TOKEN_REFRESH_HEADER);
+if (refreshedToken) {
+  // Update stored token
+  CookieUtil.setCookie(AppConstant.APP_COOKIE_NAME_JWT, refreshedToken);
+}
+
+// Read SSO token from cookie
+const ssoToken = CookieUtil.getCookie(AppConstant.SSO_COOKIE_NAME_JWT);
+const ssoUserId = CookieUtil.getCookie(AppConstant.SSO_COOKIE_NAME_USERID);
+
+// Read app token from cookie
+const appToken = CookieUtil.getCookie(AppConstant.APP_COOKIE_NAME_JWT);
+const appUserId = CookieUtil.getCookie(AppConstant.APP_COOKIE_NAME_USERID);
+```
+
+**Complete Example:**
+
+```typescript
+import { AppConstant, CookieUtil } from "tsb-fontos-core";
+
+// Authentication helper using AppConstant
+class AuthHelper {
+  // Get authentication header
+  static getAuthHeader(token: string, isMobile: boolean = false): string {
+    const scheme = isMobile 
+      ? AppConstant.AUTH_SCHEME_MBEARER 
+      : AppConstant.AUTH_SCHEME_BEARER;
+    return `${scheme} ${token}`;
+  }
+
+  // Store SSO session
+  static storeSSOSession(token: string, userId: string) {
+    CookieUtil.setCookie(AppConstant.SSO_COOKIE_NAME_JWT, token);
+    CookieUtil.setCookie(AppConstant.SSO_COOKIE_NAME_USERID, userId);
+  }
+
+  // Get SSO session
+  static getSSOSession(): { token: string | null; userId: string | null } {
+    return {
+      token: CookieUtil.getCookie(AppConstant.SSO_COOKIE_NAME_JWT),
+      userId: CookieUtil.getCookie(AppConstant.SSO_COOKIE_NAME_USERID)
+    };
+  }
+
+  // Store app session
+  static storeAppSession(token: string, userId: string) {
+    CookieUtil.setCookie(AppConstant.APP_COOKIE_NAME_JWT, token);
+    CookieUtil.setCookie(AppConstant.APP_COOKIE_NAME_USERID, userId);
+  }
+
+  // Get app session
+  static getAppSession(): { token: string | null; userId: string | null } {
+    return {
+      token: CookieUtil.getCookie(AppConstant.APP_COOKIE_NAME_JWT),
+      userId: CookieUtil.getCookie(AppConstant.APP_COOKIE_NAME_USERID)
+    };
+  }
+
+  // Handle token refresh from response headers
+  static handleTokenRefresh(response: Response) {
+    const refreshedToken = response.headers.get(AppConstant.TOKEN_REFRESH_HEADER);
+    if (refreshedToken) {
+      // Update stored token
+      const currentUserId = CookieUtil.getCookie(AppConstant.APP_COOKIE_NAME_USERID);
+      if (currentUserId) {
+        CookieUtil.setCookie(AppConstant.APP_COOKIE_NAME_JWT, refreshedToken);
+      }
+    }
+  }
+}
+
+// Use in API calls
+async function apiCall(url: string, options: RequestInit = {}) {
+  const token = CookieUtil.getCookie(AppConstant.APP_COOKIE_NAME_JWT);
+  
+  const headers = {
+    ...options.headers,
+    "Authorization": AuthHelper.getAuthHeader(token || ""),
+    "Content-Type": "application/json"
+  };
+
+  const response = await fetch(url, {
+    ...options,
+    headers
+  });
+
+  // Check for token refresh
+  AuthHelper.handleTokenRefresh(response);
+
+  return response;
+}
+```
+
+**Key Points:**
+
+1. **All constants are readonly static properties** - cannot be modified
+2. **Authentication schemes** are used for HTTP Authorization headers
+3. **Token refresh header** (`x-access-token`) is sent by server to update JWT tokens
+4. **Cookie names** are standardized for SSO and app-specific tokens
+5. **Use with CookieUtil** to manage authentication cookies
+6. **SSO vs App tokens** - SSO tokens are for single sign-on scenarios, App tokens are for app-specific authentication
+
+---
+
+## 12. DAO (Data Access Object)
+
+### 12.1 BaseDaoSupport
+
+Base class for DAO implementations. Currently an empty class that serves as a base for other DAO classes.
+
+**Usage:**
+
+```typescript
+import { BaseDaoSupport } from "tsb-fontos-core";
+
+class MyDao extends BaseDaoSupport {
+  // Extend BaseDaoSupport for your DAO implementation
+  // Add custom methods as needed
+}
+```
+
+### 12.2 HttpWebDaoSupport
+
+HTTP-based DAO implementation extending `BaseDaoSupport` and implementing `IRemoteServerDaoSupport`. Provides methods for making HTTP requests to remote servers.
+
+**Methods:**
+
+- `getRequestConfig(serverKey?: string): TRequestConfig` - Get request configuration for a server key
+- `get<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - Make GET request
+- `post<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - Make POST request
+- `postFormData<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - Make POST request with FormData
+- `postDownloadFile(request: TRequest, config?: TRequestConfig): Promise<DownloadFileItem>` - Download file via POST request
+
+**Usage:**
+
+```typescript
+import { HttpWebDaoSupport, TRequest, TResponse } from "tsb-fontos-core";
+
+class ProductDao extends HttpWebDaoSupport {
+  constructor() {
+    super();
+  }
+
+  async getProducts(): Promise<TResponse<Product[]>> {
+    const request: TRequest = {
+      serverKey: "ProductService",
+      url: "/api/products"
+    };
+    return this.get<Product[]>(request);
+  }
+
+  async createProduct(product: Product): Promise<TResponse<Product>> {
+    const request: TRequest = {
+      serverKey: "ProductService",
+      url: "/api/products",
+      datas: product
+    };
+    return this.post<Product>(request);
+  }
+
+  async downloadReport(params: any): Promise<DownloadFileItem> {
+    const request: TRequest = {
+      serverKey: "ProductService",
+      url: "/api/products/report",
+      datas: params
+    };
+    return this.postDownloadFile(request);
+  }
+}
+```
+
+### 12.3 HttpWebDaoBindingSupport
+
+HTTP DAO with automatic JSON serialization/deserialization support. Extends `HttpWebDaoSupport` and provides methods that automatically serialize request data and deserialize response data using `JsonMapperBindingUtil`.
+
+**Methods:**
+
+- `getRestResponseSerialize<T>(clazz: { new (): T }, request: TRequest): Promise<TRestResponsePage<T>>` - GET request with automatic serialization
+- `postRestResponseSerialize<T>(clazz: { new (): T }, request: TRequest): Promise<TRestResponsePage<T>>` - POST request with automatic serialization
+- `postDownloadFileSerialize(request: TRequest, config?: TRequestConfig): Promise<DownloadFileItem>` - Download file with serialized request
+
+**Usage:**
+
+```typescript
+import { HttpWebDaoBindingSupport, TRequest, TRestResponsePage } from "tsb-fontos-core";
+
+class OrderDao extends HttpWebDaoBindingSupport {
+  constructor() {
+    super();
+  }
+
+  async getOrders(): Promise<TRestResponsePage<OrderItem>> {
+    const request: TRequest = {
+      serverKey: "OrderService",
+      url: "/api/orders"
+    };
+    // Automatically deserializes response.data.dataItems to OrderItem[]
+    return this.getRestResponseSerialize(OrderItem, request);
+  }
+
+  async createOrder(order: OrderItem): Promise<TRestResponsePage<OrderItem>> {
+    const request: TRequest = {
+      serverKey: "OrderService",
+      url: "/api/orders",
+      datas: order // Automatically serialized
+    };
+    // Automatically serializes order and deserializes response
+    return this.postRestResponseSerialize(OrderItem, request);
+  }
+}
+```
+
+### 12.4 IRemoteServerDaoSupport
+
+Interface for remote server DAO support.
+
+```typescript
+import type { IRemoteServerDaoSupport } from "tsb-fontos-core";
+
+class CustomDao implements IRemoteServerDaoSupport {
+  // Implement interface methods
+}
+```
+
+---
+
+## 13. Exception Handling
+
+### 13.1 AppNormanErrorBoundary
+
+React error boundary component.
+
+```typescript
+import { AppNormanErrorBoundary } from "tsb-fontos-core";
+
+function App() {
+  return (
+    <AppNormanErrorBoundary>
+      <YourComponent />
+    </AppNormanErrorBoundary>
+  );
+}
+```
+
+### 13.2 BizError
+
+Custom error class extending JavaScript's built-in `Error` class for business logic errors.
+
+**Properties:**
+
+- `message: string` - Error message (inherited from Error)
+
+**Methods:**
+
+- `getErrorMessage(): string` - Returns formatted error message: "Something went wrong: " + message
+
+**Usage:**
+
+```typescript
+import { BizError } from "tsb-fontos-core";
+
+// Throw business error
+throw new BizError("Failed to fetch data");
+
+// Catch and handle
+try {
+  // Some operation
+  await processData();
+} catch (error) {
+  if (error instanceof BizError) {
+    // Handle business error
+    console.error(error.message); // "Failed to fetch data"
+    console.error(error.getErrorMessage()); // "Something went wrong: Failed to fetch data"
+  } else {
+    // Handle other errors
+    console.error("Unexpected error:", error);
+  }
+}
+
+// Use in validation
+function validateEmail(email: string) {
+  if (!email || !email.includes("@")) {
+    throw new BizError("Invalid email format");
+  }
+}
+
+// Use in service layer
+class ProductService {
+  async getProduct(id: string) {
+    if (!id) {
+      throw new BizError("Product ID is required");
+    }
+    
+    try {
+      return await this.dao.findById(id);
+    } catch (error) {
+      throw new BizError(`Failed to get product: ${error}`);
+    }
+  }
+}
+```
+
+### 13.3 HttpErrorsHandler
+
+Function for handling HTTP errors. Logs error information to console and handles `BizError` instances specially.
+
+**Function:**
+
+- `handleHttpError(error: any): void` - Handle HTTP error (default export)
+
+**Usage:**
+
+```typescript
+import handleHttpError, { BizError } from "tsb-fontos-core";
+
+try {
+  // Some HTTP operation
+  await fetch("/api/data");
+} catch (error) {
+  // Handle error
+  handleHttpError(error);
+  // If error is BizError, logs error.message
+  // Otherwise, logs error.code and error.message
+}
+
+// Use in DAO
+class MyDao extends HttpWebDaoSupport {
+  async getData() {
+    try {
+      return await this.get(request);
+    } catch (error) {
+      handleHttpError(error); // Handles and logs error
+      throw error; // Re-throw if needed
+    }
+  }
+}
+```
+
+---
+
+## 14. Remote Server
+
+### 14.1 BaseRemoteServerKeys
+
+Base class for remote server key constants. Provides a default key constant.
+
+**Constants:**
+
+- `Default: string` - Default server key (`"Default"`)
+
+**Usage:**
+
+```typescript
+import { BaseRemoteServerKeys } from "tsb-fontos-core";
+
+// Use default key
+const defaultKey = BaseRemoteServerKeys.Default; // "Default"
+
+// Extend for custom keys
+class MyServerKeys extends BaseRemoteServerKeys {
+  static readonly PRODUCT_SERVICE = "ProductService";
+  static readonly ORDER_SERVICE = "OrderService";
+}
+
+// Use in TRequest
+const request: TRequest = {
+  serverKey: MyServerKeys.PRODUCT_SERVICE,
+  url: "/api/products"
+};
+```
+
+### 14.2 RemoteServerCfgProvider
+
+Provider for remote server configuration.
+
+```typescript
+import { RemoteServerCfgProvider } from "tsb-fontos-core";
+
+// Get server configuration
+const config = RemoteServerCfgProvider.getConfig("ServiceName");
+
+// Register configuration
+RemoteServerCfgProvider.register("ServiceName", {
+  baseUrl: "https://api.example.com",
+  timeout: 5000
+});
+```
+
+### 14.3 RemoteServerCfgHdl
+
+Singleton handler for managing remote server configurations. Implements `IRemoteServerCfgHdl` interface.
+
+**Methods:**
+
+- `getInstance(): RemoteServerCfgHdl` - Get singleton instance
+- `setConfig(configItem: TRemoteConfig): void` - Set/register configuration
+- `getConfig(key: string): TRemoteConfig` - Get configuration by key
+- `getConfigByClone(key: string): TRemoteConfig` - Get cloned configuration by key
+
+**Usage:**
+
+```typescript
+import { RemoteServerCfgHdl, TRemoteConfig } from "tsb-fontos-core";
+
+// Get singleton instance
+const handler = RemoteServerCfgHdl.getInstance();
+
+// Register configuration
+const config = new TRemoteConfig();
+config.key = "ProductService";
+config.baseURL = "https://api.example.com";
+handler.setConfig(config);
+
+// Get configuration
+const productConfig = handler.getConfig("ProductService");
+
+// Get cloned configuration (safe to modify)
+const clonedConfig = handler.getConfigByClone("ProductService");
+```
+
+### 14.4 TRemoteConfig
+
+Type for remote configuration.
+
+```typescript
+import type { TRemoteConfig } from "tsb-fontos-core";
+
+const config: TRemoteConfig = {
+  baseUrl: "https://api.example.com",
+  timeout: 5000,
+  headers: {
+    "Content-Type": "application/json"
+  }
+};
+```
+
+### 14.5 TRemoteServerConfig
+
+Class representing a collection of remote server configurations.
+
+**Properties:**
+
+- `servers: TRemoteConfig[]` - Array of remote server configurations
+
+**Usage:**
+
+```typescript
+import { TRemoteServerConfig, TRemoteConfig } from "tsb-fontos-core";
+
+// Create server config collection
+const serverConfig = new TRemoteServerConfig();
+
+// Add configurations
+const productConfig = new TRemoteConfig();
+productConfig.key = "ProductService";
+productConfig.baseURL = "https://api.example.com/products";
+
+const orderConfig = new TRemoteConfig();
+orderConfig.key = "OrderService";
+orderConfig.baseURL = "https://api.example.com/orders";
+
+serverConfig.servers.push(productConfig);
+serverConfig.servers.push(orderConfig);
+```
+
+---
+
+## 15. HTTP Handlers
+
+### 15.1 HttpBaseRequestHandler
+
+Base class for HTTP request handlers implementing `IRemoteRequestHandler`. Uses Axios for HTTP requests and handles token refresh automatically.
+
+**Methods:**
+
+- `get<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - Make GET request
+- `post<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - Make POST request
+- `postFormData<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - Make POST request with FormData
+- `postDownloadFile(request: TRequest, config?: TRequestConfig): Promise<DownloadFileItem>` - Download file via POST
+
+**Properties:**
+
+- `refreshTokenHeadName?: string` - Header name for token refresh
+
+**Usage:**
+
+```typescript
+import { HttpBaseRequestHandler, TRequest, TRequestConfig } from "tsb-fontos-core";
+
+// Create handler with configuration
+const config = new TRemoteConfig();
+config.baseURL = "https://api.example.com";
+const handler = new HttpBaseRequestHandler(config);
+
+// Make GET request
+const request: TRequest = {
+  url: "/api/products",
+  params: { page: 1 }
+};
+const response = await handler.get<Product[]>(request);
+
+// Make POST request
+const postRequest: TRequest = {
+  url: "/api/products",
+  datas: { name: "Product 1" }
+};
+const postResponse = await handler.post<Product>(postRequest);
+
+// Download file
+const downloadRequest: TRequest = {
+  url: "/api/products/export",
+  datas: { format: "xlsx" }
+};
+const downloadItem = await handler.postDownloadFile(downloadRequest);
+```
+
+### 15.2 HttpWebRequestHandler
+
+Web-based HTTP request handler extending `HttpBaseRequestHandler`. Simple wrapper that passes configuration to base class.
+
+**Usage:**
+
+```typescript
+import { HttpWebRequestHandler, TRemoteConfig } from "tsb-fontos-core";
+
+// Create handler with configuration
+const config = new TRemoteConfig();
+config.baseURL = "https://api.example.com";
+const handler = new HttpWebRequestHandler(config);
+
+// Use same methods as HttpBaseRequestHandler
+const response = await handler.get("/api/products");
+```
+
+### 15.3 IRemoteRequestHandler
+
+Interface for remote request handlers. Defines methods for making HTTP requests.
+
+**Methods:**
+
+- `get<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - GET request
+- `post<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - POST request
+- `postFormData<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R>` - POST FormData request
+- `postDownloadFile(request: TRequest, config?: TRequestConfig): Promise<DownloadFileItem>` - Download file
+
+**Usage:**
+
+```typescript
+import type { IRemoteRequestHandler, TRequest, TResponse } from "tsb-fontos-core";
+
+class CustomHandler implements IRemoteRequestHandler {
+  async get<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R> {
+    // Implementation
+  }
+  
+  async post<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R> {
+    // Implementation
+  }
+  
+  async postFormData<T, R, O>(request: TRequest, config?: TRequestConfig, type?: { new (): O }): Promise<R> {
+    // Implementation
+  }
+  
+  async postDownloadFile(request: TRequest, config?: TRequestConfig): Promise<DownloadFileItem> {
+    // Implementation
+  }
+}
+```
+
+### 15.4 TRequest
+
+Interface for HTTP request parameters.
+
+**Properties:**
+
+- `serverKey?: string` - Server key identifier (used to lookup server configuration)
+- `url?: string` - Request URL
+- `params?: any` - Query parameters (for GET requests)
+- `datas?: any` - Request body data (for POST requests)
+- `useMask?: boolean` - Whether use spinner mask to prevent additional ui input while api processing
+
+**Usage:**
+
+```typescript
+import type { TRequest } from "tsb-fontos-core";
+
+// GET request
+const getRequest: TRequest = {
+  serverKey: "ProductService",
+  url: "/api/products",
+  params: { page: 1, size: 20 }
+};
+
+// POST request
+const postRequest: TRequest = {
+  serverKey: "ProductService",
+  url: "/api/products",
+  datas: { name: "Product 1", price: 100 }
+};
+```
+
+### 15.5 TResponse
+
+Type for HTTP responses.
+
+```typescript
+import type { TResponse } from "tsb-fontos-core";
+
+const response: TResponse = {
+  status: 200,
+  statusText: "OK",
+  headers: {},
+  data: { id: 1, name: "Item 1" }
+};
+```
+
+### 15.6 TRestResponse
+
+Interface for REST API responses. Extends `BaseRestResponse<T>`.
+
+**Usage:**
+
+```typescript
+import type { TRestResponse } from "tsb-fontos-core";
+
+// REST response (check BaseRestResponse for actual properties)
+const restResponse: TRestResponse<Product> = {
+  // Properties from BaseRestResponse
+  // dataItem?: T
+  // dataItems?: T[]
+  // errorInfo?: TExceptionItem
+  // status?: number
+  // statusText?: string
+};
+```
+
+---
+
+## 16. Services
+
+### 16.1 BaseService
+
+Base class for service implementations.
+
+```typescript
+import { BaseService } from "tsb-fontos-core";
+
+class ProductService extends BaseService {
+  async getProducts(): Promise<Product[]> {
+    return this.dao.findAll();
+  }
+}
+```
+
+### 16.2 BizServiceLocator
+
+Static service locator for retrieving services. Automatically wraps services with proxy for interception.
+
+**Methods:**
+
+- `getService<T>(svrName: string): T` - Get service by name (returns proxied service)
+- `getServiceToProxy<T>(service: T): T` - Wrap service instance with proxy
+
+**Usage:**
+
+```typescript
+import { BizServiceLocator, CoreServerName } from "tsb-fontos-core";
+
+// Get service (automatically proxied)
+const securityService = BizServiceLocator.getService<ISecurityService>(
+  CoreServerName.CORE_SECURITY_SVR
+);
+
+// Use service
+const token = await securityService.requestToken({ userName: "user", password: "pass" });
+
+// Wrap existing service with proxy
+const myService = new MyService();
+const proxiedService = BizServiceLocator.getServiceToProxy(myService);
+```
+
+### 16.3 BizServiceProvider
+
+Service provider for service registration.
+
+```typescript
+import { BizServiceProvider } from "tsb-fontos-core";
+
+// Register service implementation
+BizServiceProvider.register("IProductService", ProductService);
+
+// Get service instance
+const service = BizServiceProvider.get<IProductService>("IProductService");
+```
+
+### 16.4 BizServiceProxy
+
+Class for creating JavaScript Proxy wrappers around service objects. Uses ES6 Proxy API for method interception.
+
+**Methods:**
+
+- `createServiceProxy(targetObj: any): any` - Create proxy wrapper for service object
+
+**Usage:**
+
+```typescript
+import { BizServiceProxy } from "tsb-fontos-core";
+
+// Create proxy instance
+const proxy = new BizServiceProxy();
+
+// Wrap service with proxy
+const myService = new MyService();
+const proxiedService = proxy.createServiceProxy(myService);
+
+// Use proxied service (methods are automatically intercepted)
+const result = await proxiedService.getData();
+// Proxy intercepts method calls but doesn't modify behavior by default
+```
+
+### 16.5 BizServiceProxyFactory
+
+Factory for creating service proxies.
+
+```typescript
+import { BizServiceProxyFactory } from "tsb-fontos-core";
+
+// Create proxy factory
+const factory = new BizServiceProxyFactory();
+
+// Create proxy
+const proxy = factory.createProxy(ProductService);
+
+// Use proxy
+const products = await proxy.getProducts();
+```
+
+---
+
+## 17. Cache Management
+
+### 17.1 CacheManager
+
+Static cache manager for application-wide caching. Uses `ICacheProvider` for actual cache operations. Automatically initialized with `GeneralCacheProvider`.
+
+**Methods:**
+
+- `getKeys(): string[]` - Get all cache keys
+- `get(key: string): object | undefined` - Get cached item
+- `getGeneric<T>(key: string): T | undefined` - Get cached item with type
+- `insert(key: string, value: object): void` - Insert/update cache item
+- `remove(key: string): void` - Remove cache item
+- `removeStartsWith(value: string): void` - Remove items with keys starting with value
+- `removeAll(keys: string[]): void` - Remove multiple items
+- `clear(): void` - Clear all cache
+- `containsKey(key: string): boolean` - Check if key exists
+- `containsStartsWith(value: string): boolean` - Check if any key starts with value
+
+**Usage:**
+
+```typescript
+import { CacheManager } from "tsb-fontos-core";
+
+// Insert item
+CacheManager.insert("product:1", { id: 1, name: "Product 1" });
+
+// Get item
+const product = CacheManager.get("product:1");
+
+// Get with type
+const typedProduct = CacheManager.getGeneric<Product>("product:1");
+
+// Check if exists
+if (CacheManager.containsKey("product:1")) {
+  console.log("Product is cached");
+}
+
+// Remove item
+CacheManager.remove("product:1");
+
+// Remove items starting with prefix
+CacheManager.removeStartsWith("product:"); // Removes all product:* keys
+
+// Get all keys
+const keys = CacheManager.getKeys();
+
+// Clear all
+CacheManager.clear();
+```
+
+### 17.2 GeneralCacheProvider
+
+Default cache provider implementation using in-memory `Map`. Implements `ICacheProvider` interface.
+
+**Usage:**
+
+```typescript
+import { GeneralCacheProvider } from "tsb-fontos-core";
+
+// Create cache provider (used automatically by CacheManager)
+const provider = new GeneralCacheProvider();
+
+// CacheManager uses this internally, no need to register manually
+// CacheManager is initialized with GeneralCacheProvider automatically
+```
+
+### 17.3 ICacheProvider
+
+Interface for cache providers. Defines methods for cache operations.
+
+**Methods:**
+
+- `getKeys(): string[]` - Get all cache keys
+- `get(key: string): object | undefined` - Get cached item
+- `getGeneric<T>(key: string): T | undefined` - Get cached item with type
+- `insert(key: string, value: object): void` - Insert/update cache item
+- `remove(key: string): void` - Remove cache item
+- `removeStartsWith(value: string): void` - Remove items with keys starting with value
+- `removeAll(keys: string[]): void` - Remove multiple items
+- `clear(): void` - Clear all cache
+- `containsKey(key: string): boolean` - Check if key exists
+- `containsStartsWith(value: string): boolean` - Check if any key starts with value
+
+**Usage:**
+
+```typescript
+import type { ICacheProvider } from "tsb-fontos-core";
+
+class CustomCacheProvider implements ICacheProvider {
+  private cache = new Map<string, object>();
+
+  getKeys(): string[] {
+    return Array.from(this.cache.keys());
+  }
+
+  get(key: string): object | undefined {
+    return this.cache.get(key);
+  }
+
+  getGeneric<T>(key: string): T | undefined {
+    return this.cache.get(key) as T;
+  }
+
+  insert(key: string, value: object): void {
+    this.cache.set(key, value);
+  }
+
+  remove(key: string): void {
+    this.cache.delete(key);
+  }
+
+  removeStartsWith(value: string): void {
+    // Implementation
+  }
+
+  removeAll(keys: string[]): void {
+    keys.forEach(key => this.cache.delete(key));
+  }
+
+  clear(): void {
+    this.cache.clear();
+  }
+
+  containsKey(key: string): boolean {
+    return this.cache.has(key);
+  }
+
+  containsStartsWith(value: string): boolean {
+    // Implementation
+  }
+}
+```
+
+### 17.4 ICacheDataProvider
+
+Interface for cache data providers used in code management. Defines methods for loading and caching code data.
+
+**Methods:**
+
+- `getDataItemListByDelegator<T>(queryDelegator: CodeDataQueryDelegator): Promise<T[]>` - Get data items using query delegator
+- `getDataItemListByDelegatorClone<T>(queryDelegator: CodeDataQueryDelegator, doClone: boolean): Promise<T[]>` - Get data items with clone option
+- `getDataItemListByKey<T>(cacheKey: string): T[]` - Get cached data items by key
+- `getDataItemListByKeyClone<T>(cacheKey: string, doClone: boolean): T[]` - Get cached data items with clone option
+- `fillDataToCache(itemListObject: object): void` - Fill cache with data
+- `isCached(): boolean` - Check if data is cached
+
+**Usage:**
+
+```typescript
+import type { ICacheDataProvider, CodeDataQueryDelegator } from "tsb-fontos-core";
+
+class CustomDataProvider implements ICacheDataProvider {
+  async getDataItemListByDelegator<T>(
+    queryDelegator: CodeDataQueryDelegator
+  ): Promise<T[]> {
+    // Implementation
+  }
+
+  async getDataItemListByDelegatorClone<T>(
+    queryDelegator: CodeDataQueryDelegator,
+    doClone: boolean
+  ): Promise<T[]> {
+    // Implementation
+  }
+
+  getDataItemListByKey<T>(cacheKey: string): T[] {
+    // Implementation
+  }
+
+  getDataItemListByKeyClone<T>(cacheKey: string, doClone: boolean): T[] {
+    // Implementation
+  }
+
+  fillDataToCache(itemListObject: object): void {
+    // Implementation
+  }
+
+  isCached(): boolean {
+    // Implementation
+  }
+}
+```
+
+---
+
+## 18. Code Management
+
+### 18.1 CodeManager
+
+Static singleton class for managing application codes and constants. Provides centralized code data management with caching support.
+
+**Methods:**
+
+- `initializeInstance(codeHandler: BaseCodeHandler): void` - Initialize CodeManager with a code handler instance (must be called before using other methods)
+- `getCodes<T>(codeType: string, ...args: string[]): Promise<T[]>` - Get code data items list by code type
+- `getDescriptionByCode(codeType: string, key: string, ...args: string[]): Promise<string>` - Get description by code type and key
+- `getCodesIncludeUnused<T>(codeType: string, ...args: string[]): Promise<T[]>` - Get codes including unused ones
+- `isCacheCodes(key: string): boolean` - Check if codes are cached (for BUSINESS_CODE group)
+- `isCacheCodesByGroup(codeGroupType: CodeGroupTypes, key: string): boolean` - Check if codes are cached for specific group
+- `removeCacheCodes(key: string): boolean` - Remove cached codes (for BUSINESS_CODE group)
+- `removeCacheCodesByGroup(codeGroupType: CodeGroupTypes, key: string): void` - Remove cached codes for specific group
+- `removeCacheStartsWith(value: string): boolean` - Remove cached codes starting with value (for BUSINESS_CODE group)
+- `removeCacheStartsWithByGroup(codeGroupType: CodeGroupTypes, value: string): void` - Remove cached codes starting with value for specific group
+- `removeCacheAll(): void` - Remove all cached code data
+
+**Initialization:**
+
+```typescript
+import { CodeManager, BaseCodeHandler } from "tsb-fontos-core";
+
+// Create code handler (must implement BaseCodeHandler interface)
+class MyCodeHandler implements BaseCodeHandler {
+  async getCodes<T>(codeType: string, ...args: string[]): Promise<T[]> {
+    // Implementation to fetch codes from service
+  }
+  
+  async getDescriptionByCode(codeType: string, key: string, ...args: string[]): Promise<string> {
+    // Implementation
+  }
+  
+  // ... other required methods
+}
+
+// Initialize CodeManager (must be done before using)
+const codeHandler = new MyCodeHandler();
+CodeManager.initializeInstance(codeHandler);
+```
+
+**Basic Usage:**
+
+```typescript
+import { CodeManager, CodeDataItem } from "tsb-fontos-core";
+
+// Get code list
+const statusCodes = await CodeManager.getCodes<CodeDataItem>("STATUS");
+// Returns: CodeDataItem[] with code, codeName, etc.
+
+// Get description by code
+const description = await CodeManager.getDescriptionByCode("STATUS", "ACTIVE");
+// Returns: Description string for the code
+
+// Get codes including unused
+const allCodes = await CodeManager.getCodesIncludeUnused<CodeDataItem>("STATUS");
+
+// Check if codes are cached
+const isCached = CodeManager.isCacheCodes("STATUS"); // true/false
+
+// Remove cache
+CodeManager.removeCacheCodes("STATUS");
+
+// Remove all caches
+CodeManager.removeCacheAll();
+```
+
+**Cache Management:**
+
+```typescript
+import { CodeManager, CodeGroupTypes } from "tsb-fontos-core";
+
+// Check cache by group
+const isCached = CodeManager.isCacheCodesByGroup(
+  CodeGroupTypes.BUSINESS_CODE,
+  "STATUS"
+);
+
+// Remove cache by group
+CodeManager.removeCacheCodesByGroup(
+  CodeGroupTypes.BUSINESS_CODE,
+  "STATUS"
+);
+
+// Remove cache starting with prefix
+CodeManager.removeCacheStartsWith("STATUS_"); // Removes STATUS_ACTIVE, STATUS_INACTIVE, etc.
+
+// Remove cache by group with prefix
+CodeManager.removeCacheStartsWithByGroup(
+  CodeGroupTypes.BUSINESS_CODE,
+  "STATUS_"
+);
+```
+
+**Complete Example:**
+
+```typescript
+import { CodeManager, CodeDataItem, CodeGroupTypes } from "tsb-fontos-core";
+
+// Initialize (usually done in app startup)
+function initializeCodeManager(codeHandler: BaseCodeHandler) {
+  CodeManager.initializeInstance(codeHandler);
+}
+
+// Use in component
+async function loadStatusCodes() {
+  try {
+    // Get codes (automatically cached)
+    const codes = await CodeManager.getCodes<CodeDataItem>("STATUS");
+    
+    // Use codes
+    codes.forEach(code => {
+      console.log(`${code.code}: ${code.codeName}`);
+    });
+    
+    // Get description
+    const desc = await CodeManager.getDescriptionByCode("STATUS", "ACTIVE");
+    console.log("Description:", desc);
+    
+    // Check cache
+    if (CodeManager.isCacheCodes("STATUS")) {
+      console.log("Codes are cached");
+    }
+  } catch (error) {
+    console.error("Failed to load codes:", error);
+  }
+}
+
+// Clear cache when needed
+function refreshCodes() {
+  CodeManager.removeCacheCodes("STATUS");
+  // Next call to getCodes will fetch fresh data
+}
+```
+
+### 18.2 CodeDataItem
+
+Class representing a code data item. Extends `BaseDataItem` and implements `ICodeDataItem` interface.
+
+**Properties:**
+
+- `code?: string` - Code value
+- `codeName?: string` - Code name/description
+- `textValue?: string` - Custom text value for display (e.g., concatenated CODE and CodeName like "TSB:Total Soft Bank")
+- `type?: string` - Code type
+- `typeName?: string` - Code type name
+- `defaultChkYN?: string` - Default check Y/N flag
+- `hide?: boolean` - Whether to hide this code (default: false)
+- `selected: boolean` - Whether this code is selected (default: false)
+- Inherits all properties from `BaseDataItem` (guid, opCode, key, etc.)
+
+**Usage:**
+
+```typescript
+import { CodeDataItem } from "tsb-fontos-core";
+
+// Create code item
+const codeItem = new CodeDataItem();
+codeItem.code = "ACTIVE";
+codeItem.codeName = "Active";
+codeItem.type = "STATUS";
+codeItem.selected = false;
+codeItem.hide = false;
+
+// Use in select/dropdown
+const statusCodes = await CodeManager.getCodes<CodeDataItem>("STATUS");
+statusCodes.forEach(code => {
+  console.log(`Value: ${code.code}, Label: ${code.codeName}`);
+  if (code.selected) {
+    console.log("This code is selected");
+  }
+});
+
+// Filter visible codes
+const visibleCodes = statusCodes.filter(code => !code.hide);
+
+// Use textValue for custom display
+codeItem.textValue = `${codeItem.code}:${codeItem.codeName}`; // "ACTIVE:Active"
+```
+
+### 18.3 CodeDataItemList
+
+Collection class for code data items. Extends JavaScript's native `Array<CodeDataItem>` class.
+
+**Usage:**
+
+```typescript
+import { CodeDataItemList, CodeDataItem } from "tsb-fontos-core";
+
+// Create code list
+const codeList = new CodeDataItemList();
+
+// Add items using array methods
+const activeCode = new CodeDataItem();
+activeCode.code = "A";
+activeCode.codeName = "Active";
+codeList.push(activeCode);
+
+const inactiveCode = new CodeDataItem();
+inactiveCode.code = "I";
+inactiveCode.codeName = "Inactive";
+codeList.push(inactiveCode);
+
+// Use array methods
+codeList.forEach(code => {
+  console.log(`${code.code}: ${code.codeName}`);
+});
+
+// Filter codes
+const visibleCodes = codeList.filter(code => !code.hide);
+
+// Find code
+const activeCodeItem = codeList.find(code => code.code === "A");
+```
+
+### 18.4 CodeDataParam
+
+Class representing parameters for code data queries.
+
+**Properties:**
+
+- `codeGroupType: CodeGroupTypes` - Type of code data group (default: `CodeGroupTypes.MASTER_CODE`)
+- `type?: string` - Type of code data
+- `typeName?: string` - Type name of code data
+- `key: string` - Key string of code data (default: "")
+- `args?: string[]` - General arguments array for query options
+- `prevCodeValue?: string` - Previous value (displayed value)
+- `prevCodeData?: string` - Previous data (original data)
+
+**Usage:**
+
+```typescript
+import { CodeDataParam, CodeGroupTypes } from "tsb-fontos-core";
+
+// Create code data parameter
+const param = new CodeDataParam();
+param.codeGroupType = CodeGroupTypes.BUSINESS_CODE;
+param.type = "STATUS";
+param.key = "STATUS";
+param.args = ["category", "USER"];
+
+// Use with code handler (implementation specific)
+// const codes = await codeHandler.getCodesWithParam(param);
+```
+
+### 18.5 BaseCodeDataService
+
+Base service class for code data operations. Extends `BaseService` and implements `IBaseCodeDataService`. Provides a protected `dao` property for data access.
+
+**Properties:**
+
+- `protected dao: IBaseCodeDataDao` - Data access object for code data
+
+**Usage:**
+
+```typescript
+import { BaseCodeDataService, IBaseCodeDataDao } from "tsb-fontos-core";
+
+class MyCodeService extends BaseCodeDataService {
+  constructor(codeDataDao: IBaseCodeDataDao) {
+    super(codeDataDao); // Pass DAO to base class
+  }
+
+  // Add custom service methods
+  async loadCodes(group: string): Promise<CodeDataItem[]> {
+    // Use this.dao to access data
+    return await this.dao.getCodes(group);
+  }
+}
+```
+
+### 18.6 CodeCacheDataProvider
+
+Cache provider for code data.
+
+```typescript
+import { CodeCacheDataProvider } from "tsb-fontos-core";
+
+const provider = new CodeCacheDataProvider(codeService);
+CodeManager.setCacheProvider(provider);
+```
+
+### 18.7 CodeBindTypes
+
+Enumeration for code binding types used in UI components to specify how codes should be bound (value vs label).
+
+**Enum Values:**
+
+- `Code_CodeName` - Bind code as value, codeName as display
+- `CodeName_Code` - Bind codeName as value, code as display
+- `Code_Code` - Bind code as both value and display
+- `CodeName_CodeName` - Bind codeName as both value and display
+
+**Usage:**
+
+```typescript
+import { CodeBindTypes } from "tsb-fontos-core";
+
+// Use in select component binding
+const bindType = CodeBindTypes.Code_CodeName;
+// Value will be code, display will be codeName
+
+// Example: In a dropdown
+// <Select value={code.code} label={code.codeName} bindType={CodeBindTypes.Code_CodeName} />
+
+// Different binding types
+CodeBindTypes.Code_CodeName; // Value: code, Display: codeName
+CodeBindTypes.CodeName_Code; // Value: codeName, Display: code
+CodeBindTypes.Code_Code; // Value: code, Display: code
+CodeBindTypes.CodeName_CodeName; // Value: codeName, Display: codeName
+```
+
+### 18.8 CodeGroupTypes
+
+Enumeration for code group types used to categorize different types of codes.
+
+**Enum Values:**
+
+- `MASTER_CODE` - Master code type
+- `GENERAL_CODE` - General code type
+- `BUSINESS_CODE` - Business code type
+- `CUSTOM_CODE` - Custom code type
+
+**Usage:**
+
+```typescript
+import { CodeGroupTypes } from "tsb-fontos-core";
+
+// Use in CodeDataParam
+const param = new CodeDataParam();
+param.codeGroupType = CodeGroupTypes.BUSINESS_CODE;
+
+// Use in cache management
+CodeManager.isCacheCodesByGroup(CodeGroupTypes.BUSINESS_CODE, "STATUS");
+CodeManager.removeCacheCodesByGroup(CodeGroupTypes.BUSINESS_CODE, "STATUS");
+
+// Different code group types
+CodeGroupTypes.MASTER_CODE; // "MASTER_CODE"
+CodeGroupTypes.GENERAL_CODE; // "GENERAL_CODE"
+CodeGroupTypes.BUSINESS_CODE; // "BUSINESS_CODE"
+CodeGroupTypes.CUSTOM_CODE; // "CUSTOM_CODE"
+```
+
+---
+
+## 19. Security
+
+### 19.1 BaseUserInfo
+
+Interface for user information used in authentication.
+
+**Properties:**
+
+- `userName?: string` - User name
+- `password?: string` - Password
+
+**Usage:**
+
+```typescript
+import type { BaseUserInfo } from "tsb-fontos-core";
+
+// Create user info for login
+const userInfo: BaseUserInfo = {
+  userName: "john.doe",
+  password: "password123"
+};
+
+// Use in security service
+const token = await securityService.requestToken(userInfo);
+```
+
+### 19.2 BaseUserToken
+
+Interface for user authentication token information.
+
+**Properties:**
+
+- `userName?: string` - User name
+- `access_token: string` - Access token (required)
+- `refresh_token?: string` - Refresh token
+- `token_type: string` - Token type (e.g., "Bearer")
+- `expires_in?: number` - Token expiration time in seconds
+- `scope?: string` - Token scope
+
+**Usage:**
+
+```typescript
+import type { BaseUserToken } from "tsb-fontos-core";
+
+// Token from authentication response
+const token: BaseUserToken = {
+  userName: "john.doe",
+  access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  refresh_token: "refresh_token_here",
+  token_type: "Bearer",
+  expires_in: 3600,
+  scope: "read write"
+};
+
+// Use access token
+const authHeader = `${token.token_type} ${token.access_token}`;
+```
+
+### 19.3 ISecurityDao
+
+Interface for security data access operations.
+
+**Methods:**
+
+- `requestToken(param: BaseUserInfo): Promise<TResponse<BaseUserToken>>` - Request authentication token
+- `requestCachedToken?(token: string): Promise<TResponse<BaseUserToken>>` - Request cached token (optional)
+- `verifyToken?(token: string): Promise<TResponse<boolean>>` - Verify token validity (optional)
+- `inquiryAuthorityControls<T>(param: BaseSecurityParam): Promise<TResponse<TRestResponsePage<T>>>` - Query authority controls
+- `inquiryAuthorInfoList?<T>(param: BaseSecurityParam): Promise<TResponse<TRestResponsePage<T>>>` - Query authorization info list (optional)
+
+**Usage:**
+
+```typescript
+import type { ISecurityDao, BaseUserInfo, BaseUserToken, TResponse } from "tsb-fontos-core";
+
+class SecurityDao implements ISecurityDao {
+  async requestToken(param: BaseUserInfo): Promise<TResponse<BaseUserToken>> {
+    // Implementation to request token from server
+  }
+
+  async verifyToken(token: string): Promise<TResponse<boolean>> {
+    // Implementation to verify token
+  }
+
+  async inquiryAuthorityControls<T>(param: BaseSecurityParam): Promise<TResponse<TRestResponsePage<T>>> {
+    // Implementation to query authority controls
+  }
+}
+```
+
+### 19.4 ISecurityService
+
+Interface for security service operations.
+
+**Methods:**
+
+- `requestToken(param: BaseUserInfo): Promise<TResponse<BaseUserToken>>` - Request authentication token
+- `requestCahcedToken?(token: string): Promise<TResponse<BaseUserToken>>` - Request cached token (optional, note: typo in method name)
+- `invalidateToken?(token: string): Promise<TResponse<boolean>>` - Invalidate token (optional)
+- `verifyToken?(token: string): Promise<TResponse<boolean>>` - Verify token validity (optional)
+- `inquiryAuthorityControls(param: BaseSecurityParam): Promise<AuthorInfoItem[]>` - Query authority controls
+- `inquiryOperationAuthorInfoList?(param: BaseSecurityParam): Promise<AuthorInfoItem[]>` - Query operation authorization info (optional)
+
+**Usage:**
+
+```typescript
+import type { ISecurityService, BaseUserInfo, AuthorInfoItem } from "tsb-fontos-core";
+
+class SecurityService implements ISecurityService {
+  async requestToken(param: BaseUserInfo): Promise<TResponse<BaseUserToken>> {
+    // Implementation
+  }
+
+  async verifyToken(token: string): Promise<TResponse<boolean>> {
+    // Implementation
+  }
+
+  async inquiryAuthorityControls(param: BaseSecurityParam): Promise<AuthorInfoItem[]> {
+    // Implementation - returns AuthorInfoItem[] directly
+  }
+}
+```
+
+### 19.5 AuthorInfoItem
+
+Class representing authorization information for UI controls, operations, or objects. Extends `BaseDataItem`.
+
+**Properties:**
+
+- `moduleId: string` - Module identifier
+- `targetId: string` - Target identifier (menu ID, control ID, etc.)
+- `parentModuleId: string` - Parent module identifier
+- `parentTargetId: string` - Parent target identifier
+- `ruleScope: AuthorRuleScopeTypes` - Rule scope (User or Group, default: User)
+- `roleId: string` - Role identifier
+- `targetName: string` - Target name
+- `targetType: AuthorTargetTypes` - Target type (UIControl, Operation, Object, default: UIControl)
+- `targetTypeId: string` - Target type identifier
+- `visibleYN: string` - Visibility flag (Y/N/1/YES/TRUE for visible)
+- `visible: boolean | undefined` (readonly) - Computed visibility (true if visibleYN is Y/1/YES/TRUE)
+- `enableYN: string` - Enable flag (Y/N/1/YES/TRUE for enabled)
+- `enable: boolean | undefined` (readonly) - Computed enable status (true if enableYN is Y/1/YES/TRUE)
+- `optInfo: string` - Optional information
+- Inherits all properties from `BaseDataItem`
+
+**Usage:**
+
+```typescript
+import { AuthorInfoItem, AuthorRuleScopeTypes, AuthorTargetTypes } from "tsb-fontos-core";
+
+// Create authorization info
+const authInfo = new AuthorInfoItem();
+authInfo.moduleId = "ORDER_MODULE";
+authInfo.targetId = "ORDER_LIST";
+authInfo.targetName = "Order List";
+authInfo.targetType = AuthorTargetTypes.UIControl;
+authInfo.ruleScope = AuthorRuleScopeTypes.User;
+authInfo.roleId = "ADMIN";
+authInfo.visibleYN = "Y";
+authInfo.enableYN = "Y";
+
+// Check visibility and enable status
+if (authInfo.visible) {
+  console.log("Menu is visible");
+}
+
+if (authInfo.enable) {
+  console.log("Control is enabled");
+}
+
+// Use in authorization check
+function checkAuthorization(menuId: string, authInfos: AuthorInfoItem[]): boolean {
+  const authInfo = authInfos.find(a => a.targetId === menuId);
+  if (!authInfo) {
+    return true; // Default to authorized if not found
+  }
+  return authInfo.visible === true && authInfo.enable === true;
+}
+```
+
+### 19.6 AuthorRuleScopeTypes
+
+Types for authorization rule scopes.
+
+```typescript
+import { AuthorRuleScopeTypes } from "tsb-fontos-core";
+
+const scope = AuthorRuleScopeTypes.MODULE;
+```
+
+### 19.7 AuthorTargetTypes
+
+Enumeration for authorization target types.
+
+**Enum Values:**
+
+- `UIControl` - UI control target (0)
+- `Operation` - Operation target (1)
+- `Object` - Object target (2)
+
+**Usage:**
+
+```typescript
+import { AuthorTargetTypes } from "tsb-fontos-core";
+
+// Use in AuthorInfoItem
+const authInfo = new AuthorInfoItem();
+authInfo.targetType = AuthorTargetTypes.UIControl; // For UI controls (buttons, menus, etc.)
+authInfo.targetType = AuthorTargetTypes.Operation; // For operations (save, delete, etc.)
+authInfo.targetType = AuthorTargetTypes.Object; // For objects (data items, etc.)
+
+// Check target type
+if (authInfo.targetType === AuthorTargetTypes.UIControl) {
+  // Handle UI control authorization
+} else if (authInfo.targetType === AuthorTargetTypes.Operation) {
+  // Handle operation authorization
+}
+```
+
+### 19.8 AuditUtil
+
+Static utility class for generating audit staff codes. Used for tracking user actions and module access.
+
+**Constants:**
+
+- `USER_ID_MAX_LENGTH: number` - Maximum length for user ID (10)
+- `MODULE_ID_MAX_LENGTH: number` - Maximum length for module ID (15)
+- `PGM_CDOE_DELIMIT: string` - Program code delimiter (`"-"`)
+- `NOT_NOTIFY_TO_RMS_DELIMIT: string` - Delimiter for not notifying to RMS (`"^"`)
+
+**Methods:**
+
+- `getStaffCd(menuId: string, userId: string, isNotNotifytoRMS?: boolean): string` - Generate staff code for audit
+
+**Usage:**
+
+```typescript
+import { AuditUtil, AppConfig } from "tsb-fontos-core";
+
+// Generate staff code for audit
+const staffCd = AuditUtil.getStaffCd("ORDER_LIST", "USER001");
+// Format: userId (padded to 10) + moduleId (padded to 15)
+// moduleId = pgm_code + "-" + menuId
+
+// With not notify to RMS flag
+const staffCdWithFlag = AuditUtil.getStaffCd("ORDER_LIST", "USER001", true);
+// Adds "^" delimiter before module ID if flag is true
+```
+
+### 19.9 DefaultLoginStrategy
+
+Default implementation of `ILoginStrategy` interface. Handles automatic login, manual login, and logout operations.
+
+**Methods:**
+
+- `tryAutoLogin(setAccessToken: (token: string) => void): Promise<void>` - Try automatic login using cookies
+- `login(userName: string, password: string, setAccessToken: (token: string) => void): Promise<void>` - Login with credentials
+- `logout(token: string): Promise<boolean>` - Logout and clear cookies
+
+**Usage:**
+
+```typescript
+import { DefaultLoginStrategy, LoginedUserInfo } from "tsb-fontos-core";
+
+// Create login strategy
+const loginStrategy = new DefaultLoginStrategy();
+
+// Try automatic login (checks cookies for token and staffCd)
+await loginStrategy.tryAutoLogin((token) => {
+  // Set access token callback
+  console.log("Access token:", token);
+});
+
+// Manual login
+await loginStrategy.login("username", "password", (token) => {
+  // Set access token
+  console.log("Logged in, token:", token);
+  // LoginedUserInfo.isLogined and LoginedUserInfo.staffCd are set automatically
+});
+
+// Logout
+await loginStrategy.logout(token);
+// Clears cookies and resets LoginedUserInfo
+```
+
+### 19.10 ILoginStrategy
+
+Interface for login strategy implementations.
+
+**Methods:**
+
+- `tryAutoLogin(setAccessToken: (token: string) => void): Promise<void>` - Try automatic login
+- `login(userName: string, password: string, setAccessToken: (token: string) => void): Promise<void>` - Login with credentials
+- `logout(token: string): Promise<boolean>` - Logout
+
+**Usage:**
+
+```typescript
+import type { ILoginStrategy } from "tsb-fontos-core";
+
+class CustomLoginStrategy implements ILoginStrategy {
+  async tryAutoLogin(setAccessToken: (token: string) => void): Promise<void> {
+    // Custom auto-login implementation
+  }
+
+  async login(userName: string, password: string, setAccessToken: (token: string) => void): Promise<void> {
+    // Custom login implementation
+  }
+
+  async logout(token: string): Promise<boolean> {
+    // Custom logout implementation
+    return true;
+  }
+}
+```
+
+---
+
+## 20. Observer Pattern
+
+### 20.1 DataSyncAgent
+
+Agent for data synchronization.
+
+```typescript
+import { DataSyncAgent } from "tsb-fontos-core";
+
+// Create sync agent
+const agent = new DataSyncAgent("dataKey");
+
+// Subscribe to changes
+agent.subscribe((data) => {
+  console.log("Data changed:", data);
+});
+
+// Notify changes
+agent.notify(newData);
+```
+
+### 20.2 DataSyncManager
+
+Singleton manager class for coordinating data synchronization across multiple `DataSyncAgent` instances. Manages registration of sync agents and distributes synchronization notifications.
+
+**Methods:**
+
+- `getInstance(): DataSyncManager` - Get singleton instance
+- `registerDataSyncAgent(syncGroupID: string, dataSyncAgent: DataSyncAgent): void` - Register a sync agent for a sync group
+- `unRegisterDataSyncAgent(syncGroupID: string, dataSyncAgent: DataSyncAgent): void` - Unregister a sync agent
+- `getTargetSyncData(syncGroupID: string): any` - Get cached target sync data for a sync group
+- `notifyToSync(syncGroupID: string, targetSyncData: any, additionInfo: any): void` - Notify all registered agents in a sync group about data changes
+
+**Usage:**
+
+```typescript
+import { DataSyncManager, DataSyncAgent } from "tsb-fontos-core";
+
+// Get singleton instance
+const manager = DataSyncManager.getInstance();
+
+// Create and register sync agents
+const agent1 = new DataSyncAgent();
+const agent2 = new DataSyncAgent();
+
+// Register agents for the same sync group
+manager.registerDataSyncAgent("productData", agent1);
+manager.registerDataSyncAgent("productData", agent2);
+
+// Notify all agents in the sync group
+const updatedData = { id: 1, name: "Updated" };
+manager.notifyToSync("productData", updatedData, { source: "API" });
+// Both agent1 and agent2 will receive the notification
+
+// Get cached sync data
+const cachedData = manager.getTargetSyncData("productData");
+
+// Unregister agent
+manager.unRegisterDataSyncAgent("productData", agent1);
+```
+
+**Note:** `DataSyncManager` is typically used internally by `DataSyncAgent`. Direct usage is usually not necessary unless you need to coordinate synchronization manually.
+
+### 20.3 DataSyncNotifiedEventArgs
+
+Class representing event arguments for data synchronization notifications.
+
+**Properties:**
+
+- `targetDataToSync: any` (readonly) - Target data to synchronize
+- `additionInfo: any` (readonly) - Additional information about the synchronization
+
+**Type:**
+
+- `DataSyncNotifiedHandler` - Type alias for handler function: `(sender: any, e: DataSyncNotifiedEventArgs) => void`
+
+**Usage:**
+
+```typescript
+import { DataSyncNotifiedEventArgs, DataSyncNotifiedHandler } from "tsb-fontos-core";
+
+// Create event args
+const eventArgs = new DataSyncNotifiedEventArgs(
+  { id: 1, name: "Updated Product" }, // targetDataToSync
+  { source: "EDIT_FORM", timestamp: new Date() } // additionInfo
+);
+
+// Use in handler
+const handler: DataSyncNotifiedHandler = (sender, e) => {
+  console.log("Data to sync:", e.targetDataToSync);
+  console.log("Additional info:", e.additionInfo);
+  
+  // Update local data
+  updateLocalData(e.targetDataToSync);
+};
+
+// Use with DataSyncAgent
+agent.addCallbackInfoWithHandler("productData", handler);
+```
+
+---
+
+## 21. Export Utilities
+
+### 21.1 ExportGridItem
+
+Represents grid data for export.
+
+```typescript
+import { ExportGridItem } from "tsb-fontos-core";
+
+const exportItem = new ExportGridItem({
+  headers: headerItems,
+  rows: rowData,
+  title: "Product List"
+});
+```
+
+### 21.2 ExportGridCellItem
+
+Class representing a cell in exported grid. Extends `ExportGridBaseCellItem`.
+
+**Properties:**
+
+- `dataField?: string` - Data field name
+- `text: string` - Cell text value (default: "")
+- `backColor?: string` - Background color
+- `foreColor?: string` - Foreground/text color
+- Inherits from `ExportGridBaseCellItem`:
+  - `valign?: string` - Vertical alignment
+  - `halign?: string` - Horizontal alignment
+
+**Usage:**
+
+```typescript
+import { ExportGridCellItem } from "tsb-fontos-core";
+
+// Create cell item
+const cell = new ExportGridCellItem();
+cell.dataField = "productName";
+cell.text = "Product 1";
+cell.backColor = "#FFFFFF";
+cell.foreColor = "#000000";
+cell.valign = "middle";
+cell.halign = "left";
+
+// Use in row data
+const row: ExportGridCellItem[] = [
+  cell,
+  new ExportGridCellItem({ text: "100", dataField: "price" }),
+  new ExportGridCellItem({ text: "10", dataField: "quantity" })
+];
+```
+
+### 21.3 ExportGridHeaderItem
+
+Class representing a header item in exported grid. Extends `ExportGridBaseCellItem`.
+
+**Properties:**
+
+- `dataField: string` - Data field name (default: "")
+- `dataType: string` - Data type (default: "")
+- `width: number` - Column width (default: 0)
+- `text: string` - Header text (default: "")
+- `visible?: boolean` - Whether header is visible (default: true)
+- `backColor?: string` - Background color
+- `foreColor?: string` - Foreground/text color
+- `precision?: number` - Number precision (default: 0)
+- `colorRule?: string` - Color rule
+- `codeType?: string` - Code type for code binding
+- `cellDisplayType?: string` - Cell display type
+- Inherits from `ExportGridBaseCellItem`:
+  - `valign?: string` - Vertical alignment
+  - `halign?: string` - Horizontal alignment
+
+**Usage:**
+
+```typescript
+import { ExportGridHeaderItem } from "tsb-fontos-core";
+
+// Create header item
+const header = new ExportGridHeaderItem();
+header.dataField = "productName";
+header.text = "Product Name";
+header.width = 200;
+header.visible = true;
+header.halign = "left";
+header.valign = "middle";
+header.backColor = "#F0F0F0";
+header.foreColor = "#000000";
+
+// Use in ExportGridItem
+const exportItem = new ExportGridItem();
+exportItem.headers = [header];
+```
+
+### 21.4 ExportGridComplexHeader
+
+Class representing complex headers with merged cells for export.
+
+**Properties:**
+
+- `header: string` - Header text (default: "")
+- `name: string` - Header name identifier (default: "")
+- `childNames: string[]` - Array of child header names (default: [])
+
+**Usage:**
+
+```typescript
+import { ExportGridComplexHeader } from "tsb-fontos-core";
+
+// Create complex header
+const complexHeader = new ExportGridComplexHeader();
+complexHeader.header = "Product Information";
+complexHeader.name = "productInfo";
+complexHeader.childNames = ["productName", "productPrice", "productQuantity"];
+
+// Use in ExportGridItem
+const exportItem = new ExportGridItem();
+exportItem.complexHeaders = [complexHeader];
+```
+
+### 21.5 FileExportParm
+
+Class representing parameters for file export operations.
+
+**Properties:**
+
+- `url: string` - Export service URL (default: "")
+- `mainTitle: string` - Main title for exported file (default: "")
+- `showTitle: boolean` - Whether to show title in exported file (default: true)
+- `showBorder: boolean` - Whether to show borders in exported file (default: true)
+- `fileName: string` - Name of the exported file (default: "")
+- `fileFormat: string` - File format (default: `FileExportConstants.EXPORT_FILE_FORMAT_XLSX`)
+- `searchDataParm?: FileExportDataSearchParm` - Search parameters for data export
+- `gridItem?: ExportGridItem` - Grid data to export
+
+**Usage:**
+
+```typescript
+import { FileExportParm, FileExportConstants, ExportGridItem } from "tsb-fontos-core";
+
+// Create export parameter
+const exportParam = new FileExportParm();
+exportParam.url = "/api/export/products";
+exportParam.fileName = "products.xlsx";
+exportParam.fileFormat = FileExportConstants.EXPORT_FILE_FORMAT_XLSX;
+exportParam.mainTitle = "Product List";
+exportParam.showTitle = true;
+exportParam.showBorder = true;
+
+// Set grid data
+exportParam.gridItem = exportGridItem;
+
+// Use with export service
+const downloadItem = await exportService.exportGrid(exportParam);
+```
+
+### 21.6 FileExportConstants
+
+Constants object for file export format types.
+
+**Constants:**
+
+- `EXPORT_FILE_FORMAT_XLS: string` - Excel 97-2003 format (`"XLS"`)
+- `EXPORT_FILE_FORMAT_XLSX: string` - Excel 2007+ format (`"XLSX"`)
+- `EXPORT_FILE_FORMAT_PDF: string` - PDF format (`"PDF"`)
+
+**Usage:**
+
+```typescript
+import { FileExportConstants } from "tsb-fontos-core";
+
+// Use export format constants
+const excelFormat = FileExportConstants.EXPORT_FILE_FORMAT_XLSX; // "XLSX"
+const pdfFormat = FileExportConstants.EXPORT_FILE_FORMAT_PDF; // "PDF"
+
+// Use in export function
+function exportToExcel(data: any) {
+  return {
+    format: FileExportConstants.EXPORT_FILE_FORMAT_XLSX,
+    data: data
+  };
+}
+
+function exportToPDF(data: any) {
+  return {
+    format: FileExportConstants.EXPORT_FILE_FORMAT_PDF,
+    data: data
+  };
+}
+```
+
+### 21.7 IExportGridDataService
+
+Interface for grid data export service.
+
+**Methods:**
+
+- `exportAndDownload(item: FileExportParm): Promise<DownloadFileItem>` - Export grid data and return download file item
+
+**Usage:**
+
+```typescript
+import type { IExportGridDataService, FileExportParm, DownloadFileItem } from "tsb-fontos-core";
+
+class ExportService implements IExportGridDataService {
+  async exportAndDownload(item: FileExportParm): Promise<DownloadFileItem> {
+    // Implementation to export grid data
+    // Returns DownloadFileItem with fileBlob or error information
+  }
+}
+
+// Use service
+const exportService: IExportGridDataService = new ExportService();
+const exportParam = new FileExportParm();
+exportParam.fileName = "products.xlsx";
+exportParam.gridItem = exportGridItem;
+
+const downloadItem = await exportService.exportAndDownload(exportParam);
+if (downloadItem.fileBlob) {
+  DownloadUtils.downloadFile(downloadItem.fileName, downloadItem.fileBlob);
+} else {
+  console.error("Export failed:", downloadItem.error);
+}
+```
+
+---
+
+## 22. Common Types
+
+### 22.1 TPageInfo
+
+Interface for pagination information used in API responses and data queries.
+
+**Properties:**
+
+- `pageNum?: number` - Current page number
+- `pageSize?: number` - Number of items per page
+- `size?: number` - Size of current page
+- `startRow?: number` - Starting row index
+- `endRow?: number` - Ending row index
+- `pages?: number` - Total number of pages
+- `prePage?: number` - Previous page number
+- `nextPage?: number` - Next page number
+- `isFirstPage?: boolean` - Whether current page is the first page
+- `isLastPage?: boolean` - Whether current page is the last page
+- `hasPreviousPage?: boolean` - Whether there is a previous page
+- `hasNextPage?: boolean` - Whether there is a next page
+- `navigatePages?: boolean` - Whether to show navigation pages
+- `navigatepageNums?: number[]` - Array of page numbers for navigation
+- `navigateFirstPage?: number` - First page in navigation
+- `navigateLastPage?: number` - Last page in navigation
+- `paging?: boolean` - Whether paging is enabled
+- `total?: number` - Total number of items
+
+**Usage:**
+
+```typescript
+import type { TPageInfo } from "tsb-fontos-core";
+
+// Page info from API response
+const pageInfo: TPageInfo = {
+  pageNum: 1,
+  pageSize: 20,
+  total: 100,
+  pages: 5,
+  isFirstPage: true,
+  isLastPage: false,
+  hasPreviousPage: false,
+  hasNextPage: true,
+  navigatepageNums: [1, 2, 3, 4, 5]
+};
+
+// Use in pagination component
+function Pagination({ pageInfo }: { pageInfo: TPageInfo }) {
+  return (
+    <div>
+      <button disabled={!pageInfo.hasPreviousPage}>Previous</button>
+      <span>Page {pageInfo.pageNum} of {pageInfo.pages}</span>
+      <button disabled={!pageInfo.hasNextPage}>Next</button>
+    </div>
+  );
+}
+```
+
+### 22.2 ExceptionItem
+
+Type for exception information.
+
+```typescript
+import type { ExceptionItem } from "tsb-fontos-core";
+
+const exception: ExceptionItem = {
+  code: "ERR001",
+  message: "Error occurred",
+  details: {}
+};
+```
+
+### 22.3 TErrorMsgItem
+
+Type alias for error message items used in REST API error responses.
+
+**Properties:**
+
+- `code?: string` - Error code
+- `msg?: string` - Error message
+
+**Usage:**
+
+```typescript
+import type { TErrorMsgItem } from "tsb-fontos-core";
+
+// Error message item
+const errorMsg: TErrorMsgItem = {
+  code: "VALIDATION_ERROR",
+  msg: "Invalid email format"
+};
+
+// Use in error handling
+function handleError(error: TErrorMsgItem) {
+  if (error.code) {
+    console.error(`Error [${error.code}]: ${error.msg || "Unknown error"}`);
+  }
+}
+```
+
+### 22.4 TRestErrorResponseItem
+
+Type alias for REST API error responses.
+
+**Properties:**
+
+- `code?: string` - Error code
+- `result?: TErrorMsgItem` - Error message item containing detailed error information
+
+**Usage:**
+
+```typescript
+import type { TRestErrorResponseItem, TErrorMsgItem } from "tsb-fontos-core";
+
+// REST error response
+const errorResponse: TRestErrorResponseItem = {
+  code: "API_ERROR",
+  result: {
+    code: "VALIDATION_ERROR",
+    msg: "Invalid input parameters"
+  }
+};
+
+// Handle REST error response
+function handleRestError(response: TRestErrorResponseItem) {
+  if (response.code) {
+    console.error("Error code:", response.code);
+  }
+  if (response.result) {
+    console.error("Error message:", response.result.msg);
+  }
+}
+```
+
+### 22.5 DownloadFileItem
+
+Class representing a downloadable file item with error handling support.
+
+**Properties:**
+
+- `fileName: string` - Name of the file to download
+- `fileBlob: Blob | null` - File data as Blob object (null if download failed)
+- `error?: any` - Server error (original JSON or parsed result) if download failed
+- `internalErrorMessage?: string` - Framework error message if processing failed
+
+**Usage:**
+
+```typescript
+import { DownloadFileItem, DownloadUtils } from "tsb-fontos-core";
+
+// Create download item
+const downloadItem = new DownloadFileItem();
+downloadItem.fileName = "report.xlsx";
+downloadItem.fileBlob = blobData;
+
+// Check if download is successful
+if (downloadItem.fileBlob) {
+  // Download file
+  DownloadUtils.downloadFile(downloadItem.fileName, downloadItem.fileBlob);
+} else {
+  // Handle error
+  if (downloadItem.error) {
+    console.error("Server error:", downloadItem.error);
+  }
+  if (downloadItem.internalErrorMessage) {
+    console.error("Framework error:", downloadItem.internalErrorMessage);
+  }
+}
+
+// Use in export service
+async function exportData(): Promise<DownloadFileItem> {
+  const downloadItem = new DownloadFileItem();
+  
+  try {
+    const response = await fetch("/api/export");
+    const blob = await response.blob();
+    
+    downloadItem.fileName = "export.xlsx";
+    downloadItem.fileBlob = blob;
+  } catch (error) {
+    downloadItem.fileBlob = null;
+    downloadItem.error = error;
+    downloadItem.internalErrorMessage = "Failed to download file";
+  }
+  
+  return downloadItem;
+}
+```
+
+### 22.6 IPageParam
+
+Interface for pagination parameters used in API requests.
+
+**Properties:**
+
+- `dataSouceType?: string` - Type of data source
+- `paging?: boolean` - Whether paging is enabled
+- `pageNum?: number` - Page number to retrieve
+- `pageSize?: number` - Number of items per page
+
+**Usage:**
+
+```typescript
+import type { IPageParam } from "tsb-fontos-core";
+
+// Create page parameter
+const pageParam: IPageParam = {
+  paging: true,
+  pageNum: 1,
+  pageSize: 20,
+  dataSouceType: "DATABASE"
+};
+
+// Use in API call
+async function fetchData(pageParam: IPageParam) {
+  const response = await fetch("/api/data", {
+    method: "POST",
+    body: JSON.stringify(pageParam)
+  });
+  return response.json();
+}
+```
+
+---
+
+## 23. Constants
+
+### 23.1 CoreServerName
+
+Static class containing constants for core server names used in service locator and remote service configuration.
+
+**Constants:**
+
+- `CORE_SECURITY_SVR: string` - Core security server name (`"CORE_SECURITY_SVR"`)
+- `CORE_REMOTE_LOG_SVR: string` - Core remote log server name (`"CORE_REMOTE_LOG_SVR"`)
+- `CORE_COL_SETTING_SVR: string` - Core column setting server name (`"CORE_COL_SETTING_SVR"`)
+- `CORE_EXPORT_GRID_DATA_SVR: string` - Core export grid data server name (`"CORE_EXPORT_GRID_DATA_SVR"`)
+
+**Usage:**
+
+```typescript
+import { CoreServerName, BizServiceLocator } from "tsb-fontos-core";
+
+// Get service using core server name
+const logService = BizServiceLocator.getService(CoreServerName.CORE_REMOTE_LOG_SVR);
+const securityService = BizServiceLocator.getService(CoreServerName.CORE_SECURITY_SVR);
+const exportService = BizServiceLocator.getService(CoreServerName.CORE_EXPORT_GRID_DATA_SVR);
+
+// Use in GeneralLogger for remote logging
+import { GeneralLogger, FrontendLogLevel } from "tsb-fontos-core";
+
+GeneralLogger.remoteWriteLog(
+  FrontendLogLevel.ERROR,
+  {
+    message: "Error occurred",
+    timestamp: new Date()
+  }
+);
+// Uses CoreServerName.CORE_REMOTE_LOG_SVR internally
+```
+
+---
+
+## 24. Best Practices
+
+### 24.1 Service Layer Pattern
+
+Use the service layer pattern for business logic:
+
+```typescript
+// Good: Business logic in service
+class ProductService extends BaseService {
+  async createProduct(data: ProductData): Promise<Product> {
+    // Validation
+    if (!data.name) {
+      throw new BizError("ERR001", "Product name is required");
+    }
+    
+    // Business logic
+    const product = await this.dao.save(data);
+    
+    // Post-processing
+    await this.notifyProductCreated(product);
+    
+    return product;
+  }
+}
+```
+
+### 24.2 Error Handling
+
+Always handle errors appropriately:
+
+```typescript
+try {
+  const result = await service.operation();
+} catch (error) {
+  if (error instanceof BizError) {
+    // Handle business error
+    console.error(error.message);
+  } else {
+    // Handle unexpected error
+    HttpErrorsHandler.handle(error);
+  }
+}
+```
+
+### 24.3 Data Item Management
+
+Use BaseDataItem for data items with change tracking:
+
+```typescript
+class OrderItem extends BaseDataItem {
+  // Properties with change tracking
+  private _quantity: number = 0;
+  
+  get quantity(): number {
+    return this._quantity;
+  }
+  
+  set quantity(value: number) {
+    if (this._quantity !== value) {
+      this._quantity = value;
+      this.markChanged(); // Automatically tracks changes
+    }
+  }
+}
+```
+
+### 24.4 Cache Usage
+
+Use cache for frequently accessed data:
+
+```typescript
+// Cache code data
+const codes = await CodeManager.getCodes("STATUS"); // Automatically cached
+
+// Cache custom data
+const cache = CacheManager.getCache("myCache");
+let data = cache.get("key");
+if (!data) {
+  data = await loadData();
+  cache.put("key", data);
+}
+```
+
+---
+
+## 25. Appendix
+
+### 25.1 Available Exports
+
+All exports from `tsb-fontos-core`:
+
+- **GUID**: All types from `guid-typescript`
+- **Utilities**: DateFormatter, ArrayUtil, StringUtil, ConvertUtil, CheckUtils, DownloadUtils, CookieUtil, PriorityQueue, SortedMap, CallbackManager
+- **Events**: TEvent, TEventArgs, TPropertyChangedEvent
+- **Structures**: DayOfWeek, OpCodes
+- **Data Items**: IDataItem, BaseDataItem, BaseItemList
+- **Commands**: CommandUndoManager, ActionCommand, CommandAdd, CommandDelete
+- **JSON Mapping**: JsonMapper, JsonMapperBindingUtil, MapDecoratorMetaData, ArrayMetaData, DimensionalArrayMetaData
+- **Logger**: GeneralLogger, IFrontendLogService, FrontendLogItem, FrontendLogLevel
+- **Environments**: AppConfig, Localization, LoginedUserInfo, AppConstant
+- **DAO**: BaseDaoSupport, HttpWebDaoSupport, HttpWebDaoBindingSupport, IRemoteServerDaoSupport
+- **Exceptions**: AppNormanErrorBoundary, BizError, HttpErrorsHandler
+- **Remote**: BaseRemoteServerKeys, RemoteServerCfgProvider, RemoteServerCfgHdl, TRemoteConfig, TRemoteServerConfig
+- **HTTP**: HttpBaseRequestHandler, HttpWebRequestHandler, IRemoteRequestHandler, TRequest, TResponse, TRestResponse, TRestResponsePage
+- **Services**: BaseService, BizServiceLocator, BizServiceProvider, BizServiceProxy, BizServiceProxyFactory, IBizServiceLocator
+- **Cache**: CacheManager, GeneralCacheProvider, ICacheProvider, ICacheDataProvider
+- **Codes**: CodeManager, CodeDataItem, CodeDataItemList, CodeDataParam, BaseCodeDataService, CodeCacheDataProvider, CodeBindTypes, CodeGroupTypes
+- **Security**: BaseUserInfo, BaseUserToken, ISecurityDao, ISecurityService, AuthorInfoItem, AuthorRuleScopeTypes, AuthorTargetTypes, AuditUtil, DefaultLoginStrategy, ILoginStrategy
+- **Observer**: DataSyncAgent, DataSyncManager, DataSyncNotifiedEventArgs
+- **Export**: ExportGridItem, ExportGridCellItem, ExportGridHeaderItem, ExportGridComplexHeader, FileExportParm, FileExportConstants, IExportGridDataService, IExportGridDataDao
+- **Types**: TPageInfo, ExceptionItem, TErrorMsgItem, TRestErrorResponseItem, DownloadFileItem, IPageParam
+- **Constants**: CoreServerName
+
+### 25.2 Dependencies
+
+- `guid-typescript`: ^1.0.9
+- `dayjs`: ^1.10.7
+- `reflect-metadata`: ^0.1.13
+
+### 25.3 TypeScript Configuration
+
+Ensure your `tsconfig.json` includes:
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "esModuleInterop": true
+  }
+}
+```
+
+---
+
+## Summary
+
+`tsb-fontos-core` provides a comprehensive set of utilities, data management, service layer, and infrastructure components for building robust TypeScript applications. This guide covers all major features and provides examples for common use cases.
+
+For more detailed information about specific components, refer to the source code and inline documentation.
+
+
+
 # [tsb-fontos-ui] Developer Guide
 
 <img width="1918" height="956" alt="Image" src="https://github.com/user-attachments/assets/2bca3fce-e033-417c-bcda-d029c7c256cb" />
@@ -3885,7 +8801,7 @@ async retrieveData(pageNum: number) {
 
   this.grid!.current?.setLoadingState("LOADING");
 
-  const boardService: ISingleGridServie = BizServiceLocator.getService<ISingleGridServie>(SampleServiceName.SAMPLE_SINGLE_GRID_SVR);
+  const boardService: ISingleGridService = BizServiceLocator.getService<ISingleGridService>(SampleServiceName.SAMPLE_SINGLE_GRID_SVR);
 
   const param = this.getSearchConditions(pageNum);
 
