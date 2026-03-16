@@ -7727,7 +7727,7 @@ private grd_ADM_NewsList = React.createRef<TSpreadGrid>();
 
 ### 7.2 Grid Schema
 
-Grid schemas define informations of column header in JSON files located in `public/process.env.REACT_APP_GRID_PATH(optional)/grid/` directory.
+Grid schemas define informations of column header in JSON files located in `public/grid/process.env.REACT_APP_GRID_PATH(optional)` directory.
 
 **Example: `process.env.REACT_APP_GRID_PATH`**
 
