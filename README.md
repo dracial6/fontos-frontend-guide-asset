@@ -7722,6 +7722,7 @@ private grd_ADM_NewsList = React.createRef<TSpreadGrid>();
   showTotalCount={true} // Displays the total number of data records at the bottom
   selectionUnit="row" // Sets the selection unit to the entire row
   useLookup={true} // Create a map by copying the source list for fast indexing. (Performance improvement, Memory usage increase)
+  rowLockKey="rowLock" // Set row lock column schema`s key. When row is locked, cell`s fore color and back color would be set as default but column which has colorRule as 'C' or 'L' would be excepted.
 />
 ```
 
@@ -8088,8 +8089,8 @@ The following color rule types are available (defined in `ColorRuleTypes.ts`):
 | `"I"` | `ITEM_COLOR` | Item-based color from bizRule | Calls `grid.bizRule.getCellCodeColor()` with the cell value to get dynamic colors based on item data |
 | `"L"` | `VALUE_COLOR` | Color value stored in cell data | Converts cell value to RGB color using `ConvertUtil.oleToRGB()`. If conversion fails, falls back to schema colors |
 | `"U"` | `UISTYLE_COLOR` | UI style-based color | Reserved for future implementation (currently not implemented) |
-| `"V"` | `VERIFED_CNTR` | Verified container color | Reserved for future implementation (currently not implemented) |
-| `"W"` | `VERIFIED_WAGON` | Verified wagon color | Reserved for future implementation (currently not implemented) |
+| `"V"` | `VERIFED_CNTR` | Verified container color | Calls `isValidCntrNo(cntrNo: string)` and if it returns `false` set fore color to `HotPink` |
+| `"W"` | `VERIFIED_WAGON` | Verified wagon color | Calls `isValidWagonNo(wagonNo: string)` and if it returns `false` set fore color to `HotPink` |
 
 **How ColorRuleType Works:**
 
