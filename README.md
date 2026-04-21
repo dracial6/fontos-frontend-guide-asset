@@ -7723,6 +7723,7 @@ private grd_ADM_NewsList = React.createRef<TSpreadGrid>();
   selectionUnit="row" // Sets the selection unit to the entire row
   useLookup={true} // Create a map by copying the source list for fast indexing. (Performance improvement, Memory usage increase)
   rowLockKey="rowLock" // Set row lock column schema`s key. When row is locked, cell`s fore color and back color would be set as default with top priority but column which has colorRule as 'C' or 'L' would be excepted.
+  bindingItemType={NewsItem} // Determines item binding type to covert imported data like excel import.
 />
 ```
 
