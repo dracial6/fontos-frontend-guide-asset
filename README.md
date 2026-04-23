@@ -9745,11 +9745,11 @@ The Presenter (Controller) uses `ControllerToolbarSet` decorators to register me
 - `@(ControllerToolbarSet.getInstance().RefreshDecorator())` - Refresh/Inquiry button
 - `@(ControllerToolbarSet.getInstance().SaveDecorator())` - Save button
 - `@(ControllerToolbarSet.getInstance().DeleteDecorator())` - Delete button
-- `@(ControllerToolbarSet.getInstance().FindDecorator())` - Find button
-- `@(ControllerToolbarSet.getInstance().ColumnSettingDecorator())` - Column Setting button
-- `@(ControllerToolbarSet.getInstance().SummaryDecorator())` - Summary button
+- `@(ControllerToolbarSet.getInstance().FindDecorator())` - Find button. Auto activated by base grid controllers.
+- `@(ControllerToolbarSet.getInstance().ColumnSettingDecorator())` - Column Setting button. Auto activated by base grid controllers.
+- `@(ControllerToolbarSet.getInstance().SummaryDecorator())` - Summary button. Auto activated by base grid controllers.
 - `@(ControllerToolbarSet.getInstance().DetailDecorator())` - Detail button
-- `@(ControllerToolbarSet.getInstance().ExcelImportDecorator())` - Excel Import button
+- `@(ControllerToolbarSet.getInstance().ExcelImportDecorator())` - Excel Import button. Auto activated by base grid controllers.
 - `@(ControllerToolbarSet.getInstance().ExcelExportDecorator())` - Excel Export button
 
 **How Toolbar Activation Works:**
