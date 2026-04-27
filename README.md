@@ -9749,7 +9749,7 @@ The Presenter (Controller) uses `ControllerToolbarSet` decorators to register me
 - `@(ControllerToolbarSet.getInstance().ColumnSettingDecorator())` - Column Setting button. Auto activated by base grid controllers.
 - `@(ControllerToolbarSet.getInstance().SummaryDecorator())` - Summary button. Auto activated by base grid controllers.
 - `@(ControllerToolbarSet.getInstance().DetailDecorator())` - Detail button
-- `@(ControllerToolbarSet.getInstance().ExcelImportDecorator())` - Excel Import button. Auto activated by base grid controllers.
+- `@(ControllerToolbarSet.getInstance().ExcelImportDecorator())` - Excel Import button
 - `@(ControllerToolbarSet.getInstance().ExcelExportDecorator())` - Excel Export button
 
 **How Toolbar Activation Works:**
