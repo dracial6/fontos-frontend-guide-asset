@@ -5324,6 +5324,20 @@ The `MainComponent` processes menu items by:
 2. Merging menu item properties (icon, content, customTabTitle) with JSON configuration
 3. Creating `IMenuTabItem` objects for the layout system
 4. Supporting menu chapters, groups, and common menus
+5. Refresh menu with `MenuInfo.refreshMenu()`
+6. Get or set visibility of each menu with `MenuInfo.getVisibilityMenu(menuKey: string): boolean | undefined`, `MenuInfo.setVisibilityMenu(menuKey: string, visible: boolean, refresh?: boolean`
+  - menuKey should be key property of each menu item, but case of chapter and group it should be JSON key.
+    ```json
+    "menu": {
+      "Data": { // <-- Use it as menuKey param to set visibility
+        "Grid": [ // <-- Use it as menuKey param to set visibility
+          {
+            "key": "singleGrid", // <-- Use it as menuKey param to set visibility
+          }
+        ]
+      }
+    }
+    ```
 
 **Example Menu Item Structure:**
 
