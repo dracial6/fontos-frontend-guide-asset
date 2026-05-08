@@ -7768,6 +7768,44 @@ To use a grid schema, specify the schema file name (without the `.json` extensio
 />
 ```
 
+Or set `columnSchema` property in a grid and call `makeColumn()` function in codes manually.
+
+```typescript
+const columnSchemas: ColumnSchema[] = [
+  {
+    key: "unid",
+    labelResKey: "WRD_FTSL_UNID",
+    viewColumnSeq: 0,
+    width: 80,
+    horizontalAlignment: "C",
+    verticalAlignment: "C",
+    filter: false,
+    sort: "A",
+    dbField: "unid",
+    refDBField: "",
+    cellInputType: "N",
+    cellStyleId: "Unid",
+    cellDisplayType: "N",
+    valueDisplayType: "N",
+    cellType: "Text",
+    colorRule: "",
+    backColor: "rgba(198,255,255)",
+    foreColor: "Black",
+    codeType: "",
+    refCodeType: "",
+    locked: false,
+    isMandatory: true,
+    isPrimaryKey: true,
+    enabled: true,
+    visible: true
+  },
+  //... other column schemas
+];
+
+this._grid!.current!.columnSchemas = columnSchemas;
+this._grid!.current?.makeColumns();
+```
+
 **C# Schema Handling Tool**
 Tsb-Fontos-Tools -> run Tsb-Fontos-Tools-Se-MultiHeader -> Spread Editor tab -> Spread Editor(Web) menu
 
