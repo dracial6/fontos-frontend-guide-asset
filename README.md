@@ -10311,7 +10311,7 @@ All UI template components (`BaseSingleGridComponent`, `BaseMultiGridComponent`,
 The `setAuthControls()` method (`/src/ui-templates/BaseComponent.tsx`) is automatically called in `componentDidMount()` and performs the following:
 
 1. **Retrieves Authorization Information**: Calls `ISecurityService.inquiryAuthorityControls()` with the current `menuId` and user information
-2. **Applies Controls to Grid Columns**: For grid columns (identified by `targetId === "Column"`), it:
+2. **Applies Controls to Grid Columns**: For grid columns (identified by `targetTypeId === "Column"`), it:
    - Hides columns if `visibleYN === false`
    - Disables columns if `enableYN === false` (removes editor, sets locked flag)
 3. **Applies Controls to UI Elements**: For other UI elements (identified by `authControlId`), it:
