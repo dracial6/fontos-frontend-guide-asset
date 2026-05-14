@@ -5326,7 +5326,7 @@ The `MainComponent` processes menu items by:
 4. Supporting menu chapters, groups, and common menus
 5. Refresh menu with `MenuInfo.refreshMenu()`
 6. Get or set visibility of each menu with `MenuInfo.getVisibilityMenu(menuKey: string): boolean | undefined`, `MenuInfo.setVisibilityMenu(menuKey: string, visible: boolean, refresh?: boolean`
-  - menuKey should be key property of each menu item, but case of chapter and group it should be JSON key.
+  - menuKey should be key property of each menu, but case of chapter and group it should be JSON key.
     ```json
     "menu": {
       "Data": { // <-- Use it as menuKey param to set visibility
@@ -7768,7 +7768,7 @@ To use a grid schema, specify the schema file name (without the `.json` extensio
 />
 ```
 
-Or set `columnSchema` property in a grid and call `makeColumn()` function in codes manually.
+Or set `columnSchemas` property in a grid and call `makeColumn()` function in codes manually.
 
 ```typescript
 const columnSchemas: ColumnSchema[] = [
@@ -10300,11 +10300,11 @@ All UI template components share the following features:
 
 5. **Event Handling**: Components provide event handling infrastructure through controllers.
 
-6. **UI Authentication**: Components automatically apply authorization controls to UI elements based on user permissions.
+6. **UI Authorization**: Components automatically apply authorization controls to UI elements based on user permissions.
 
-#### UI Authentication
+#### UI Authorization
 
-All UI template components (`BaseSingleGridComponent`, `BaseMultiGridComponent`, `BaseSingleDrawComponent`, `BaseMultiDrawComponent`, `BaseCompositeComponent`, `CustomContainerComponent`) inherit from `BaseComponent`, which provides automatic UI authentication through the `setAuthControls()` method.
+All UI template components (`BaseSingleGridComponent`, `BaseMultiGridComponent`, `BaseSingleDrawComponent`, `BaseMultiDrawComponent`, `BaseCompositeComponent`, `CustomContainerComponent`) inherit from `BaseComponent`, which provides automatic UI Authorization through the `setAuthControls()` method.
 
 **How It Works:**
 
@@ -10314,23 +10314,23 @@ The `setAuthControls()` method (`/src/ui-templates/BaseComponent.tsx`) is automa
 2. **Applies Controls to Grid Columns**: For grid columns (identified by `targetId === "Column"`), it:
    - Hides columns if `visibleYN === false`
    - Disables columns if `enableYN === false` (removes editor, sets locked flag)
-3. **Applies Controls to UI Elements**: For other UI elements (identified by `className`), it:
+3. **Applies Controls to UI Elements**: For other UI elements (identified by `authControlId`), it:
    - Hides elements if `visibleYN === false`
    - Disables elements if `enableYN === false` (sets `tabIndex=-1`, disables pointer events)
 
 **Grid Column Authorization:**
 
-Grid columns are identified using the format: `className|columnName` (e.g., `"myGrid|userName"`). The `targetId` in the authorization response should match this format.
+Grid columns are identified using the format: `authControlId|columnName` (e.g., `"{targetId}|userName"`). The `targetId` in the authorization response should match this format.
 
 **Example:**
 ```typescript
 // In your View component
 <TSpreadGrid
   ref={this._grid}
-  className="myGrid"  // Used for authorization matching
+  authControlId={targetId}  // Used for authorization matching
   columns={[
-    { header: "User Name", name: "userName" },  // Matches "myGrid|userName"
-    { header: "Email", name: "email" },         // Matches "myGrid|email"
+    { header: "User Name", name: "userName" },  // Matches "{targetId}|userName"
+    { header: "Email", name: "email" },         // Matches "{targetId}|email"
   ]}
 />
 ```
@@ -10365,8 +10365,8 @@ import BizRemoteServerKeys from "../../config/environment/BizRemoteServerKeys";
 // Define your custom AuthControlItem type based on your backend response
 interface AuthControlItem {
   roleId: string;
-  controlId: string;      // e.g., "myGrid|userName"
-  controlType: string;    // e.g., "Column" or element className
+  controlId: string;      // e.g., "{targetId}|userName"
+  controlType: string;    // e.g., "Column" or element authControlId
   visibleYN: string;      // "Y" or "N"
   enableYN: string;       // "Y" or "N"
 }
@@ -10438,8 +10438,8 @@ export default class SampleTokenService
             const menuAuthItem = new AuthorInfoItem();
             menuAuthItem.roleId = authItem.roleId;
             menuAuthItem.targetType = AuthorTargetTypes.UIControl;
-            menuAuthItem.targetId = authItem.controlId; // e.g., "myGrid|userName"
-            menuAuthItem.targetTypeId = authItem.controlType; // e.g., "Column" or element className
+            menuAuthItem.targetId = authItem.controlId; // e.g., "{targetId}|userName"
+            menuAuthItem.targetTypeId = authItem.controlType; // e.g., "Column" or element authControlId
             menuAuthItem.parentModuleId = AppConfig.getInstance().module_id;
 
             if (LoginedUserInfo.userGroup) {
@@ -10579,8 +10579,8 @@ The `inquiryAuthorityControls` method should return an array of `AuthorInfoItem`
 interface AuthorInfoItem {
   roleId: string;
   targetType: AuthorTargetTypes;      // e.g., AuthorTargetTypes.UIControl
-  targetId: string;                  // e.g., "myGrid|userName" for columns, or className for elements
-  targetTypeId: string;              // "Column" for grid columns, or element className
+  targetId: string;                  // e.g., "{targetId}|userName" for columns, or elements authControlId
+  targetTypeId: string;              // "Column" for grid columns, or element authControlId
   parentModuleId: string;
   ruleScope: AuthorRuleScopeTypes;   // AuthorRuleScopeTypes.User or AuthorRuleScopeTypes.Group
   visibleYN: string;                 // "Y" or "N"
