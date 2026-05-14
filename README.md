@@ -7768,7 +7768,7 @@ To use a grid schema, specify the schema file name (without the `.json` extensio
 />
 ```
 
-Or set `columnSchemas` property in a grid and call `makeColumn()` function in codes manually.
+Or set `columnSchemas` property(not props) in a grid and call `makeColumn()` function in codes manually.
 
 ```typescript
 const columnSchemas: ColumnSchema[] = [
