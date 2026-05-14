@@ -7802,8 +7802,15 @@ const columnSchemas: ColumnSchema[] = [
   //... other column schemas
 ];
 
-this._grid!.current!.columnSchemas = columnSchemas;
+this._grid!.current!.columnSchemas.push(...columnSchemas);
 this._grid!.current?.makeColumns();
+
+<TSpreadGrid
+  ref={this.grd_ADM_NewsList}
+  columns={[]} // When grid use [specifiedSchemaFileName] props with schema.json, set [columns] props as empty
+  specifiedSchemaFileName="grd_ADM_NewsList_Schema" // Grid would combine json and columnSchemas property into a columns list
+  // ... other props
+/>
 ```
 
 **C# Schema Handling Tool**
