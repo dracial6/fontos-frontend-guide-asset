@@ -7717,7 +7717,6 @@ private grd_ADM_NewsList = React.createRef<TSpreadGrid>();
 <TSpreadGrid
   ref={this.grd_ADM_NewsList}
   width={"auto"} // Sets grid width to automatically fit the container
-  bodyHeight={"fitToParent"} // Adjusts the grid body height to match its parent element
   header={{ height: 30 }} // Defines the height of the header row as 30px
   minRowHeight={25} // Sets the minimum height for each data row to 25px
   rowHeaders={["rowNum"]} // Displays row numbers in the header column
@@ -7735,7 +7734,7 @@ private grd_ADM_NewsList = React.createRef<TSpreadGrid>();
   bizRule={BaseBizRule} // Assigns common business logic rules to the grid
   showTotalCount={true} // Displays the total number of data records at the bottom
   selectionUnit="row" // Sets the selection unit to the entire row
-  useLookup={true} // Create a map by copying the source list for fast indexing. (Performance improvement, Memory usage increase)
+  useLookup={true} // Create a map by copying the source list for fast indexing. (Performance improvement, Memory usage increase)  
   bindingItemType={NewsItem} // Determines item binding type to covert imported data like excel import.
   authControlId="gridAuthKey" // Key for UI Authorization
 />
@@ -9754,6 +9753,211 @@ The MVP (Model-View-Presenter) pattern separates concerns into three distinct la
   - Handling user input events
   - Displaying data received from the Presenter
   - Delegating business logic to the Presenter
+  - Definitions
+	```typeScript
+	//BaseComponent
+	import React, { RefObject } from "react";
+	import BaseController from "./BaseController";
+	import { TEventHandler } from "tsb-fontos-core";
+	export interface BaseBizProps {
+		mainComponent: JSX.Element;
+		menuId: string;
+		rootRef: RefObject<HTMLElement>;
+		controller?: BaseController;
+		mandatoryFieldMap?: Map<string, any>;
+		onClose?: (e: {
+			cancel?: boolean;
+		}) => void;
+	}
+	declare class BaseComponent<T extends BaseBizProps, X> extends React.Component<T, X> {
+		protected _tabId?: string;
+		readonly dockResizeEvent: TEventHandler;
+		private _dockResizeCallback;
+		protected readonly dockResizeObserver: ResizeObserver;
+		protected prevDockPanel?: HTMLElement;
+		private readonly SPREAD_COLUMN_NAME;
+		private _securityService;
+		private _activePromise;
+		protected authCallback: () => void;
+		private enableToolbars;
+		private onClick;
+		isModalView(): boolean;
+		getDockPanel(): HTMLElement | undefined;
+		setViewState(): void;
+		setAuthControls(): Promise<void>;
+		private setAuth;
+		componentDidMount(): void;
+		componentWillUnmount(): void;
+		checkMandatory(): boolean;
+		refreshContent(idx?: number, gap?: number): void;
+		render(): import("react/jsx-runtime").JSX.Element;
+	}
+	export default BaseComponent;
+
+	//BaseSingleDrawComponent
+	import { RefObject } from "react";
+	import BaseComponent, { BaseBizProps } from "./BaseComponent";
+	import BaseSingleDrawController from "./BaseSingleDrawController";
+	export interface BaseSingleDrawProps extends BaseBizProps {
+		controller?: BaseSingleDrawController;
+		drawContainerRef: RefObject<HTMLElement>;
+		resizeValue?: number;
+	}
+	declare class BaseSingleDrawComponent<T extends BaseSingleDrawProps, X> extends BaseComponent<T, X> {
+		private _firstObserver?;
+		static defaultProps: {
+			resizeValue: number;
+		};
+		get resizeValue(): number;
+		set resizeValue(value: number);
+		onResize(): void;
+		private _onResizeHandler;
+		private observerCallback;
+		private _init;
+		componentDidMount(): void;
+		componentWillUnmount(): void;
+		refreshContent(idx?: number, gap?: number): void;
+	}
+	export default BaseSingleDrawComponent;
+
+	//BaseMultiDrawComponent
+	import { RefObject } from "react";
+	import BaseComponent, { BaseBizProps } from "./BaseComponent";
+	import BaseMultiDrawController from "./BaseMultiDrawController";
+	export interface BaseMultiDrawProps extends BaseBizProps {
+		controller?: BaseMultiDrawController;
+		drawContainerRefs: RefObject<HTMLElement>[];
+		resizeValues?: number[];
+		horizontal?: boolean;
+	}
+	declare class BaseMultiDrawComponent<T extends BaseMultiDrawProps, X> extends BaseComponent<T, X> {
+		private _firstObserver?;
+		private _drawRefs;
+		private _currentDrawRef?;
+		static defaultProps: {
+			resizeValues: number[];
+		};
+		getCurrentDrawIdx(): number;
+		get currentResizeValue(): number;
+		set currentResizeValue(value: number);
+		getResizeValue(index: number): number;
+		setResizeValue(index: number, value: number, doResize?: boolean): void;
+		onResize(): void;
+		private _onResizeHandler;
+		private onDrawClick;
+		private observerCallback;
+		private _init;
+		componentDidMount(): void;
+		componentWillUnmount(): void;
+		refreshContent(idx?: number, gap?: number): void;
+	}
+	export default BaseMultiDrawComponent;
+
+	//BaseSingleGridComponent
+	import { RefObject } from "react";
+	import TSpreadGrid from "../grid/TSpreadGrid";
+	import BaseComponent, { BaseBizProps } from "./BaseComponent";
+	import BaseSingleGridController from "./BaseSingleGridController";
+	export interface BaseSingleGridProps extends BaseBizProps {
+		controller?: BaseSingleGridController;
+		resizeValue?: number;
+		gridRef: RefObject<TSpreadGrid>;
+	}
+	declare class BaseSingleGridComponent<T extends BaseSingleGridProps, X> extends BaseComponent<T, X> {
+		private _grid;
+		private _timers;
+		static defaultProps: {
+			resizeValue: number;
+		};
+		get resizeValue(): number;
+		set resizeValue(value: number);
+		private _resizeCallback;
+		private _init;
+		componentDidMount(): void;
+		componentDidUpdate(): void;
+		componentWillUnmount(): void;
+		refreshContent(): void;
+	}
+	export default BaseSingleGridComponent;
+
+	//import { RefObject } from "react";
+	import TSpreadGrid from "../grid/TSpreadGrid";
+	import BaseComponent, { BaseBizProps } from "./BaseComponent";
+	import BaseMultiGridController from "./BaseMultiGridController";
+	export interface BaseMultiGridProps extends BaseBizProps {
+		controller?: BaseMultiGridController;
+		resizeValues?: number[];
+		gridRefs: RefObject<TSpreadGrid>[];
+		horizontal?: boolean;
+	}
+	declare class BaseMultiGridComponent<T extends BaseMultiGridProps, X> extends BaseComponent<T, X> {
+		private _gridIds;
+		private _currentGridId;
+		private _timers;
+		static defaultProps: {
+			resizeValues: number[];
+		};
+		getCurrentGridIdx(): number;
+		get currentResizeValue(): number;
+		set currentResizeValue(value: number);
+		getResizeValue(index: number): number;
+		setResizeValue(index: number, value: number, doResize?: boolean): void;
+		private _resizeCallback;
+		private onGridClick;
+		private _init;
+		componentDidMount(): void;
+		componentDidUpdate(): void;
+		componentWillUnmount(): void;
+		refreshContent(idx?: number, gap?: number): void;
+	}
+	export default BaseMultiGridComponent;
+
+	//import { RefObject } from "react";
+	import TSpreadGrid from "../grid/TSpreadGrid";
+	import BaseComponent, { BaseBizProps } from "./BaseComponent";
+	import BaseCompositeController from "./BaseCompositeController";
+	export interface BaseCompositeProps extends BaseBizProps {
+		controller?: BaseCompositeController;
+		drawContainerRef: RefObject<HTMLElement>;
+		drawResizeValue?: number;
+		gridResizeValue?: number;
+		gridRef: RefObject<TSpreadGrid>;
+	}
+	declare class BaseCompositeComponent<T extends BaseCompositeProps, X> extends BaseComponent<T, X> {
+		private _firstObserver?;
+		private _activeChild?;
+		private _grid;
+		private _timers;
+		static defaultProps: {
+			drawResizeValue: number;
+			gridResizeValue: number;
+		};
+		get activeChild(): any;
+		get drawResizeValue(): number;
+		set drawResizeValue(value: number);
+		get gridResizeValue(): number;
+		set gridResizeValue(value: number);
+		doDrawResize(value: number): void;
+		private _resizeCallback;
+		onResize(): void;
+		private _onResizeHandler;
+		private observerCallback;
+		private onDrawContainerClick;
+		private onGridClick;
+		private _init;
+		componentDidMount(): void;
+		componentDidUpdate(): void;
+		componentWillUnmount(): void;
+		refreshContent(idx?: number, gap?: number): void;
+	}
+	export default BaseCompositeComponent;
+
+	//CustomContainerComponent
+	import React from "react";
+	export default abstract class CustomContainerComponent extends React.Component {
+		abstract open(): void;
+	}
+	```
 - **Characteristics**:
   - Should be "dumb" - minimal business logic
   - Receives data and callbacks from Presenter
@@ -9769,6 +9973,86 @@ The MVP (Model-View-Presenter) pattern separates concerns into three distinct la
   - Manages application state
   - Handles data synchronization between multiple views(`DataSyncAgent`)
   - Controls toolbar menu activation based on view state
+  - !Important! Take view instance and type through constructor(NOT GENERIC TYPE) and Base-Controllers would hold these.
+	- Base Controller definitions
+	```typescript
+	//BaseController
+	import { DataSyncAgent } from "tsb-fontos-core";
+	export default abstract class BaseController {
+		dataSyncAgent: DataSyncAgent;
+		initDataSyncCallbackInfo(): void;
+		clearDataSyncCallbackInfo(): void;
+		dispose(): void;
+	}
+	
+	//BaseDrawController
+	import BaseController from "./BaseController";
+	export default abstract class BaseDrawController extends BaseController {
+	}
+
+
+	//BaseGridController
+	import BaseController from "./BaseController";
+	export default abstract class BaseGridController extends BaseController {
+	}
+
+	//BaseSingleDrawController
+	import BaseDrawController from "./BaseDrawController";
+	export default abstract class BaseSingleDrawController extends BaseDrawController {
+	}
+	
+	//BaseMultiDrawController
+	import BaseDrawController from "./BaseDrawController";
+	export default abstract class BaseMultiDrawController extends BaseDrawController {
+	}
+
+	//BaseSingleGridController
+	import { RefObject } from "react";
+	import TSpreadGrid from "../grid/TSpreadGrid";
+	import BaseGridController from "./BaseGridController";
+	import BaseSingleGridComponent, { BaseSingleGridProps } from "./BaseSingleGridComponent";
+	export default abstract class BaseSingleGridController extends BaseGridController {
+		protected singleGridCompRef: RefObject<BaseSingleGridComponent<BaseSingleGridProps, {}>>;
+		get grid(): RefObject<TSpreadGrid> | undefined;
+		constructor(componentRef: RefObject<BaseSingleGridComponent<BaseSingleGridProps, {}>>);
+		Find(): void;
+		ColumnSetting(): void;
+		Summary(): void;
+		dispose(): void;
+	}
+
+	//BaseMultiGridController
+	import { RefObject } from "react";
+	import TSpreadGrid from "../grid/TSpreadGrid";
+	import BaseGridController from "./BaseGridController";
+	import BaseMultiGridComponent, { BaseMultiGridProps } from "./BaseMultiGridComponent";
+	export default abstract class BaseMultiGridController extends BaseGridController {
+		activeGridIdx: number;
+		protected multiGridCompRef: RefObject<BaseMultiGridComponent<BaseMultiGridProps, {}>>;
+		get grids(): RefObject<TSpreadGrid>[] | undefined;
+		constructor(componentRef: RefObject<BaseMultiGridComponent<BaseMultiGridProps, {}>>);
+		Find(): void;
+		ColumnSetting(): void;
+		Summary(): void;
+		dispose(): void;
+	}
+	
+	//BaseCompositeController
+	import { RefObject } from "react";
+	import BaseController from "./BaseController";
+	import TSpreadGrid from "../grid/TSpreadGrid";
+	import BaseCompositeComponent, { BaseCompositeProps } from "./BaseCompositeComponent";
+	export default abstract class BaseCompositeController extends BaseController {
+		protected gridCompRef: RefObject<BaseCompositeComponent<BaseCompositeProps, {}>>;
+		get grid(): RefObject<TSpreadGrid> | undefined;
+		constructor(componentRef: RefObject<BaseCompositeComponent<BaseCompositeProps, {}>>);
+		Find(): void;
+		ColumnSetting(): void;
+		Summary(): void;
+		ExcelImport(): void;
+		dispose(): void;
+	}
+	```
 - **Characteristics**:
   - Contains business logic
   - Uses decorators (`ControllerToolbarSet`) to register toolbar menu handlers
@@ -9785,6 +10069,7 @@ The MVP (Model-View-Presenter) pattern separates concerns into three distinct la
   - Data items extend `BaseDataItem`
   - Data lists extend `BaseItemList`
   - Services extend `BaseService`
+  - Presenter(Controller) gets services through `BizServiceLocator`
   - Example: `ProductItem`, `ProductList`, `ProductService`, `ProductDao`
 
 **Data Flow:**
@@ -9826,10 +10111,17 @@ import { TEventArgs } from "tsb-fontos-core";
 import { ControllerToolbarSet, BaseSingleGridController } from "tsb-fontos-ui";
 
 class ProductController extends BaseSingleGridController {
+  private _componentRef: RefObject<BaseSingleGridComponent<ProductProps, {}>>; // ProductProps is extending BaseSingleGridProps
+  
+  constructor(componentRef: RefObject<BaseSingleGridComponent<ProductProps, {}>>) {
+	  this._componentRef = componentRef;
+  }
+
   // This method will be called when the "Refresh" toolbar button is clicked
   @(ControllerToolbarSet.getInstance().RefreshDecorator())
   public async menuRefresh(): Promise<void> {
     await this.doRetrieveData(TEventArgs.Empty);
+	  this._componentRef.current?.postForm(); // Call view`s own function
   }
 
   // This method will be called when the "Save" toolbar button is clicked
@@ -10602,7 +10894,7 @@ interface AuthorInfoItem {
 - Implement controllers to separate business logic from view components
 - Use `mainComponent` prop to define your screen layout
 - For multi-grid/draw components, ensure `gridRefs`/`drawContainerRefs` array length matches `resizeValues` array length
-- Use consistent `className` values for grid components to enable proper authorization matching
+- Use consistent `authControlId` values for grid components to enable proper authorization matching
 - Ensure your security service implementation properly handles authorization data from your backend
 
 #### 8.7.2 Data Synchronization
@@ -11734,14 +12026,674 @@ Specifying optional or dynamic functional values directly in the inline style at
 |Predefined Options (Choice from a set)|CSS Classes|Lowest|Even with malicious input, it won't match your predefined whitelist in the CSS file. The most secure approach.|
 |url() Functions (External resources)|Strict Validation or CSS Classes|High|These carry the highest risk of XSS via javascript: schemas or CSS Injection. Isolation is highly recommended.|
 
+1. Core Principles
+* **Component Strategy:** Utilize `TForm` + `TForm.Item` for batch/global style application to minimize the use of inline `className` declarations.
+* **CSS Specificity & Overrides:** Since standard CSS holds higher priority than common component props style, use the CSS `:not()` pseudo-class to exclude specific components that already have common props styles applied.
+* **Handling Exceptions:** For exceptional layouts or edge cases, combine miscellaneous components with common props styles.
+* **Grouping:** Use `TFlex` for structural grouping.
 
-```typescript
-<div style={{ width: `${userSize}px`, color: userColor }} /> // Safe. Use for dynamic values that are strictly numeric or hex codes, such as slider positions or color pickers
+```Common Css Styles
+.group-title {
+  width: fit-content;
+  margin:5px;
+  margin-top:-17px;
+  color:blue;
+  text-align: left;
+  font-size: 12px;
+  background-color:#F5F5F5;
+}
 
-<div className={isDarkMode ? 'theme-dark' : 'theme-light'} /> // Safe. Use for toggleable states or predefined themes. This prevents users from injecting arbitrary CSS properties
+.detail-form {
+  width:100%;
+  height:100%;
+}
 
-<div style={{ backgroundImage: `url(${validatedUrl})` }} /> // Not safe. Isolation is highly recommended
+.detail-form .ant-form-item {
+  margin: 0px; /* remove default margin of form item */
+}
+
+.detail-form input:not(.ft.width),
+.detail-form .ant-picker,
+.detail-form .ant-select{
+  width: 150px;
+}
+
+/* Set this style to all label except .group-title and .ant-checkbox-wrapper class*/
+.detail-form label:not(.group-title):not(.ant-radio-wrapper):not(.ant-checkbox-wrapper):not([class^="tui-grid"]) {
+  color:black;
+  text-align:right;
+  margin-right:5px;
+  padding:0px;
+  font-size:12px;
+  font-family:Tahoma;
+}
+
+.detail-form label:not(.group-title):not(.ant-radio-wrapper):not(.ant-checkbox-wrapper):not(.ft.width):not([class^="tui-grid"]) {
+  width: 120px;
+  display: inline-block;
+}
+
+.grid-form .ant-form-item .ant-row {
+    width: 100%;
+}
+
+.grid-form .ant-form-item {
+    margin: 0px; /* remove default margin of form item */
+    margin-top: -2px;
+    padding: 0px;
+}
+
+.grid-form .ant-form-item .ant-row .ant-col {
+    border-style: inset;
+    border-width: 1px;
+    background-color:#F5F5F5;
+    padding: 0px;
+}
+
+.grid-form .ant-form-item label:not(.ant-checkbox-wrapper),
+.grid-form .ant-form-item .ant-form-item-row .ant-form-item-label label:not(.ant-checkbox-wrapper) {
+    margin-left: 7px;
+    padding-bottom: 5px;
+}
+
+.root-panel {
+  width: 100%;
+  height: 100%;
+}
+
+.list-layout {
+  width: 100%;
+  height: 100%;
+  text-align: left;
+  font-size: 12px;
+  font-family: Tahoma;
+}
+
+.list-layout .ant-layout-header {
+  width: auto;
+  height: auto;
+  padding:2px;
+  border: solid;
+  border-width: 1px;
+  border-color: lightgray;
+  border-bottom: none;
+  line-height: 1.5;
+  font-size: 12px;
+  font-family: Tahoma;
+}
+
+.list-layout .ant-layout-content {
+  width: auto;
+  height: auto;
+  padding:2px;
+  border: solid;
+  border-width: 1px;
+  border-color: lightgray;
+  font-size: 12px;
+  font-family: Tahoma;
+}
+
+.list-layout label:not(.group-title):not(.grid-header-box):not(.ant-radio-wrapper):not(.ant-checkbox-wrapper):not([class^="tui-grid"]) {
+  color: black;
+  text-align: right;
+  margin-right: 5px;
+  padding: 0px;
+  line-height: 1px;
+  font-size: 12px;
+  font-family: Tahoma;
+}
+
+.list-layout .grid-header-box {
+  border: solid;
+  border-width: 1px;
+  border-color: gray;
+}
 ```
+
+```typescript example
+//#region RENDER AREA **************************************
+private createHeader(): React.ReactNode {
+	try {
+		const { isHeaderLocked, isDetailActive, isSztpLocked, isExportMode } = this.state;                   
+
+		return (
+			<TForm<BindItem>
+				ref={this.frmMain}
+				className="detail-form"
+				initialValues={this.getInitialBindItem()}
+				onValuesChange={this.form_onValuesChange.bind(this)}
+			>
+			<TForm.Item name="vslCd" hidden={true}><TInput /></TForm.Item>
+			<TForm.Item name="callYear" hidden={true}><TInput /></TForm.Item>
+			<TForm.Item name="callSeq" hidden={true}><TInput /></TForm.Item>
+			<TForm.Item name="userVoy" hidden={true}><TInput /></TForm.Item>
+
+				<TFlex vertical={true} padding="5px" gap={5}>
+					<TFlex gap={5}>
+						<TFlex vertical={true} isGroupBox={true} width={"fit-content"} margin="0px">
+							<TForm.Item name={"pickupOrderMode"}>
+								<TRadio.Group onAfterChange={this.onPickupOrderModeChange} disabled={isHeaderLocked}>
+									<TFlex vertical={true} gap={this.CONTROL_GAP}>
+										<TRadio 
+											textResourceKey="WRD_CTIP_Label_PositioningOut"
+											width={"fit-content"}
+											margin={"0px"}
+											whiteSpace={"nowrap"}
+											value={PickupOrderMode.POSITIONING_OUT}
+										/>
+										<TRadio 
+											textResourceKey="WRD_CTIP_Label_PickupOrderForExport"
+											width={"fit-content"}
+											margin={"0px"}
+											whiteSpace={"nowrap"}
+											value={PickupOrderMode.PICKUP_BY_BOOKING}
+										/>
+									</TFlex>
+								</TRadio.Group>
+							</TForm.Item>
+						</TFlex>
+
+						<TFlex vertical={true} isGroupBox={true} width={"fit-content"} margin="0px" gap={this.CONTROL_GAP}>
+							<TFlex>
+								<TFlex vertical={true} gap={this.CONTROL_GAP} align="end">
+									<TLabel textResourceKey="WRD_CTIP_Label_PickupOrderNo" className="ct-label" isBold={true}/>
+									<TLabel textResourceKey="WRD_CTIP_Label_BookingNo" className="ct-label" isBold={true}/>
+								</TFlex>
+
+								<TFlex vertical={true} gap={this.CONTROL_GAP}>
+									<TFlex gap={this.CONTROL_GAP}>
+										<TForm.Item name={"jobOdrNo"}>
+											<TInput
+												width={this.CONTROL_WIDTH * 2}                                                    
+												backColorType={isHeaderLocked ? "readonly" : "free-text"} readOnly={isHeaderLocked}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter') {
+														this.onJobOdrNoKeyDown(e);
+													}
+												}}
+											/>
+										</TForm.Item>
+
+										<TButton
+											ref={this.btnCreateNo}
+											textResourceKey="WRD_CTIP_Label_CreateNo"
+											onAfterClick={this.button_onAfterClick.bind(this)}
+											disabled={isHeaderLocked}
+										/>
+									</TFlex>
+									
+									<TFlex gap={this.CONTROL_GAP}>
+										<TForm.Item name={"bookingNo"}>
+											<TInput
+												width={this.CONTROL_WIDTH * 2}
+												backColorType={isHeaderLocked ? "readonly" : "free-text"} 
+												readOnly={isHeaderLocked}
+												onKeyDown={(e) => {
+													if (e.key === 'Enter') {
+														this.onBookingNoKeyDown(e);
+													}
+												}}
+											/>
+										</TForm.Item>
+									</TFlex>
+									
+								</TFlex>
+							</TFlex>
+
+							<TFlex justify="end" gap={this.CONTROL_GAP}>
+								<TForm.Item name={"returnTmnl"} valuePropName="checked">
+									<TCheckbox textResourceKey="WRD_CTIP_Label_ReturntoTerminal" disabled={true}/>
+								</TForm.Item>
+								
+								<TForm.Item name={"ediChk"} valuePropName="checked">
+									<TCheckbox textResourceKey="WRD_CTIP_Label_BookingInSystem" disabled={true} />
+								</TForm.Item>
+							</TFlex>
+						</TFlex>
+					</TFlex>
+					
+					<TFlex vertical={true} isGroupBox={true} width={"fit-content"} margin="0px" marginTop="5px">
+						<TLabel textResourceKey="WRD_CTIP_Label_VesselSchedule" className="group-title"/>
+						<CTVesselScheduleControl
+							ref={this.vslSchCtrl}
+							readonly={isHeaderLocked}
+							onVesselScheduleBinded={this.onVesselScheduleBinded}
+							onVesselScheduleUnBinded={this.onVesselScheduleUnBinded} 
+						/>
+					</TFlex>
+					<TFlex width={"100%"}>
+						<TFlex width={"fit-content"} gap={this.CONTROL_GAP}>
+							<TButton
+								ref={this.btnNew}
+								textResourceKey="WRD_CTIP_Label_New"
+								onAfterClick={this.button_onAfterClick.bind(this)}                                  
+							/>
+							<TButton 
+								ref={this.btnDelete}
+								textResourceKey="WRD_CTIP_Label_Delete"
+								onAfterClick={this.button_onAfterClick.bind(this)}
+								disabled={!isDetailActive}
+							/>
+						</TFlex>
+
+						<TFlex width={"100%"} gap={this.CONTROL_GAP}>
+							<TLabel textResourceKey="WRD_CTIP_Label_Sztp" className="ct-label"/>
+							<TForm.Item name={"sztp"}>
+								<TInput 
+									width={this.CONTROL_WIDTH}
+									backColorType={isSztpLocked? "readonly" : "free-text"}
+									style={{ textTransform: 'uppercase' }}
+									readOnly={isSztpLocked}
+									maxLength={4}
+									onKeyDown={(e) => {
+										if (e.key === 'Enter') {
+											this.onSztpKeyDown(e); 
+										}
+									}}                                        
+								/>
+							</TForm.Item>
+							<TForm.Item name={"sztp2"}>                                    
+								<TInput 
+									width={this.CONTROL_WIDTH} 
+									backColorType={isSztpLocked? "readonly" : "code"} 
+									disabled={isSztpLocked} 
+									readOnly={true}
+									onRightClick={this.onSztp2RightClick.bind(this)}
+								/>
+							</TForm.Item>
+							<TForm.Item name={"pSztp"}>
+								<TInput 
+									width={this.CONTROL_WIDTH}
+									backColorType="readonly"
+									readOnly={true}
+								/>
+							</TForm.Item>
+
+							<TLabel textResourceKey="WRD_CTIP_Label_PickupQty" className="ct-label"/>
+							<TForm.Item name={"bookingQty"}>
+								<TInputNumber
+									width={this.CONTROL_WIDTH}
+									backColorType={!isHeaderLocked ? 'readonly' : 'free-text'}
+									textAlign="right"
+									readOnly={!isHeaderLocked}
+								/>
+							</TForm.Item>
+
+							<TButton 
+								ref={this.btnApply}
+								textResourceKey="WRD_CTIP_Label_Apply"
+								onAfterClick={this.button_onAfterClick.bind(this)}
+								disabled={!isHeaderLocked}
+							/>
+						</TFlex>
+					</TFlex>
+				</TFlex>
+			</TForm>
+		);
+	}
+	catch(ex) {
+		CTGeneralLogger.error(ex);
+		throw ex;
+	}
+}
+
+private createPickupDetail(): React.ReactNode {       
+	 const { isHeaderLocked, isDetailActive, isExportMode, isFzMode } = this.state;
+	return (
+		<TForm<BindItem>
+			ref={this.frmPickupDetail}
+			className="detail-form"
+			initialValues={this.getInitialPickupDetailBindItem()}
+			onValuesChange={this.formPickupDetail_onValuesChange.bind(this)}
+		>
+			<TFlex vertical={true} gap={5} width={"fit-content"}>
+				<TFlex isGroupBox={true} marginTop="0px" marginBottom="0px">
+					<TFlex width={"33%"}>
+						<TFlex vertical={true} align="end" gap={this.CONTROL_GAP}>
+							<TLabel textResourceKey="WRD_CTIP_Label_OPR" className="ct-label" isBold={true}/>
+							<TLabel textResourceKey="WRD_CTIP_Label_Sztp" className="ct-label"/>
+							<TLabel textResourceKey="WRD_CTIP_Label_POD" className="ct-label" isBold={this.state.isExportMode}/>
+						</TFlex>
+
+						<TFlex vertical={true} gap={this.CONTROL_GAP}>
+							<TForm.Item name={"ptnrCode"}>
+								<TInput 
+									ref={this.tbxPtnrCode}
+									width={this.CONTROL_WIDTH * 2}
+									backColorType={(!isDetailActive || isExportMode) ? "readonly" : "code"}
+									disabled={!isDetailActive || isExportMode}
+									readOnly={true}
+									onAfterContextMenu={(e) => {
+										if(isDetailActive === true)
+											this.input_onAfterContextMenu(e)
+										}
+									}
+								/>
+							</TForm.Item>
+							
+							<TForm.Item name={"sztp"}>
+								<TInput 
+									ref={this.tbxDetailSztp}
+									width={this.CONTROL_WIDTH * 2} 
+									backColorType={isDetailActive ? "code" : "readonly"}
+									disabled={!isDetailActive} 
+									readOnly={true}
+									onAfterContextMenu={(e) => {
+										if(isDetailActive) {
+											this.input_onAfterContextMenu(e)
+										}
+									}}
+								/>
+							</TForm.Item>
+							
+							<TForm.Item name={"pod"}>
+								<TSelect
+									 width={this.CONTROL_WIDTH * 2} 
+									 backColorType={(!isDetailActive || isHeaderLocked || !isExportMode) ? "readonly" : "code"}
+									 disabled={!isDetailActive || isHeaderLocked || !isExportMode}
+									 dataSource={this.state.codeItemList.podList}
+									 valueMember="code"
+									 displayMember="code"
+									 />
+							</TForm.Item>
+						</TFlex>
+					</TFlex>
+
+					<TFlex width={"33%"}>
+						<TFlex vertical={true} align="end" gap={this.CONTROL_GAP}>
+							<TLabel textResourceKey="WRD_CTIP_Label_ReturnOPR" className="ct-label"/>
+							<TLabel textResourceKey="WRD_CTIP_Label_CargoType" className="ct-label" isBold={this.state.isExportMode}/>
+							<TLabel textResourceKey="WRD_CTIP_Label_StorageCode" className="ct-label"/>
+						</TFlex>
+
+						<TFlex vertical={true} gap={this.CONTROL_GAP}>
+							<TForm.Item name={"returnPtnr"}>
+								<TSelect
+									width={this.CONTROL_WIDTH * 2}
+									backColorType={!isExportMode && !isDetailActive ? "readonly" : "code"}
+									dataSource={this.state.codeItemList.returnPtnrList}
+									disabled={!isExportMode || !isDetailActive}
+									valueMember="code"
+									displayMember="code"                                                                                 
+								/>
+							</TForm.Item>
+							
+							<TForm.Item name={"cargoType"}>
+								<TSelect
+									width={this.CONTROL_WIDTH * 2}
+									backColorType={(!isDetailActive  || isExportMode) ? "readonly" : "code"}
+									disabled={true}
+									dataSource={this.state.codeItemList.cargoTypeList}                                        
+									valueMember="code"
+									displayMember="code" 
+								/>
+							</TForm.Item>
+							
+							<TForm.Item name={"storageCode"}>
+								<TSelect
+									width={this.CONTROL_WIDTH * 2}
+									backColorType={isDetailActive ? "code" : "readonly"}
+									dataSource={this.state.codeItemList.storageCodeList}
+									valueMember="code"
+									disabled={!isDetailActive}
+									displayMember="code" 
+								/>
+							</TForm.Item>
+						</TFlex>
+					</TFlex>
+
+					<TFlex width={"34%"} >
+						<TFlex vertical={true} align="end" gap={this.CONTROL_GAP}>
+							<TLabel textResourceKey="WRD_CTIP_Label_DamageCond" className="ct-label"/>
+							<TLabel textResourceKey="WRD_CTIP_Label_CntrCondCamelCase" className="ct-label"/>
+							<TLabel textResourceKey="WRD_CTIP_Label_StackDays" className="ct-label"/>
+						</TFlex>
+
+						<TFlex vertical={true} gap={this.CONTROL_GAP}>
+							<TForm.Item name={"dmgCond"}>
+								<TInput
+									ref={this.tbxDamageCond}
+									width={this.CONTROL_WIDTH * 2}
+									backColorType={isDetailActive ? "code" : "readonly"}
+									onAfterContextMenu={(e) => {
+										if(isDetailActive) this.input_onAfterContextMenu(e)
+									}}
+									readOnly={true}
+									disabled={!isDetailActive}
+								/>
+							</TForm.Item>
+							<TForm.Item name={"cntrCond"}>
+								<TInput
+									ref={this.tbxCntrCond}
+									width={this.CONTROL_WIDTH * 2}
+									backColorType={isDetailActive ? "code" : "readonly"}                                        
+									onAfterContextMenu={(e) => {
+										if(isDetailActive) this.input_onAfterContextMenu(e)
+									}}
+									readOnly={true}
+									disabled={!isDetailActive}
+								/>
+							</TForm.Item>
+							
+							<TFlex width={this.CONTROL_WIDTH * 2}>
+								<TForm.Item name={"fDays"}>
+									<TInput
+										width={"100%"}
+										backColorType={isDetailActive ? "free-text" : "readonly"}
+										disabled={!isDetailActive}
+									/>
+								</TForm.Item>
+								<TLabel textResourceKey="~" className="ct-label"/>
+								<TForm.Item name={"tDays"}>
+									<TInput
+										width={"100%"}
+										backColorType={isDetailActive ? "free-text" : "readonly"}
+										disabled={!isDetailActive}
+									/>
+								</TForm.Item>
+							</TFlex>
+						</TFlex>
+					</TFlex>
+				</TFlex>
+
+				<TFlex isGroupBox={true} marginTop="0px" marginBottom="0px">
+					<TFlex width={"33%"}>
+						<TFlex vertical={true} align="end" gap={this.CONTROL_GAP}>                                
+							<TLabel textResourceKey="WRD_CTIP_Label_RecvDate" className="ct-label" isBold={true}/>
+							<TLabel textResourceKey="WRD_CTIP_Label_PickupDate" className="ct-label" isBold={true}/>
+						</TFlex>
+
+						<TFlex vertical={true} gap={this.CONTROL_GAP}>                               
+							<TForm.Item name={"recvDateBind"}>
+								<TDatePicker
+									showTime={true}
+									width={this.CONTROL_WIDTH * 2}     
+									disabled={true}                                   
+								/>
+							</TForm.Item>
+							<TForm.Item name={"pickupDateBind"}>
+								<TDatePicker
+									showTime={true}
+									width={this.CONTROL_WIDTH * 2}
+								/>
+							</TForm.Item>
+						</TFlex>
+					</TFlex>
+
+					<TFlex width={"33%"}>
+						<TFlex vertical={true} align="end" gap={this.CONTROL_GAP}>
+							<TLabel textResourceKey="WRD_CTIP_Label_TruckCo" className="ct-label" isBold={true}/>
+							<TLabel textResourceKey="WRD_CTIP_Label_ReturnPlace" className="ct-label" isBold={this.state.isReturnPlaceRequired}/>
+							<TLabel textResourceKey="WRD_CTIP_Label_WarehouseCd" className="ct-label" isBold={isFzMode}/>
+							<TLabel textResourceKey="WRD_CTIP_Label_GroundingType" className="ct-label" isBold={isFzMode}/>
+						</TFlex>
+
+						<TFlex vertical={true} align="end" gap={this.CONTROL_GAP}>
+							<TForm.Item name={"trucker"}>
+								<TSelect
+									width={this.CONTROL_WIDTH * 2}                                        
+									dataSource={this.state.codeItemList.truckerList}
+									valueMember="code"
+									displayMember="code" 
+									backColorType={isDetailActive ? "code" : "readonly"}
+									disabled={!isDetailActive}
+									onSelect={(e) => this.onTruckerSelect && this.onTruckerSelect(e)}                                        
+								/>
+							</TForm.Item>
+							<TForm.Item name={"returnPlace"}>
+								<TSelect
+									width={this.CONTROL_WIDTH * 2}                                        
+									dataSource={this.state.codeItemList.returnPlaceList}
+									valueMember="code"
+									displayMember="code" 
+									backColorType={isDetailActive ? "code" : "readonly"}
+									disabled={!isDetailActive}
+									onSelect={(e) => this.onReturnPlaceSelect && this.onReturnPlaceSelect(e)}                                       
+								/>
+							</TForm.Item>
+							
+							<TForm.Item name={"warehouseCd"}>
+								<TSelect 
+									width={this.CONTROL_WIDTH * 2}  
+									// FZ 모드가 아니면 비활성화
+									backColorType={isDetailActive && isFzMode ? "code" : "readonly"}
+									disabled={!isDetailActive || !isFzMode}                                     
+									dataSource={this.state.codeItemList.warehouseCdList}
+									valueMember="code"
+									displayMember="codeName" 
+								/>
+							</TForm.Item>
+							
+							<TForm.Item name={"wdChk"}>
+								<TSelect
+									width={this.CONTROL_WIDTH * 2}  
+									// FZ 모드가 아니면 비활성화
+									backColorType={isDetailActive && isFzMode ? "code" : "readonly"}
+									disabled={!isDetailActive || !isFzMode} 
+									dataSource={this.state.codeItemList.groundingTypeList}
+									valueMember="code"
+									displayMember="codeName"                                         
+								/>
+							</TForm.Item>
+						</TFlex>
+
+						
+						
+					</TFlex>
+
+					<TFlex width={"35%"} paddingLeft="5%">
+						<TLabel textResourceKey="WRD_CTIP_Label_Remark" className="ct-label"/>
+						<TForm.Item name={"remark"}>
+							<TInput.TextArea
+								width={this.CONTROL_WIDTH * 2}
+								height={102}                                    
+								backColorType={isDetailActive ? "free-text" : "readonly"}
+								disabled={!isDetailActive}
+								className="resize-none"
+							/>
+						</TForm.Item>
+					</TFlex>
+				</TFlex>
+			</TFlex>
+		</TForm>
+	);
+}
+
+private createContent(): React.ReactNode {
+	try {            
+		const fixedHeight = 200;
+		const headerHeight = CTStyleConstant.Grid.HEADER_HEIGHT;            
+		return (
+			<TFlex vertical={true} height={"100%"} gap={5}>
+				<TFlex height={"100%"} vertical={true}>                    
+					<TFlex className="width-full padding-one" vertical={true} height={"100%"}>                            
+							<div className="width-full" 
+								 style={{ 
+									width: "100%",                                        
+									height: `${fixedHeight}px`, 
+									flex: `0 0 ${fixedHeight}px`,
+									overflow: "hidden",
+									position: "relative"
+								 }}>
+								<TSpreadGrid
+									ref={this.grd_RES_GeneralPickupOrderList}
+									width={"auto"}
+									header={{height:headerHeight}}
+									minRowHeight={CTStyleConstant.Grid.ROW_HEIGHT}
+									rowHeight={CTStyleConstant.Grid.ROW_HEIGHT}
+									rowHeaders={[CTStyleConstant.Grid.RowHeader.ChangeStatus, CTStyleConstant.Grid.RowHeader.RowNumber]}
+									columns={CTStyleConstant.Grid.Column.Default}
+									specifiedSchemaFileName={"grd_RES_GeneralPickupOrderList_Schema"}
+									bizRule={CTGridBizRule}
+									contextMenu={CTGridBizRule.createContextMenuHandler(this.grd_RES_GeneralPickupOrderList)}
+									onFocusChange={(e: any) => {
+										if (this.onGridFocusChange) {
+											this.onGridFocusChange(e);
+										}
+									}}
+								/>
+							</div>                            
+						<TFlex style={{ flex: 1, overflow: "auto" }}>
+							{this.createPickupDetail()}
+						</TFlex>
+					</TFlex>
+				</TFlex>
+
+			</TFlex>
+		);
+	}
+	catch(ex) {
+		CTGeneralLogger.error(ex);
+		throw ex;
+	}
+}
+
+private createMainComponent(): JSX.Element {
+	return (
+		<div ref={this.pnlRoot} className="root-panel">
+			<TLayout className="list-layout">
+				<TLayout.Header>
+					{this.createHeader()}
+				</TLayout.Header>
+
+				<TLayout.Content>
+					{this.createContent()}
+				</TLayout.Content>
+			</TLayout>
+		</div>
+	);
+}
+
+render(): React.ReactNode {
+	try {
+		return (
+			<CTBaseSingleGridComponent
+				ref={this.grdComp}
+				rootRef={this.pnlRoot}
+				gridRef={this.grd_RES_GeneralPickupOrderList}
+				menuId={this.props.menuId}
+				controller={this._controller}
+				mainComponent={this.createMainComponent()}                    
+			/>
+		);
+	}
+	catch(ex) {
+		CTGeneralLogger.error(ex);
+		throw ex;
+	}
+}
+//#endregion
+```
+
+2. Layout & Spacing Rules
+
+| Layout Element | Spacing / Padding Value |
+| :--- | :--- |
+| Between View and Root Panel | `padding: 10px;` |
+| Between Group and Contents | `padding: 7px;` |
+| Vertical Gap Between Controls | `2px;` |
+| Between Label and Input | `5px;` |
+| Between Groups | `5px;` |
 
 ### 11.9 Performance and Memory Management
 
@@ -11846,3 +12798,767 @@ The framework depends on:
 **Document Version**: 1.0  
 **Last Updated**: 2026 
 **Framework Version**: tsb-fontos-ui 1.0.0
+
+# JavaScript → Fontos-Framework Migration Guide
+
+> carrier-Client 실제 전환 과정에서 발생한 시행착오를 기반으로 작성한 실전 가이드입니다.
+
+---
+
+## 목차
+
+1. [프로젝트 구조 이해](#1-프로젝트-구조-이해)
+2. [Properties 설정](#2-properties-설정)
+3. [Locales(다국어) 설정](#3-locales다국어-설정)
+4. [Grid Schema 파일 작성](#4-grid-schema-파일-작성)
+5. [Item 클래스 작성](#5-item-클래스-작성)
+6. [DAO 레이어 구현](#6-dao-레이어-구현)
+7. [Service 레이어 구현](#7-service-레이어-구현)
+8. [Controller 레이어 구현](#8-controller-레이어-구현)
+9. [View 레이어 구현](#9-view-레이어-구현)
+10. [로그인 및 서버 연결 설정](#10-로그인-및-서버-연결-설정)
+11. [자주 발생하는 오류와 해결책](#11-자주-발생하는-오류와-해결책)
+12. [체크리스트](#12-체크리스트)
+
+---
+
+## 1. 프로젝트 구조 이해
+
+### Fontos-Framework 핵심 패키지
+
+```
+Fontos-Framework-Frontend/
+├── tsb-fontos-core/   # 비즈니스 로직 기반 (DAO, Service, Item, Logger 등)
+└── tsb-fontos-ui/     # UI 컴포넌트 (TSpreadGrid, TSplitter, TForm 등)
+```
+
+### carrier-Client 소스 구조
+
+```
+src/
+├── public/
+│   ├── properties.json          # 앱 전역 설정 (언어, 경로 등)
+│   ├── environment/
+│   │   └── menuitem.json        # 메뉴 정의
+│   ├── grid/
+│   │   └── grd_XXX_Schema.json  # 그리드 스키마 (컬럼 정의)
+│   └── locales/
+│       ├── enUS/
+│       │   └── translation.json # 영문 번역
+│       └── vi/
+│           └── translation.json # 베트남어 번역
+├── config/
+│   ├── context/
+│   │   ├── CarrierServiceLocator.ts  # 서비스 등록
+│   │   └── CarrierServiceName.ts     # 서비스 키 상수
+│   └── environment/
+│       └── BizRemoteServerKeys.ts    # 서버 키, clientid 상수
+├── daos/           # 서버 API 호출 (DAO 패턴)
+├── services/       # 비즈니스 로직 (Service 패턴)
+├── controllers/    # View-Service 연결 (Controller 패턴)
+├── views/          # React UI 컴포넌트
+├── items/          # 데이터 모델 (BaseDataItem 상속)
+├── params/         # 검색 파라미터 모델
+├── rules/          # 그리드 비즈니스 규칙
+├── login/          # 로그인 전략 및 폼
+├── App.tsx
+└── Menu.ts
+```
+
+---
+
+## 2. Properties 설정
+
+`src/public/properties.json`
+
+```json
+{
+  "language": "enUS",
+  "language.list": ["enUS", "vi"],
+  "language.namespaces": [
+    { "vocabulary": ["translation"] }
+  ],
+  "language.gridnamespace": "vocabulary",
+  "file.menuitem": "menuitem",
+  "path.environments": "environment",
+  "path.styles": "stylemode",
+  "path.grid": "grid",
+  "path.log": "logs",
+  "pgmCode": "CARRIER",
+  "pgmName": "ePort Carrier Portal",
+  "moduleId": "CARRIER"
+}
+```
+
+### ⚠️ 핵심 주의사항
+
+**`language.gridnamespace`는 반드시 `language.namespaces`에 등록된 namespace와 일치해야 합니다.**
+
+```json
+// ❌ 잘못된 예 — "grid" namespace가 language.namespaces에 없으므로 컬럼 레이블이 key 그대로 표시됨
+"language.namespaces": [ { "vocabulary": ["translation"] } ],
+"language.gridnamespace": "grid"
+
+// ✅ 올바른 예 — translation.json이 "vocabulary" namespace로 로드됨
+"language.namespaces": [ { "vocabulary": ["translation"] } ],
+"language.gridnamespace": "vocabulary"
+```
+
+**동작 원리:**
+- `language.namespaces`의 `{ "vocabulary": ["translation"] }` → `locales/{lang}/translation.json`을 `vocabulary` namespace로 로드
+- `TSpreadGrid`는 컬럼 레이블을 `"{gridnamespace}:{LabelResKey}"` 형식으로 i18n에서 조회
+- 두 값이 불일치하면 번역 키 자체(`WRD_XXX_YYY`)가 헤더에 그대로 표시됨
+
+---
+
+## 3. Locales(다국어) 설정
+
+### 파일 위치
+
+```
+src/public/locales/
+├── enUS/translation.json
+└── vi/translation.json
+```
+
+### 번역 파일 구조
+
+```json
+{
+  "WRD_CARRIER_Module_Title": "ePort Carrier Portal",
+  "WRD_CARRIER_No": "#",
+  "WRD_CARRIER_BillOfLading": "B/L No.",
+  "WRD_CARRIER_VesselName": "Vessel",
+  "WRD_FTCO_Find": "Search",
+  "MSG_CARRIER_CONFIRM_DELETE": "Are you sure you want to delete?"
+}
+```
+
+### 키 네이밍 규칙
+
+| 접두사 | 용도 |
+|--------|------|
+| `WRD_CARRIER_` | 그리드 컬럼 헤더, 폼 레이블 |
+| `WRD_FTCO_` | 공통 UI 텍스트 (Find, Save 등) |
+| `MSG_CARRIER_` | 사용자 메시지 (confirm, error) |
+
+---
+
+## 4. Grid Schema 파일 작성
+
+### 파일 위치
+
+```
+src/public/grid/grd_{화면명}_{Master|Detail}_Schema.json
+```
+
+### 필수 필드 목록
+
+TSpreadGrid는 camelCase boolean 필드를 읽습니다. **문자열 필드만 있으면 컬럼이 표시되지 않습니다.**
+
+| 필드명 | 타입 | 설명 | 연계 문자열 필드 |
+|--------|------|------|-----------------|
+| `ViewColumnSeq` | number | 컬럼 순서 (`Seq`와 동일값) | `Seq` |
+| `isVisible` | boolean | 컬럼 표시 여부 | `Visible: "Y"/"N"` |
+| `isFilter` | boolean | 필터 활성화 여부 | `Filter: "Y"/"N"` |
+| `IsNotAllowHidden` | boolean | 숨김 불가 여부 | `NotAllowHidden: "Y"/"N"` |
+| `isMandatory` | boolean | 필수 입력 여부 | `Mandatory: "Y"/"N"` |
+| `IsPrimaryKey` | boolean | PK 여부 | `PrimaryKey: "Y"/"N"` |
+
+### 올바른 스키마 예시
+
+```json
+{
+  "GridSchema": { "FrozenColumnCount": 0 },
+  "ColumnSchemas": [
+    {
+      "Seq": 0,
+      "ViewColumnSeq": 0,
+      "Key": "billOfLading",
+      "LabelResKey": "WRD_CARRIER_BillOfLading",
+      "DataField": "billOfLading",
+      "DBField": "billOfLading",
+      "CellType": "Text",
+      "CellStyleID": "Basic Text",
+      "Width": 160,
+      "Visible": "Y",
+      "isVisible": true,
+      "Filter": "Y",
+      "isFilter": true,
+      "Sort": "A",
+      "IsPrimaryKey": true,
+      "isMandatory": true,
+      "NotAllowHidden": "N",
+      "IsNotAllowHidden": false
+    }
+  ]
+}
+```
+
+### ❌ 흔한 실수 — boolean 필드 누락
+
+```json
+// ❌ 이렇게만 작성하면 컬럼이 그리드에 표시되지 않음
+{
+  "Seq": 0,
+  "Key": "billOfLading",
+  "Visible": "Y",
+  "Filter": "Y"
+}
+```
+
+### 체크박스/rowNum 컬럼 패턴
+
+```json
+{
+  "Seq": 0, "ViewColumnSeq": 0,
+  "Key": "rowCheckbox", "LabelResKey": "", "DataField": "",
+  "CellType": "Checkbox", "Width": 34,
+  "Visible": "Y", "isVisible": true,
+  "Filter": "N", "isFilter": false,
+  "CellInput": "N",
+  "NotAllowHidden": "Y", "IsNotAllowHidden": true
+},
+{
+  "Seq": 1, "ViewColumnSeq": 1,
+  "Key": "rowNum", "LabelResKey": "WRD_CARRIER_No", "DataField": "",
+  "CellType": "Text", "Width": 40,
+  "Visible": "Y", "isVisible": true,
+  "Filter": "N", "isFilter": false,
+  "CellInput": "N",
+  "NotAllowHidden": "Y", "IsNotAllowHidden": true
+}
+```
+
+---
+
+## 5. Item 클래스 작성
+
+모든 데이터 모델은 **`BaseDataItem`을 상속**해야 합니다. 그래야 `makeBackupItem()` 등 프레임워크 메서드를 사용할 수 있습니다.
+
+```typescript
+// src/items/EdoItem.ts
+import { BaseDataItem } from 'tsb-fontos-core';
+
+export default class EdoItem extends BaseDataItem {
+  id: string = '';
+  billOfLading: string = '';
+  vesselName: string = '';
+  // ... 서버 응답 필드와 동일하게 선언
+}
+```
+
+### ⚠️ 주의
+
+- 서버에서 받은 plain JSON 객체는 `BaseDataItem` 인스턴스가 아닙니다.
+- `new BaseItemList(items, true)`에 plain 객체를 넣으면 `makeBackupItem is not a function` TypeError가 발생합니다.
+- 반드시 `Object.assign(new EdoItem(), plainObject)` 패턴으로 변환해야 합니다.
+
+---
+
+## 6. DAO 레이어 구현
+
+### CarrierDaoSupport 기반 클래스
+
+서버 응답 형식 `{ rows: [...], total: N, code: 200, msg: "" }`을 `TRestResponsePage`로 변환하고, plain JSON → Item 인스턴스 매핑을 처리합니다.
+
+```typescript
+// src/daos/CarrierDaoSupport.ts
+import { HttpWebDaoBindingSupport, TRequest, TRestResponsePage } from 'tsb-fontos-core';
+
+export default class CarrierDaoSupport extends HttpWebDaoBindingSupport {
+  protected async getCarrierList<T>(
+    request: TRequest,
+    ItemClass?: new () => T,
+  ): Promise<TRestResponsePage<T>> {
+    const res = await this.get<any>(request);
+    const body = res?.data ?? {};
+    const rawRows: any[] = body.rows ?? [];
+    const dataItems: T[] = ItemClass
+      ? rawRows.map((d) => Object.assign(new ItemClass(), d))
+      : (rawRows as T[]);
+    return {
+      dataItems,
+      pageInfo: { total: body.total ?? 0 },
+      status: res?.status ?? 200,
+    } as unknown as TRestResponsePage<T>;
+  }
+}
+```
+
+### DAO 구현 패턴
+
+```typescript
+// src/daos/EdoDao.ts
+export default class EdoDao extends CarrierDaoSupport implements IEdoDao {
+
+  // ✅ GET 목록 조회 — params 사용 (datas 아님!)
+  async selectEdoList(param: EdoParam): Promise<TRestResponsePage<EdoItem>> {
+    const req: TRequest = {
+      serverKey: BizRemoteServerKeys.CARRIER_SERVICE,
+      url: '/api/procedure/edo/list',
+      params: param,       // ← GET 요청은 반드시 params
+      useMask: true,
+    };
+    return this.getCarrierList<EdoItem>(req, EdoItem);  // ← ItemClass 전달 필수
+  }
+
+  // ✅ GET 단건 조회
+  async selectEdoDetails(param: EdoDetailParam): Promise<TResponse<EdoDetailItem[]>> {
+    const req: TRequest = {
+      serverKey: BizRemoteServerKeys.CARRIER_SERVICE,
+      url: `/api/procedure/edo/${param.edoId}/edo-details`,
+      useMask: true,
+    };
+    return this.get<EdoDetailItem[]>(req);
+  }
+
+  // ✅ POST — datas 사용
+  async batchEdos(items: EdoDetailItem[]): Promise<TResponse<null>> {
+    const req: TRequest = {
+      serverKey: BizRemoteServerKeys.CARRIER_SERVICE,
+      url: '/api/procedure/edo/batch',
+      datas: items,        // ← POST/PUT 요청은 datas
+      useMask: true,
+    };
+    return this.post<null>(req);
+  }
+}
+```
+
+### ❌ GET 요청 params vs datas 오류
+
+```typescript
+// ❌ GET 요청에 datas를 사용하면 쿼리스트링이 서버로 전송되지 않음
+const req: TRequest = { url: '/api/list', datas: param };
+
+// ✅ GET 요청은 반드시 params
+const req: TRequest = { url: '/api/list', params: param };
+```
+
+**이유:** `HttpBaseRequestHandler.get()`는 `request.params`를 axios의 `params`(query string)으로 전달합니다. `request.datas`는 GET에서 무시됩니다.
+
+---
+
+## 7. Service 레이어 구현
+
+인터페이스를 먼저 정의하고, 구현체에서 DAO를 주입합니다.
+
+```typescript
+// src/services/IEdoService.ts
+export default interface IEdoService {
+  inquiryEdoList(param: EdoParam): Promise<TRestResponsePage<EdoItem>>;
+  inquiryEdoDetailList(param: EdoDetailParam): Promise<TResponse<EdoDetailItem[]>>;
+  batchEdos(items: EdoDetailItem[]): Promise<TResponse<null>>;
+  deleteEdo(edoId: string): Promise<TResponse<null>>;
+}
+```
+
+```typescript
+// src/services/EdoService.ts
+export default class EdoService implements IEdoService {
+  private _dao: IEdoDao;
+  constructor() { this._dao = new EdoDao(); }
+
+  inquiryEdoList(param: EdoParam) { return this._dao.selectEdoList(param); }
+  inquiryEdoDetailList(param: EdoDetailParam) { return this._dao.selectEdoDetails(param); }
+  batchEdos(items: EdoDetailItem[]) { return this._dao.batchEdos(items); }
+  deleteEdo(edoId: string) { return this._dao.deleteEdo(edoId); }
+}
+```
+
+### 서비스 등록
+
+```typescript
+// src/config/context/CarrierServiceLocator.ts
+export default class CarrierServiceLocator extends BizServiceLocator {
+  getServices(): TBizService[] {
+    return [
+      { name: CarrierServiceName.EDO_SVR, service: new EdoService() },
+      { name: CarrierServiceName.EBOOKING_SVR, service: new EbookingService() },
+      // ...
+    ];
+  }
+}
+```
+
+---
+
+## 8. Controller 레이어 구현
+
+### 목록 조회 (menuRefresh)
+
+```typescript
+@(ControllerToolbarSet.getInstance().RefreshDecorator())
+async menuRefresh(pageNum = 1): Promise<void> {
+  try {
+    this._view.setMasterLoadingState('LOADING');
+    const param = this._view.getSearchParam();
+    param.pageNum = pageNum;
+    const res = await this._service.inquiryEdoList(param);
+    if (res?.dataItems?.length) {
+      // ✅ CarrierDaoSupport.getCarrierList()가 이미 EdoItem 인스턴스로 변환함
+      const list = new BaseItemList<EdoItem>(res.dataItems as any[], true);
+      this._view.setMasterGridData(list, pageNum, res.pageInfo?.total ?? 0);
+    } else {
+      this._view.setMasterGridData(new BaseItemList<EdoItem>(), pageNum, 0);
+    }
+  } catch (ex) {
+    GeneralLogger.error(ex);
+  } finally {
+    this._view.setMasterLoadingState('DONE');
+  }
+}
+```
+
+### 상세 조회 (doMasterSelection)
+
+```typescript
+async doMasterSelection(item: EdoItem | null): Promise<void> {
+  try {
+    this._view.setDetailLoadingState('LOADING');
+    if (!item?.id) {
+      this._view.setDetailGridData(new BaseItemList<EdoDetailItem>());
+      return;
+    }
+    const res = await this._service.inquiryEdoDetailList(new EdoDetailParam(item.id));
+
+    // ✅ 서버 응답 구조: { code, data: [...], msg }
+    const rawDetails: any[] = (res.data as any)?.data ?? res.data ?? [];
+
+    // ✅ plain JSON → EdoDetailItem 인스턴스 변환 필수
+    const details = rawDetails.map(d => Object.assign(new EdoDetailItem(), d));
+
+    this._view.setDetailGridData(new BaseItemList<EdoDetailItem>(details as any[], true));
+  } catch (ex) {
+    GeneralLogger.error('doMasterSelection 오류:', ex);
+  } finally {
+    this._view.setDetailLoadingState('DONE');
+  }
+}
+```
+
+### ⚠️ 서버 응답 형식별 데이터 추출
+
+| API 유형 | 서버 응답 구조 | 데이터 추출 방법 |
+|----------|---------------|-----------------|
+| 목록 | `{ rows: [...], total: N, code: 200 }` | `CarrierDaoSupport.getCarrierList()` 내부 처리 |
+| 단건/상세 | `{ data: [...], code: 200 }` | `(res.data as any)?.data ?? res.data ?? []` |
+
+---
+
+## 9. View 레이어 구현
+
+### 기본 구조
+
+```tsx
+export default class EdoView extends React.Component<EdoViewProps, EdoViewState> {
+  private _masterGridRef = createRef<TSpreadGrid>();
+  private _detailGridRef = createRef<TSpreadGrid>();
+  private _searchFormRef = createRef<TForm<EdoParam>>();
+  private _controller: EdoController;
+
+  render() {
+    return (
+      <BaseMultiGridComponent ...>
+        <TFlex vertical height="100%" gap={5}>
+          {this.createHeader()}
+          <TSplitter layout="horizontal" splitterSize={5}>
+            <TSplitter.Panel defaultSize="44%">   {/* ✅ Panel (Pane 아님) */}
+              <TSpreadGrid
+                ref={this._masterGridRef}
+                columns={[]}
+                specifiedSchemaFileName="grd_EDO_Master_Schema"
+                bindingItemType={EdoItem}
+                bizRule={EdoBizRule}
+                onAfterFocusChange={this.masterGrid_onAfterFocusChange}
+              />
+            </TSplitter.Panel>
+            <TSplitter.Panel defaultSize="56%">   {/* ✅ Panel (Pane 아님) */}
+              <TSpreadGrid
+                ref={this._detailGridRef}
+                columns={[]}
+                specifiedSchemaFileName="grd_EDO_Detail_Schema"
+                bindingItemType={EdoDetailItem}
+                bizRule={EdoBizRule}
+              />
+            </TSplitter.Panel>
+          </TSplitter>
+        </TFlex>
+      </BaseMultiGridComponent>
+    );
+  }
+}
+```
+
+### ⚠️ TSplitter 서브컴포넌트 이름
+
+```tsx
+// ❌ TSplitter.Pane는 undefined — React rendering 오류 발생
+<TSplitter.Pane defaultSize="44%"> ... </TSplitter.Pane>
+
+// ✅ 올바른 이름
+<TSplitter.Panel defaultSize="44%"> ... </TSplitter.Panel>
+```
+
+### ⚠️ onAfterFocusChange — 올바른 item 참조
+
+```tsx
+// ❌ getActiveSourceItem()은 타이밍 문제로 이전 행의 item을 반환할 수 있음
+private masterGrid_onAfterFocusChange = async (e: any) => {
+  if (e.prevRowKey !== e.rowKey && e.rowKey !== null) {
+    const item = this._masterGridRef.current?.getActiveSourceItem() as EdoItem | null;
+    await this._controller.doMasterSelection(item);
+  }
+};
+
+// ✅ 이벤트 args의 sourceItem을 직접 사용 — 항상 새로 선택된 행의 item
+private masterGrid_onAfterFocusChange = async (e: any) => {
+  if (e.prevRowKey !== e.rowKey && e.rowKey !== null) {
+    const item = (e.sourceItem ?? null) as EdoItem | null;
+    await this._controller.doMasterSelection(item);
+  }
+};
+```
+
+**이유:** TSpreadGrid는 `onAfterFocusChange` 이벤트를 발생시키기 직전에 `eventArgs.sourceItem = getSourceItem(newRow)`를 이미 계산해 넣습니다. 반면 `getActiveSourceItem()`은 그리드 내부의 "active row" 상태를 조회하므로 이벤트 발생 타이밍에 따라 이전 행을 반환할 수 있습니다.
+
+### TSpreadGrid 주요 Props
+
+```tsx
+<TSpreadGrid
+  ref={this._masterGridRef}
+  width="auto"
+  height="100%"
+  header={{ height: 30 }}
+  minRowHeight={25}
+  rowHeaders={[{ type: 'checkbox', header: '<span></span>' }, 'rowNum']}
+  columns={[]}                                    // schema 사용 시 빈 배열
+  specifiedSchemaFileName="grd_EDO_Master_Schema" // public/grid/ 하위 파일명 (확장자 제외)
+  bindingItemType={EdoItem}
+  bizRule={EdoBizRule}
+  showTotalCount
+  selectionUnit="row"
+  useLookup
+  onAfterFocusChange={this.masterGrid_onAfterFocusChange}
+/>
+```
+
+---
+
+## 10. 로그인 및 서버 연결 설정
+
+### BizRemoteServerKeys
+
+```typescript
+// src/config/environment/BizRemoteServerKeys.ts
+export default class BizRemoteServerKeys {
+  static readonly CARRIER_SERVICE = 'CARRIER_SERVICE';
+  static readonly CLIENT_ID = 'e5cd7e4891bf95d1d19206ce24a7b32e'; // 서버에서 발급된 고정 값
+  static readonly LOCALE = 'vi_VN';
+}
+```
+
+### 서버 설정 (App.tsx)
+
+```typescript
+const config = new TRemoteConfig();
+config.headers = {
+  'Content-Type': 'application/json',
+  'clientid': BizRemoteServerKeys.CLIENT_ID,  // ← 모든 API 요청에 필수
+  'Content-Language': BizRemoteServerKeys.LOCALE,
+};
+```
+
+### CarrierLoginStrategy — 로그인 요청 형식
+
+```typescript
+// src/login/CarrierLoginStrategy.ts
+async login(id: string, password: string): Promise<...> {
+  const body = {
+    loginId: id,
+    loginPassword: password,
+    tenantId: '000000',   // ← 필수, 없으면 로그인 실패
+  };
+  // POST /api/auth/login
+}
+```
+
+### 서버 로그인 응답 처리
+
+```json
+{
+  "code": 200,
+  "data": {
+    "access_token": "Bearer eyJ...",
+    "expire_time": 86400,
+    "clientid": "e5cd7e4891bf95d1d19206ce24a7b32e"
+  },
+  "msg": ""
+}
+```
+
+### 무해한 콘솔 경고 (정상 동작)
+
+```
+[WARNING] New Access Token is missing or empty
+```
+
+이 경고는 `HttpBaseRequestHandler.handleRefreshToken()`이 매 API 응답 후 갱신 토큰 존재 여부를 확인할 때 발생합니다. 서버가 refresh token을 응답 헤더에 포함하지 않는 경우 항상 출력되며 **정상입니다. 오류가 아닙니다.**
+
+---
+
+## 11. 자주 발생하는 오류와 해결책
+
+### 오류 1: `item.makeBackupItem is not a function`
+
+**증상:** `menuRefresh 오류:` 콘솔 에러, 그리드에 데이터 미표시
+
+**원인:** 서버에서 받은 plain JSON 객체를 `new BaseItemList(items, true)`에 넣을 때 발생. `isBackupRequired=true`이면 BaseItemList가 각 item의 `makeBackupItem()`을 호출하는데 plain 객체에는 이 메서드가 없음.
+
+**해결:**
+```typescript
+// DAO에서 ItemClass를 전달하여 자동 변환
+return this.getCarrierList<EdoItem>(req, EdoItem);
+
+// 또는 수동 변환
+const items = rawData.map(d => Object.assign(new EdoItem(), d));
+```
+
+---
+
+### 오류 2: 그리드 컬럼이 표시되지 않음
+
+**증상:** 그리드가 렌더링되지만 컬럼 헤더/데이터가 없음
+
+**원인 A:** 스키마 JSON에 `isVisible`, `isFilter`, `ViewColumnSeq` 누락
+
+**해결:** 각 컬럼에 boolean 버전 필드 추가
+```json
+{ "Seq": 0, "ViewColumnSeq": 0, "Visible": "Y", "isVisible": true, "Filter": "N", "isFilter": false }
+```
+
+**원인 B:** `properties.json`의 `language.gridnamespace`가 로드된 namespace와 불일치
+
+**해결:** namespace 이름 통일
+```json
+"language.namespaces": [ { "vocabulary": ["translation"] } ],
+"language.gridnamespace": "vocabulary"
+```
+
+---
+
+### 오류 3: 컬럼 레이블이 번역 키 그대로 표시됨 (예: `WRD_CARRIER_No`)
+
+**원인:** `language.gridnamespace`이 i18n에 등록되지 않은 namespace를 가리킴
+
+**해결:**
+1. `language.gridnamespace` 값과 `language.namespaces`의 namespace 이름 일치 확인
+2. `locales/{lang}/translation.json`에 해당 키 존재 확인
+
+---
+
+### 오류 4: GET 요청에 검색 파라미터가 서버로 전송되지 않음
+
+**원인:** `TRequest.datas`를 사용했으나 GET 요청은 `TRequest.params`를 사용해야 함
+
+**해결:**
+```typescript
+// ❌
+const req: TRequest = { url: '/api/list', datas: param };
+// ✅
+const req: TRequest = { url: '/api/list', params: param };
+```
+
+---
+
+### 오류 5: `type is invalid — got: undefined` (React rendering 오류)
+
+**원인:** `TSplitter.Pane`를 사용했으나 `TSpreadGrid`에는 `Panel`만 존재
+
+**해결:**
+```tsx
+// ❌
+<TSplitter.Pane> ... </TSplitter.Pane>
+// ✅
+<TSplitter.Panel> ... </TSplitter.Panel>
+```
+
+---
+
+### 오류 6: Master 선택 시 이전 행의 Detail이 표시됨
+
+**원인:** `getActiveSourceItem()`의 타이밍 문제
+
+**해결:** `onAfterFocusChange` 이벤트의 `e.sourceItem` 사용
+```typescript
+// ❌
+const item = this._masterGridRef.current?.getActiveSourceItem();
+// ✅
+const item = (e.sourceItem ?? null) as EdoItem | null;
+```
+
+---
+
+### 오류 7: Detail 그리드에 데이터가 표시되지 않음
+
+**원인:** 단건/상세 API의 응답 구조 `{ code, dataItems: [...], msg }` 에서 비동기 처리를 하지 않음.
+
+**해결:**
+```typescript
+const boardService: ISingleGridServie = BizServiceLocator.getService<ISingleGridServie>(SampleServiceName.SAMPLE_SINGLE_GRID_SVR);
+
+const param: SingleGridParam = {
+  imdgClass:
+	this.singleGridCompRef.current?.props.mandatoryFieldMap!.get("Imdg")!,
+};
+
+await boardService.selectSingleGrid(param).then((res) => {
+	const result = new BaseItemList(res.dataItems, true);
+	this.grid!.current?.checkMandatory(result);
+	this.grid!.current?.bindListAsGridDataSource(result);
+})
+```
+
+### 오류 8: 잘못된 TForm 함수 호출
+
+**원인:** formInstance 대신 refObject.current 를 통해서 호출 시도함. `this._searchFormRef.current.getFieldsValue(); // 오류!`
+
+**해결:**
+```typescript
+this._searchFormRef.current.getFormInstance().getFieldsValue(); 
+```
+
+
+---
+
+## 12. 체크리스트
+
+### 스키마 파일 (`grd_XXX_Schema.json`)
+- [ ] 모든 컬럼에 `ViewColumnSeq` 추가 (`Seq`와 동일값)
+- [ ] 모든 컬럼에 `isVisible: true/false` 추가
+- [ ] 모든 컬럼에 `isFilter: true/false` 추가
+- [ ] `LabelResKey` 값이 translation.json에 등록되어 있음
+
+### Properties 설정
+- [ ] `language.gridnamespace`가 `language.namespaces`에 등록된 namespace 이름과 일치
+- [ ] `path.grid`가 스키마 파일 디렉토리와 일치 (`grid`)
+
+### DAO 레이어
+- [ ] GET 요청에 `params` 사용 (`datas` 아님)
+- [ ] 목록 조회에 `getCarrierList(req, ItemClass)` 사용 (ItemClass 전달)
+- [ ] POST/PUT 요청에 `datas` 사용
+
+### Controller 레이어
+- [ ] `doMasterSelection`에서 detail 데이터를 `Object.assign(new DetailItem(), d)` 패턴으로 변환
+- [ ] `menuRefresh`에서 `res.dataItems`가 이미 Item 인스턴스임을 확인 (CarrierDaoSupport가 처리)
+
+### View 레이어
+- [ ] `TSplitter.Panel` 사용 (`TSplitter.Pane` 아님)
+- [ ] `onAfterFocusChange`에서 `e.sourceItem` 사용 (`getActiveSourceItem()` 아님)
+- [ ] `specifiedSchemaFileName`이 실제 파일명과 일치 (`.json` 확장자 제외)
+
+### 서버 연결
+- [ ] 모든 요청 헤더에 `clientid` 포함
+- [ ] 로그인 body에 `tenantId: '000000'` 포함
+- [ ] `language.gridnamespace`에 해당하는 번역 파일 존재 확인
