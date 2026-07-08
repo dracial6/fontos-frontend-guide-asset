@@ -5013,46 +5013,55 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 7.13 [Excel Export Service](#713-excel-export-service)
      - 7.13.1 [Basic Excel Export](#7131-basic-excel-export)
      - 7.13.2 [Excel Export with Frontend Data](#7132-excel-export-with-frontend-data)
-8. [UI Templates](#8-ui-templates)
-   - 8.1 [BaseSingleGridComponent](#81-basesinglegridcomponent)
-   - 8.2 [BaseMultiGridComponent](#82-basemultigridcomponent)
-   - 8.3 [BaseSingleDrawComponent](#83-basesingledrawcomponent)
-   - 8.4 [BaseMultiDrawComponent](#84-basemultidrawcomponent)
-   - 8.5 [BaseCompositeComponent](#85-basecompositecomponent)
-   - 8.6 [CustomContainerComponent](#86-customcontainercomponent)
-   - 8.7 [Common Features](#87-common-features)
-     - 8.7.1 [UI Authentication](#871-ui-authentication)
-     - 8.7.2 [Data Synchronization](#872-data-synchronization)
-9. [Menu System](#9-menu-system)
-   - 9.1 [MainLayout](#91-mainlayout)
-   - 9.2 [Menu Configuration](#92-menu-configuration)
-     - 9.2.1 [Registering Screens in Menu.tsx](#921-registering-screens-in-menutsx)
-   - 9.3 [GlobalDockTabAgent](#93-globaldocktabagent)
-     - 9.3.1 [Adding Custom Tab Menu](#931-adding-custom-tab-menu)
-     - 9.3.2 [Removing Custom Tab Menu](#932-removing-custom-tab-menu)
-     - 9.3.3 [Checking if Menu is Opened](#933-checking-if-menu-is-opened)
-     - 9.3.4 [Disabling Dock Functionality](#934-disabling-dock-functionality)
-     - 9.3.5 [Complete Example](#935-complete-example)
-   - 9.4 [Custom Toolbars](#94-custom-toolbars)
-10. [Utilities and Helpers](#10-utilities-and-helpers)
-    - 10.1 [TMessageManager](#101-tmessagemanager)
-    - 10.2 [MaskHandler](#102-maskhandler)
-    - 10.3 [ControllerToolbarSet](#103-controllertoolbarset)
-    - 10.4 [Export Utilities](#104-export-utilities)
-    - 10.5 [SpreadGridUtil](#105-spreadgridutil)
-11. [Best Practices](#11-best-practices)
-    - 11.1 [Component Structure](#111-component-structure)
-    - 11.2 [Error Handling](#112-error-handling)
-    - 11.3 [Resource Keys](#113-resource-keys)
-    - 11.4 [Form Initialization](#114-form-initialization)
-    - 11.5 [Grid Schema Naming](#115-grid-schema-naming)
-    - 11.6 [Component Refs](#116-component-refs)
-    - 11.7 [Async Operations](#117-async-operations)
-    - 11.8 [UI Styling Security Best Practices](#118-ui-styling-security-best-practices)
-    - 11.9 [Performance and Memory Management](#119-performance-and-memory-management)
-12. [Appendix](#12-appendix)
-    - 12.1 [Available Components](#121-available-components)
-    - 12.2 [Dependencies](#122-dependencies)
+8. [Pivot Component](#8-pivot-component)
+   - 8.1 [Overview](#81-overview)
+   - 8.2 [PivotState and Props](#82-pivotstate-and-props)
+   - 8.3 [Data Preparation (extractSummaryData)](#83-data-preparation-extractsummarydata)
+   - 8.4 [Basic Usage](#84-basic-usage)
+   - 8.5 [State Management and onChange](#85-state-management-and-onchange)
+   - 8.6 [Renderers and Aggregators](#86-renderers-and-aggregators)
+   - 8.7 [Export Methods](#87-export-methods)
+   - 8.8 [Complete Example (PivotView)](#88-complete-example-pivotview)
+9. [UI Templates](#9-ui-templates)
+   - 9.1 [BaseSingleGridComponent](#91-basesinglegridcomponent)
+   - 9.2 [BaseMultiGridComponent](#92-basemultigridcomponent)
+   - 9.3 [BaseSingleDrawComponent](#93-basesingledrawcomponent)
+   - 9.4 [BaseMultiDrawComponent](#94-basemultidrawcomponent)
+   - 9.5 [BaseCompositeComponent](#95-basecompositecomponent)
+   - 9.6 [CustomContainerComponent](#96-customcontainercomponent)
+   - 9.7 [Common Features](#97-common-features)
+     - 9.7.1 [UI Authentication](#971-ui-authentication)
+     - 9.7.2 [Data Synchronization](#972-data-synchronization)
+10. [Menu System](#10-menu-system)
+   - 10.1 [MainLayout](#101-mainlayout)
+   - 10.2 [Menu Configuration](#102-menu-configuration)
+     - 10.2.1 [Registering Screens in Menu.tsx](#1021-registering-screens-in-menutsx)
+   - 10.3 [GlobalDockTabAgent](#103-globaldocktabagent)
+     - 10.3.1 [Adding Custom Tab Menu](#1031-adding-custom-tab-menu)
+     - 10.3.2 [Removing Custom Tab Menu](#1032-removing-custom-tab-menu)
+     - 10.3.3 [Checking if Menu is Opened](#1033-checking-if-menu-is-opened)
+     - 10.3.4 [Disabling Dock Functionality](#1034-disabling-dock-functionality)
+     - 10.3.5 [Complete Example](#1035-complete-example)
+   - 10.4 [Custom Toolbars](#104-custom-toolbars)
+11. [Utilities and Helpers](#11-utilities-and-helpers)
+    - 11.1 [TMessageManager](#111-tmessagemanager)
+    - 11.2 [MaskHandler](#112-maskhandler)
+    - 11.3 [ControllerToolbarSet](#113-controllertoolbarset)
+    - 11.4 [Export Utilities](#114-export-utilities)
+    - 11.5 [SpreadGridUtil](#115-spreadgridutil)
+12. [Best Practices](#12-best-practices)
+    - 12.1 [Component Structure](#121-component-structure)
+    - 12.2 [Error Handling](#122-error-handling)
+    - 12.3 [Resource Keys](#123-resource-keys)
+    - 12.4 [Form Initialization](#124-form-initialization)
+    - 12.5 [Grid Schema Naming](#125-grid-schema-naming)
+    - 12.6 [Component Refs](#126-component-refs)
+    - 12.7 [Async Operations](#127-async-operations)
+    - 12.8 [UI Styling Security Best Practices](#128-ui-styling-security-best-practices)
+    - 12.9 [Performance and Memory Management](#129-performance-and-memory-management)
+13. [Appendix](#13-appendix)
+    - 13.1 [Available Components](#131-available-components)
+    - 13.2 [Dependencies](#132-dependencies)
 
 ---
 
@@ -5064,6 +5073,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
 
 - **Rich Component Library**: 80+ UI components based on Ant Design
 - **Advanced Grid Component**: `TSpreadGrid` with schema-based configuration
+- **Pivot Table**: `Pivot` component for interactive cross-tab analysis and chart visualization
 - **Menu System**: Built-in menu and layout management
 - **TypeScript Support**: Full TypeScript definitions
 - **Form Management**: Enhanced form components with validation
@@ -5078,6 +5088,7 @@ tsb-fontos-ui/
 ├── src/
 │   ├── ui-components/      # UI components (TButton, TInput, etc.)
 │   ├── grid/                # TSpreadGrid and related utilities
+│   ├── pivot/               # Pivot table and chart renderers
 │   ├── menu/                # Menu system components
 │   ├── ui-templates/        # Base templates for screens
 │   └── utils/               # Utility functions
@@ -5321,7 +5332,7 @@ MainLayout.setCustomUserHeader(
 The `MainComponent` processes menu items by:
 
 1. Matching menu item `id` with keys in `menuitem.json`
-2. Merging menu item properties (icon, content, customTabTitle) with JSON configuration
+2. Merging menu item properties (icon, content, customTabTitle) with JSON configuration — `customTabTitle` only when the tab title needs JSX beyond plain text (e.g. image + text); for text-only titles, `menuitem.json` `label` is enough
 3. Creating `IMenuTabItem` objects for the layout system
 4. Supporting menu chapters, groups, and common menus
 5. Refresh menu with `MenuInfo.refreshMenu()`
@@ -5346,7 +5357,7 @@ const menuItems: MenuType[] = [
   {
     id: "singleGrid", // Matching key
     icon: <BulbOutlined />,
-    customTabTitle: () => <span>Custom Title</span>, // Custom dock tab title
+    customTabTitle: () => <span>Custom Title</span>, // Only when tab title needs extra JSX (not for plain text — use menuitem.json label)
     content: (
       <div className="ft-root-wrapper">
         <SingleGridView menuId="singleGrid" />
@@ -6625,6 +6636,11 @@ import { TCollapse } from "tsb-fontos-ui";
 </TCollapse>
 ```
 
+**Layout Note (TCollapse.Panel padding):**
+- `TCollapse.Panel` body already has its own CSS padding.
+- When using an inner container such as `TFlex` inside `TCollapse.Panel` (for example, in `CodeMasterView.tsx`), you do not need to add additional padding to that container.
+- Adding extra padding on the inner container can cause duplicated spacing.
+
 **Props:**
 - `defaultActiveKey`: Default active panel keys
 - `onChange`: Panel change handler
@@ -7705,6 +7721,16 @@ private createHeader(): JSX.Element {
 
 `TSpreadGrid` is the core grid component of the framework, providing advanced data grid functionality. It is based on **Toast UI Grid (tui-grid)**, a powerful JavaScript grid library that provides features like sorting, filtering, editing, and more.
 
+**Important:** Do not use the `bodyHeight` prop on `TSpreadGrid`. When `bodyHeight` is set, the grid height is fixed internally and the resize integration with **rc-dock** (e.g. `TResizePanel`, `BaseSingleGridComponent`, `BaseMultiGridComponent`, `BaseCompositeComponent`) does not work correctly. Use `resizeValue`, `resizeValues`, or `gridResizeValue` on the base layout component instead so the docking panel resize handler can calculate and apply the grid area height.
+
+```typescript
+// ❌ Do not use — breaks rc-dock resize integration
+<TSpreadGrid
+  bodyHeight={200}
+  // ... other props
+/>
+```
+
 ### 7.1 Basic Usage
 
 ```typescript
@@ -7840,15 +7866,15 @@ The framework will automatically load the schema file from `public/grid/grd_ADM_
         "CellTypeID": "Unid",
         "Width": 80,
         "Visible": "Y",
-        "isVisible": true,
+        "isVisible": true, // Essential
         "AllowCodeExclude": "N",
-        "IsAllowCodeExclude": false,
+        "IsAllowCodeExclude": false, // Essential
         "ForeColor": 0,
         "ForegroundColor": "Black",
         "BackColor": 16777158,
         "BackgroundColor": "198, 255, 255",
         "Filter": "N",
-        "isFilter": false,
+        "isFilter": false, // Essential
         "Sort": "A",
         "SortSeq": 2,
         "SortDirection": 65,
@@ -7861,17 +7887,17 @@ The framework will automatically load the schema file from `public/grid/grd_ADM_
         "VerticalAlignment": "C",
         "VerticalAlign": 67,
         "Lock": "N",
-        "Locked": false,
+        "Locked": false, // Essential
         "Mandatory": "Y",
-        "isMandatory": true,
+        "isMandatory": true, // Essential
         "PrimaryKey": "Y",
-        "IsPrimaryKey": true,
+        "IsPrimaryKey": true, // Essential
         "Preview": "Y",
-        "isPreview": true,
+        "isPreview": true, // Essential
         "Copy": "N",
-        "DoCopy": false,
+        "DoCopy": false, // Essential
         "NotAllowHidden": "Y",
-        "IsNotAllowHidden": true,
+        "IsNotAllowHidden": true, // Essential
         "CellEditor": "N",
         "CellTypeCode": "N",
         "CellEditorType": 78,
@@ -7899,8 +7925,8 @@ The framework will automatically load the schema file from `public/grid/grd_ADM_
 - `DBField`: Data field name that must match the `JsonMapperProperty` decorator value in your data item class. This field is used for **Item Binding** - the framework uses this value to map grid cell data to the corresponding property in your data item class. For example, if `DBField: "unid"`, it will bind to a property decorated with `@JsonMapperProperty("unid")` in your item class.
 - `CellType`: Cell type (`"Text"`, `"Number"`, `"Date"`, etc.)
 - `Width`: Column width
-- `Visible`: Visibility (`"Y"` / `"N"`)
-- `Lock`: Lock status (`"Y"` / `"N"`)
+- `isVisible`: Visibility
+- `isLock`: Lock status
 - `CellInput`: Determines the input method and behavior for grid cells (see [CellInput Configuration](#cellinput-configuration) below)
 - `CellDisplay`, `ValueDisplay`: Control how code values are displayed in different contexts (see [CellDisplay and ValueDisplay Configuration](#celldisplay-and-valuedisplay-configuration) below)
 - `ColorRuleType`: Determines how cell colors (foreground and background) are calculated and applied (see [ColorRuleType Configuration](#colorruletype-configuration) below)
@@ -9722,9 +9748,330 @@ downloadExcelFrontendSetDataAtServer = async () => {
 - `decimalPoint`: Decimal point for numbers
 - `rowData`: Optional frontend-provided data (if not provided, server will fetch data)
 
+## 8. Pivot Component
+
+`Pivot` is an interactive pivot table component built on [PivotTable.js](https://github.com/nicolaskruchten/pivottable). It supports drag-and-drop field configuration, multiple aggregation functions, table and Plotly chart renderers, and Excel/PDF export.
+
+The underlying UI is loaded lazily via `React.lazy` to reduce the initial bundle size. While loading, a `"Loading Pivot Table..."` fallback is displayed.
+
+**Reference sample:** `Fontos-Sample-Frontend/src/pages/PivotView.tsx`
+
+### 8.1 Overview
+
+| Item | Description |
+|------|-------------|
+| Import | `import { Pivot, PivotState, AggregatorType } from "tsb-fontos-ui"` |
+| Component type | `React.PureComponent` (class component) |
+| Ref | Required for `exportExcel` / `exportPdf` |
+| Data format | `string[][]` (recommended) or `{}[]` |
+| State callback | `onChange: (s: PivotState) => void` |
+
+### 8.2 PivotState and Props
+
+`PivotProps` extends `PivotState` and adds `onChange`. All fields below are passed as props to `<Pivot />`.
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `data` | `string[][] \| {}[]` | Pivot source data. When using `extractSummaryData`, the first row is the column header labels. |
+| `rows` | `string[]` | Fields placed on the row axis. Values must match the **display labels** in `data` (e.g. `"Name"`, not `"name"`). |
+| `cols` | `string[]` | Fields placed on the column axis. |
+| `vals` | `string[]` | Value fields to aggregate. |
+| `valueFilter` | `object` | Per-field value filter. Example: `{ "Field": { "F01": true, "F02": true } }` |
+| `aggregatorName` | `AggregatorType` | Aggregation function name (e.g. `"Count"`, `"Sum"`, `"Average"`). |
+| `rendererName` | `string` | Output renderer (e.g. `"Table"`, `"Line Chart"`). |
+| `rowGrouping` | `boolean` | Enable row grouping. |
+| `colGrouping` | `boolean` | Enable column grouping. |
+| `rowGroupBefore` | `boolean` | Place row grouping before row labels. |
+| `colGroupBefore` | `boolean` | Place column grouping before column labels. |
+| `showOnlyCells` | `boolean` | Show only data cells (hide axis UI in table renderer). |
+| `showRowTotals` | `boolean` | Show row totals. |
+| `showColTotals` | `boolean` | Show column totals. |
+| `displayBlankValue` | `boolean` | Display blank values in cells. |
+| `plotlyOptions` | `{ width: number; height: number; showLegend?: boolean; fontSize?: number }` | Chart size and style when using Plotly renderers. `showLegend` defaults to `true`, `fontSize` defaults to `12`. |
+| `onChange` | `(s: PivotState) => void` | Called when the user changes rows, columns, filters, aggregator, or renderer in the pivot UI. |
+
+```typescript
+import { AggregatorType, Pivot, PivotState } from "tsb-fontos-ui";
+
+state = {
+  pivotState: {
+    data: [],
+    rows: ["Name", "Container No."],
+    cols: ["Field"],
+    vals: ["Yard"],
+    valueFilter: {},
+    plotlyOptions: { width: 900, height: 500, fontSize: 12 },
+    rowGrouping: true,
+    colGrouping: true,
+    aggregatorName: "Count" as AggregatorType,
+    showOnlyCells: false,
+    showRowTotals: true,
+    showColTotals: true,
+    rowGroupBefore: false,
+    colGroupBefore: false,
+    rendererName: "Table",
+    displayBlankValue: false,
+  },
+};
+```
+
+### 8.3 Data Preparation (extractSummaryData)
+
+Use the static helper `Pivot.extractSummaryData` to convert `BaseDataItem` (or plain object) arrays into the `string[][]` format expected by the pivot table.
+
+```typescript
+import { Pivot } from "tsb-fontos-ui";
+import { BaseDataItem } from "tsb-fontos-core";
+
+class ListGridItem extends BaseDataItem {
+  name: string[] = [];
+  containerNo = "";
+  field = "";
+  yard = 0;
+}
+
+// fieldLabels: [displayLabel, propertyName][]
+const list: ListGridItem[] = [/* ... load or create items ... */];
+
+const pivotData = Pivot.extractSummaryData(list, [
+  ["Name", "name"],
+  ["Container No.", "containerNo"],
+  ["Field", "field"],
+  ["Yard", "yard"],
+]);
+// pivotData[0] => ["Name", "Container No.", "Field", "Yard"]
+// pivotData[1..n] => string values per row
+```
+
+**Important:**
+
+- `rows`, `cols`, and `vals` props must use the **first element** (display label) from each `fieldLabels` pair, not the property name.
+- `null` / `undefined` values are converted to empty strings.
+- Other value types are converted with `toString()`.
+
+### 8.4 Basic Usage
+
+```typescript
+import React, { createRef } from "react";
+import { Pivot, PivotState } from "tsb-fontos-ui";
+
+class MyPivotPage extends React.PureComponent {
+  private _pivotRef = createRef<Pivot>();
+
+  state = {
+    pivotState: {
+      data: [] as string[][],
+      rows: ["Name", "Container No."],
+      cols: ["Field"],
+      vals: ["Yard"],
+      valueFilter: {},
+      plotlyOptions: { width: 900, height: 500 },
+      rowGrouping: true,
+      colGrouping: true,
+      aggregatorName: "Count",
+      showOnlyCells: false,
+      showRowTotals: true,
+      showColTotals: true,
+      rowGroupBefore: false,
+      colGroupBefore: false,
+      rendererName: "Table",
+      displayBlankValue: false,
+    },
+  };
+
+  componentDidMount() {
+    const pivotData = Pivot.extractSummaryData(/* items */, [
+      ["Name", "name"],
+      ["Container No.", "containerNo"],
+      ["Field", "field"],
+      ["Yard", "yard"],
+    ]);
+
+    this.setState({
+      pivotState: { ...this.state.pivotState, data: pivotData },
+    });
+  }
+
+  render() {
+    return (
+      <Pivot
+        ref={this._pivotRef}
+        {...this.state.pivotState}
+        onChange={(s: PivotState) => this.setState({ pivotState: s })}
+      />
+    );
+  }
+}
+```
+
+### 8.5 State Management and onChange
+
+The pivot UI lets users drag fields between Rows, Columns, Values, and Filters. Wire `onChange` so parent state stays in sync and you can reflect the current configuration elsewhere (side panels, saved templates, etc.).
+
+```typescript
+<Pivot
+  ref={this._pivotRef}
+  {...this.state.pivotState}
+  onChange={(s: PivotState) => this.setState({ pivotState: s })}
+/>
+```
+
+**Template switching pattern** (from `PivotView.tsx`): keep preset configurations in a `Map` and apply them when the user selects a template.
+
+```typescript
+private _templateMap = new Map<string, {
+  rows: string[];
+  cols: string[];
+  vals: string[];
+  valueFilter: Record<string, Record<string, boolean>>;
+  aggregatorName: AggregatorType;
+}>();
+
+// On mount: register templates using display labels from extractSummaryData
+this._templateMap.set("1", {
+  rows: ["Name", "Container No."],
+  cols: ["Field"],
+  vals: ["Yard"],
+  valueFilter: {},
+  aggregatorName: "Count",
+});
+
+private applyTemplate(templateKey: string) {
+  const template = this._templateMap.get(templateKey)!;
+  this.setState({
+    pivotState: {
+      ...this.state.pivotState,
+      data: this.list,
+      rows: template.rows,
+      cols: template.cols,
+      vals: template.vals,
+      valueFilter: template.valueFilter,
+      aggregatorName: template.aggregatorName,
+      rendererName: "Table", // or "Line Chart", etc.
+    },
+  });
+}
+```
+
+### 8.6 Renderers and Aggregators
+
+**Table renderers**
+
+| `rendererName` | Description |
+|----------------|-------------|
+| `Table` | Standard pivot table |
+| `Table Heatmap` | Full heatmap coloring |
+| `Table Col Heatmap` | Column heatmap |
+| `Table Row Heatmap` | Row heatmap |
+
+**Chart renderers** (Plotly; set `plotlyOptions` for size and legend)
+
+| `rendererName` | Description |
+|----------------|-------------|
+| `Grouped Column Chart` | Grouped column chart |
+| `Stacked Column Chart` | Stacked column chart |
+| `Grouped Bar Chart` | Grouped bar chart |
+| `Stacked Bar Chart` | Stacked bar chart |
+| `Line Chart` | Line chart |
+| `Dot Chart` | Scatter (markers only) |
+| `Area Chart` | Stacked area chart |
+| `Scatter Chart` | Scatter chart |
+| `Multiple Pie Chart` | Multiple pie chart |
+
+**Common aggregators**
+
+| `aggregatorName` | Description |
+|------------------|-------------|
+| `Count` | Count of records |
+| `Sum` | Sum of values |
+| `Average` | Mean of values |
+| `Median` | Median of values |
+| `Minimum` / `Maximum` | Min / max |
+| `Count Unique Values` | Distinct count |
+| `Integer Sum` | Integer sum |
+
+Additional aggregators (`Sample Variance`, `Sum as Fraction of Total`, etc.) are also available in the pivot UI dropdown.
+
+### 8.7 Export Methods
+
+Call export methods on the `Pivot` ref. Both methods operate on the rendered `.pvtTable` DOM element.
+
+```typescript
+private _pivotRef = createRef<Pivot>();
+
+private onExportExcel() {
+  this._pivotRef.current?.exportExcel("pivot-report");
+}
+
+private onExportPdf() {
+  this._pivotRef.current?.exportPdf("pivot-report");
+}
+```
+
+| Method | Output | Notes |
+|--------|--------|-------|
+| `exportExcel(fileName: string)` | `.xlsx` | Uses `@linways/table-to-excel` on the pivot table HTML. |
+| `exportPdf(fileName: string)` | `.pdf` | Uses `jspdf` with landscape A4 layout. |
+
+Export is most reliable when `rendererName` is `"Table"` (or another table-based renderer). Chart renderers do not produce a `.pvtTable` for export.
+
+### 8.8 Complete Example (PivotView)
+
+The sample `PivotView` screen demonstrates:
+
+1. Building sample `ListGridItem` data and converting it with `Pivot.extractSummaryData`
+2. Multiple pivot templates selected via `TRadio.Group`
+3. A `TCollapse` side panel showing current filters, rows, columns, values, and aggregator from `pivotState`
+4. `Pivot` with `onChange` for two-way state sync
+5. Export button wired to the pivot ref
+
+```typescript
+import React, { createRef } from "react";
+import { AggregatorType, BaseComponent, Pivot, PivotState, TButton, TCollapse, TRadio } from "tsb-fontos-ui";
+import { BaseDataItem } from "tsb-fontos-core";
+
+class PivotView extends React.PureComponent {
+  private _pivotRef = createRef<Pivot>();
+  private list: string[][] = [];
+
+  state = {
+    templateName: 1,
+    pivotState: { /* ... see 8.2 ... */ },
+  };
+
+  componentDidMount() {
+    // 1. Build ListGridItem[] sample data
+    // 2. this.list = Pivot.extractSummaryData(list, fieldLabels);
+    // 3. Register templates in _templateMap
+  }
+
+  render() {
+    return (
+      <BaseComponent
+        menuId="pivot"
+        mainComponent={
+          <div>
+            <TButton type="primary" onClick={() => this._pivotRef.current?.exportExcel("pivot")}>
+              Save as Excel
+            </TButton>
+            <Pivot
+              ref={this._pivotRef}
+              {...this.state.pivotState}
+              onChange={(s: PivotState) => this.setState({ pivotState: s })}
+            />
+          </div>
+        }
+      />
+    );
+  }
+}
+```
+
+To run the sample, open the **Pivot** menu entry in `Fontos-Sample-Frontend` (menu key: `pivot`).
+
 ---
 
-## 8. UI Templates
+## 9. UI Templates
 
 ```mermaid
 sequenceDiagram
@@ -10143,7 +10490,7 @@ class ProductController extends BaseSingleGridController {
 
 When the `ProductView` becomes active, the framework automatically enables the Refresh, Save, and Delete buttons in the main toolbar. Clicking these buttons will call the corresponding methods in `ProductController`.
 
-### 8.1 BaseSingleGridComponent
+### 9.1 BaseSingleGridComponent
 
 `BaseSingleGridComponent` is used for screens with a single grid. It provides automatic grid height management, resize handling, and controller integration.
 
@@ -10246,7 +10593,7 @@ class SingleGridController extends BaseSingleGridController {
 }
 ```
 
-### 8.2 BaseMultiGridComponent
+### 9.2 BaseMultiGridComponent
 
 `BaseMultiGridComponent` is used for screens with multiple grids. It manages multiple grid references and handles resize for each grid.
 
@@ -10354,7 +10701,119 @@ class MultiGridController extends BaseMultiGridController {
 }
 ```
 
-### 8.3 BaseSingleDrawComponent
+#### TTabs with multiple TSpreadGrid grids
+
+When a screen shows **one grid per tab** (Sencha `tabpanel` with a `tsb-datagrid` in each tab), use `BaseMultiGridComponent` with `TTabs` instead of remounting a single grid on tab change.
+
+| Setting | Value | Why |
+|---------|-------|-----|
+| `horizontal` | `true` | Each tabbed grid shares the same height offset; stacked (`horizontal={false}`) resize math is for split layouts, not tabs. |
+| `resizeValues` | **Same value for every grid** (e.g. `[210, 210]`) | Accounts for the shared search/header area above the tab content; each grid in `gridRefs` gets the identical non-grid UI height. |
+| `gridRefs` | One ref per tab grid, in tab order | Index `0` = first tab grid; set `controller.activeGridIdx` on tab change for Find / Column Setting / Summary toolbar actions. |
+
+**Tab change — recalculate grid height**
+
+Inactive `TTabs` panes are hidden (`display: none`) until selected. If height is calculated only on initial mount, the **first time** a tab is shown its grid can render with the wrong height (not yet measured against the visible dock panel).
+
+Fix this by calling `setResizeValue(index, resizeValue, true)` on the active grid **after** the tab becomes visible. The third argument (`doResize: true`) runs the internal resize callback so dock-panel height minus `resizeValues[index]` is applied.
+
+| When | Action |
+|------|--------|
+| `componentDidMount` | Resize the default/active tab grid once (e.g. after 100ms) |
+| `onTabChange` | In `setState` callback, call `applyGridResize(activeGridIdx)` |
+| `TTabs` | `destroyOnHidden={false}` |
+| `TTabs.TabPane` | `forceRender` on each pane so every grid ref is registered at mount |
+
+```typescript
+const GRID_RESIZE_VALUE = 210; // search panel + tab bar height
+
+class TabbedMultiGridView extends React.Component<ViewProps, { activeTab: string }> {
+  private _rootRef = createRef<HTMLDivElement>();
+  private _summaryGrid = createRef<TSpreadGrid>();
+  private _detailGrid = createRef<TSpreadGrid>();
+  private _baseComponent =
+    createRef<BaseMultiGridComponent<BaseMultiGridProps, {}>>();
+  private _controller = new TabbedMultiGridController(this._baseComponent);
+
+  componentDidMount(): void {
+    this._controller.activeGridIdx = 0;
+    setTimeout(() => this.applyGridResize(0), 100);
+  }
+
+  private applyGridResize(gridIdx: number): void {
+    const baseComponent = this._baseComponent.current;
+    if (!baseComponent) return;
+
+    const runResize = () => {
+      baseComponent.setResizeValue(gridIdx, GRID_RESIZE_VALUE, true);
+      baseComponent.props.gridRefs[gridIdx]?.current?.refreshLayout();
+    };
+
+    requestAnimationFrame(() => {
+      setTimeout(runResize, 50);
+    });
+  }
+
+  private onTabChange = (activeTab: string) => {
+    const gridIdx = activeTab === "summary" ? 0 : 1;
+    this._controller.activeGridIdx = gridIdx;
+    this.setState({ activeTab }, () => {
+      this.applyGridResize(gridIdx);
+    });
+  };
+
+  render() {
+    const main = (
+      <div ref={this._rootRef}>
+        <TLayout className="list-layout">
+          <TLayout.Header>{/* search panel */}</TLayout.Header>
+          <TLayout.Content>
+            <TTabs
+              activeKey={this.state.activeTab}
+              onChange={this.onTabChange}
+              destroyInactiveTabPane={false}
+            >
+              <TTabs.TabPane tab="Summary" key="summary" forceRender>
+                <TSpreadGrid ref={this._summaryGrid} /* ... */ />
+              </TTabs.TabPane>
+              <TTabs.TabPane tab="Detail" key="detail" forceRender>
+                <TSpreadGrid ref={this._detailGrid} /* ... */ />
+              </TTabs.TabPane>
+            </TTabs>
+          </TLayout.Content>
+        </TLayout>
+      </div>
+    );
+
+    return (
+      <BaseMultiGridComponent
+        ref={this._baseComponent}
+        menuId={this.props.menuId}
+        controller={this._controller}
+        mainComponent={main}
+        gridRefs={[this._summaryGrid, this._detailGrid]}
+        resizeValues={[GRID_RESIZE_VALUE, GRID_RESIZE_VALUE]}
+        horizontal={true}
+        rootRef={this._rootRef}
+        mandatoryFieldMap={mandatoryFieldMap}
+      />
+    );
+  }
+}
+```
+
+> **Do not** rely on `refreshLayout()` alone after a tab switch — it does not re-run dock resize math. Always use `setResizeValue(index, value, true)`.
+
+Reference implementation: `MOST-JPB-Frontend` → `DataGatheringOfNonVesselView.tsx`.
+
+In the matching `BaseMultiGridController`, bind **each** grid after search (do not swap schema on a single ref):
+
+```typescript
+this.grids?.[0]?.current?.bindListAsGridDataSource(summaryList);
+this.grids?.[1]?.current?.bindListAsGridDataSource(detailList);
+```
+
+### 9.3 BaseSingleDrawComponent
 
 `BaseSingleDrawComponent` is used for screens with a single drawing canvas. It manages drawing container resize and controller integration.
 
@@ -10415,7 +10874,7 @@ class DamageCheckView extends React.PureComponent {
 }
 ```
 
-### 8.4 BaseMultiDrawComponent
+### 9.4 BaseMultiDrawComponent
 
 `BaseMultiDrawComponent` is used for screens with multiple drawing canvases. It manages multiple drawing container references and resize handling.
 
@@ -10431,7 +10890,7 @@ class DamageCheckView extends React.PureComponent {
   - For subsequent containers, the calculation subtracts all previous containers' resize values
 - `horizontal`: Whether drawing containers are arranged horizontally (default: false)
 
-### 8.5 BaseCompositeComponent
+### 9.5 BaseCompositeComponent
 
 `BaseCompositeComponent` is used for complex screens that combine a grid, a draw component, and other components. It provides flexible layout management.
 
@@ -10498,7 +10957,6 @@ class CompositeView extends React.Component<ViewProps, {}> {
             useClient: true,
             perPage: 10,
           }}
-          bodyHeight={200} // page grid에서 지정하지않으면 페이지 변경에 따라 행 갯수가 바뀔때 높이가 재계산 되어버린다. gridResizeValue 와 동일한 값을 주면 된다.
           contextMenu={this.createContextMenuFn}
           data={this.state.data}
           header={{ height: 60 }}
@@ -10533,7 +10991,7 @@ class CompositeView extends React.Component<ViewProps, {}> {
 }
 ```
 
-### 8.6 CustomContainerComponent
+### 9.6 CustomContainerComponent
 
 `CustomContainerComponent` is an abstract base class for custom container components. It provides a simple structure for modal dialogs and custom views.
 
@@ -10585,7 +11043,7 @@ export default class AuthorizationByJWTView extends CustomContainerComponent {
 }
 ```
 
-### 8.7 Common Features
+### 9.7 Common Features
 
 All UI template components share the following features:
 
@@ -10897,7 +11355,7 @@ interface AuthorInfoItem {
 - Use consistent `authControlId` values for grid components to enable proper authorization matching
 - Ensure your security service implementation properly handles authorization data from your backend
 
-#### 8.7.2 Data Synchronization
+#### 9.7.2 Data Synchronization
 
 The framework provides a **Data Synchronization** mechanism that allows multiple controllers/components to stay synchronized when data changes occur. This is useful for scenarios where:
 - A detail screen needs to update when data changes in a list screen
@@ -11100,9 +11558,9 @@ public initDataSyncCallbackInfo(): void {
 
 ---
 
-## 9. Menu System
+## 10. Menu System
 
-### 9.1 MainLayout
+### 10.1 MainLayout
 
 The `MainLayout` component provides the main application layout with menu support.
 
@@ -11114,7 +11572,7 @@ import { MainLayout } from "tsb-fontos-ui";
 MainLayout.setCustomCommonToolbars([/* custom toolbars */]);
 ```
 
-### 9.2 Menu Configuration
+### 10.2 Menu Configuration
 
 Menus are configured in `public/environment/menuitem.json`:
 
@@ -11135,7 +11593,7 @@ Menus are configured in `public/environment/menuitem.json`:
 }
 ```
 
-#### 9.2.1 Registering Screens in Menu.tsx
+#### 10.2.1 Registering Screens in Menu.tsx
 
 To register a screen in the menu system, you need to create a module(file or function) (typically in `src/Menu.tsx`) that exports a `MenuType[]` array. Each menu item maps to a screen component.
 
@@ -11200,7 +11658,7 @@ The menu item follows the `IMenuTabItem` interface from `tsb-fontos-ui`. All ava
 
 - `id` (required, `string`): Unique identifier for the menu item. This should match the `key` in `menuitem.json`.
 - `content` (optional, `React.ReactElement`): JSX content to render when the menu item is selected. Should wrap the View component in a `div` with class `ft-root-wrapper`.
-- `title` (optional, `string | (() => React.ReactChild)`): Tab title text or function that returns custom JSX for the tab title. If not provided, the menu label from `menuitem.json` is used.
+- `title` (optional, `string | (() => React.ReactChild)`): Tab title text or function that returns custom JSX for the tab title. If not provided, the menu label from `menuitem.json` is used. **For text-only titles, set `label` in `menuitem.json` — do not use `customTabTitle` / `title`.** Use `customTabTitle` (alias of `title` as a function) only when the tab title needs extra JSX beyond plain text (e.g. an image next to the label, a badge, or other custom markup).
 - `icon` (optional, `React.ReactElement`): Icon component or JSX element to display in the menu and tab.
 - `group` (optional, `string`): Group identifier for organizing related menu items.
 - `cached` (optional, `boolean`): Whether to cache the tab content when switching tabs. Default: `false`.
@@ -11231,7 +11689,7 @@ The menu item follows the `IMenuTabItem` interface from `tsb-fontos-ui`. All ava
 - `resizable` (optional, `boolean`): Whether the floating window can be resized. If `false`, the window size is fixed according to `floatPosition`. Default: `true`.
 - `disableDock` (optional, `boolean`): Whether to disable docking functionality for this tab. Default: `false`.
 
-**Note:** The `customTabTitle` property mentioned in examples is actually the `title` property when used as a function.
+**Note:** The `customTabTitle` property mentioned in examples is actually the `title` property when used as a function. Use it only when the tab title needs JSX beyond plain text (e.g. image + text, badge). For text-only tab and side-menu labels, `menuitem.json` `label` is sufficient — no `customTabTitle` in `Menu.tsx` is required.
 
 **Step 4: Using Refs (Optional)**
 
@@ -11257,7 +11715,9 @@ const menuItems: MenuType[] = [
 
 **Step 5: Custom Tab Title**
 
-You can customize the tab title using `customTabTitle`:
+Use `customTabTitle` only when the tab title needs **additional JSX beyond plain text** — for example, an image alongside the label, a badge, or other custom markup. When the title is **text only**, set `label` in `menuitem.json` (and localize via `vocabulary.json` if needed); that value is used automatically for both the side menu and the dock tab. Do not add `customTabTitle` just to repeat the same text.
+
+The example below shows `customTabTitle` with an image + text:
 
 ```typescript
 import { Localization } from "tsb-fontos-core";
@@ -11364,11 +11824,11 @@ export default App;
 4. **Icon Types**: Icons can be Ant Design icons, images, or any JSX element.
 5. **Refs**: Use refs when you need programmatic access to View components from outside the component tree.
 
-### 9.3 GlobalDockTabAgent
+### 10.3 GlobalDockTabAgent
 
 The `GlobalDockTabAgent` provides programmatic control over dock tabs, allowing you to dynamically add, remove, and manage tabs at runtime. This is useful when you need to open a view not by side menu interaction and for creating custom tabs from user interactions (e.g., opening a print preview, detail view, or modal dialog as a tab).
 
-#### 9.3.1 Adding Custom Tab Menu
+#### 10.3.1 Adding Custom Tab Menu
 
 Use `addCustomTabMenu` to dynamically add a new tab to the dock layout:
 
@@ -11469,7 +11929,7 @@ class SingleGridView extends React.Component {
 }
 ```
 
-#### 9.3.2 Removing Custom Tab Menu
+#### 10.3.2 Removing Custom Tab Menu
 
 Use `removeCustomTabMenu` to programmatically close a tab:
 
@@ -11493,7 +11953,7 @@ const handlePrintComplete = () => {
 };
 ```
 
-#### 9.3.3 Checking if Menu is Opened
+#### 10.3.3 Checking if Menu is Opened
 
 Use `isOpenedMenuExist` to check if a specific tab is currently open:
 
@@ -11548,7 +12008,7 @@ const openDetailView = (itemId: string) => {
 };
 ```
 
-#### 9.3.4 Disabling Dock Functionality
+#### 10.3.4 Disabling Dock Functionality
 
 Use `disableDock` to globally enable or disable docking functionality:
 
@@ -11598,7 +12058,7 @@ const openPrintPreview = () => {
 };
 ```
 
-#### 9.3.5 Complete Example
+#### 10.3.5 Complete Example
 
 Here's a complete example demonstrating all `GlobalDockTabAgent` features:
 
@@ -11717,7 +12177,7 @@ class GridView extends React.Component {
 5. **Handle floating windows**: Set `floatPosition` and `resizable` appropriately for floating tabs
 6. **Manage docking state**: Use `disableDock` when you need to lock the layout temporarily
 
-### 9.4 Custom Toolbars
+### 10.4 Custom Toolbars
 
 ```typescript
 import { MainLayout } from "tsb-fontos-ui";
@@ -11731,9 +12191,9 @@ MainLayout.setCustomCommonToolbars([
 
 ---
 
-## 10. Utilities and Helpers
+## 11. Utilities and Helpers
 
-### 10.1 TMessageManager
+### 11.1 TMessageManager
 
 Message manager for displaying alerts, confirmations, and notifications.
 
@@ -11764,7 +12224,7 @@ if (msgResult === 'Ok') {
 }
 ```
 
-### 10.2 MaskHandler
+### 11.2 MaskHandler
 
 Loading mask handler for UI block.
 
@@ -11782,7 +12242,7 @@ try {
 }
 ```
 
-### 10.3 ControllerToolbarSet
+### 11.3 ControllerToolbarSet
 
 Toolbar decorator for controllers.
 
@@ -11799,7 +12259,7 @@ class MyController extends BaseSingleGridController {
 }
 ```
 
-### 10.4 Export Utilities
+### 11.4 Export Utilities
 
 ```typescript
 import { ExportGridService, ExportConvert, ExportUtil } from "tsb-fontos-ui";
@@ -11812,7 +12272,7 @@ await exportService.exportToExcel(grid, "filename.xlsx");
 await exportService.exportToPdf(grid, "filename.pdf");
 ```
 
-### 10.5 SpreadGridUtil
+### 11.5 SpreadGridUtil
 
 Grid utility functions.
 
@@ -11828,9 +12288,9 @@ const selectedRows = SpreadGridUtil.getCellColor(grid);
 
 ---
 
-## 11. Best Practices
+## 12. Best Practices
 
-### 11.1 Component Structure
+### 12.1 Component Structure
 
 Organize your components with clear regions:
 
@@ -11898,7 +12358,7 @@ class MyView extends React.Component<MyViewProps, MyViewState> {
 }
 ```
 
-### 11.2 Error Handling
+### 12.2 Error Handling
 
 Always wrap operations in try-catch blocks:
 
@@ -11915,7 +12375,7 @@ private async doRetrieveData(): Promise<void> {
 }
 ```
 
-### 11.3 Resource Keys
+### 12.3 Resource Keys
 
 Use resource keys for all user-facing text:
 
@@ -11927,7 +12387,7 @@ Use resource keys for all user-facing text:
 <TLabel>User Name</TLabel>
 ```
 
-### 11.4 Form Initialization
+### 12.4 Form Initialization
 
 Always provide initial values for forms:
 
@@ -11952,14 +12412,14 @@ private getInitialBindParm(): BindParam {
 >
 ```
 
-### 11.5 Grid Schema Naming
+### 12.5 Grid Schema Naming
 
 Follow consistent naming for grid schemas:
 
 - Schema file: `grd_[MODULE]_[SCREEN]_Schema.json`
 - Example: `grd_ADM_NewsList_Schema.json`
 
-### 11.6 Component Refs
+### 12.6 Component Refs
 
 ```mermaid
 stateDiagram-v2
@@ -11990,7 +12450,7 @@ componentWillUnmount() {
 }
 ```
 
-### 11.7 Async Operations
+### 12.7 Async Operations
 
 Handle async operations properly:
 
@@ -12016,7 +12476,7 @@ private async doRetrieveData(): Promise<void> {
 }
 ```
 
-### 11.8 UI Styling Security Best Practices
+### 12.8 UI Styling Security Best Practices
 
 Specifying optional or dynamic functional values directly in the inline style attribute can lead to security vulnerabilities. Please refer to the guidelines below.
 
@@ -12695,7 +13155,31 @@ render(): React.ReactNode {
 | Between Label and Input | `5px;` |
 | Between Groups | `5px;` |
 
-### 11.9 Performance and Memory Management
+**`mainComponent` root `<div>` — do not add padding**
+
+The outermost element of `mainComponent` (typically `<div ref={this._rootRef}>` or `<div ref={this.pnlRoot}>`) is a layout/resize anchor passed to `Base*Component` via `rootRef`. Do **not** set `padding` on this root tag — including inline styles such as `style={{ padding: "10px" }}`.
+
+The **Between View and Root Panel** (`10px`) inset in the table above is already provided by the framework shell (`Menu.tsx` `ft-root-wrapper`, `BaseComponent`). Adding padding on the root `div` doubles the inset and can throw off grid height calculation (`resizeValue` / dock resize).
+
+```tsx
+// ❌ Do not add padding on the root div
+const main = (
+  <div ref={this._rootRef} style={{ height: "100%", padding: "10px" }}>
+    <TLayout className="list-layout">{/* ... */}</TLayout>
+  </div>
+);
+
+// ✅ Root div: ref only; apply spacing on inner layout regions (TFlex, TLayout slots, …)
+const main = (
+  <div ref={this.pnlRoot} className="root-panel">
+    <TLayout className="list-layout">{/* ... */}</TLayout>
+  </div>
+);
+```
+
+Apply spacing values from the table to inner group/panel wrappers, `TLayout` slot content, control rows, label–input pairs, and adjacent group sections — **not** on `mainComponent`'s root `<div>`.
+
+### 12.9 Performance and Memory Management
 
 When a component unmounts, you must explicitly cut off the connection between instance member variables and the DOM.
 1. Reference Release: In componentWillUnmount, set this.props, this.el, and this.ref.current to null. This is especially critical in High-Order Component (HOC) environments using connect, as it prevents the Store from being retained in memory.
@@ -12757,9 +13241,9 @@ dispose(): void {
 
 ---
 
-## 12. Appendix
+## 13. Appendix
 
-### 12.1 Available Components
+### 13.1 Available Components
 
 The framework provides the following components:
 
@@ -12776,6 +13260,7 @@ The framework provides the following components:
 
 **Data Display:**
 - `TSpreadGrid`, `TTable`, `TList`
+- `Pivot` (pivot table and chart visualization)
 - `TTree`, `TTag`, `TBadge`
 
 **Feedback:**
@@ -12785,7 +13270,7 @@ The framework provides the following components:
 **Navigation:**
 - `TMenu`, `TBreadcrumb`, `TPagination`
 
-### 12.2 Dependencies
+### 13.2 Dependencies
 
 The framework depends on:
 - `antd`: 5.29.3
@@ -13231,7 +13716,7 @@ async doMasterSelection(item: EdoItem | null): Promise<void> {
 
     this._view.setDetailGridData(new BaseItemList<EdoDetailItem>(details as any[], true));
   } catch (ex) {
-    GeneralLogger.error('doMasterSelection 오류:', ex);
+    GeneralLogger.error(ex);
   } finally {
     this._view.setDetailLoadingState('DONE');
   }
@@ -13329,7 +13814,6 @@ private masterGrid_onAfterFocusChange = async (e: any) => {
 <TSpreadGrid
   ref={this._masterGridRef}
   width="auto"
-  height="100%"
   header={{ height: 30 }}
   minRowHeight={25}
   rowHeaders={[{ type: 'checkbox', header: '<span></span>' }, 'rowNum']}
@@ -13442,8 +13926,8 @@ const items = rawData.map(d => Object.assign(new EdoItem(), d));
 
 **해결:** namespace 이름 통일
 ```json
-"language.namespaces": [ { "vocabulary": ["translation"] } ],
-"language.gridnamespace": "vocabulary"
+"language.namespaces": [ "grid", { "vocabulary": ["translation"] } ],
+"language.gridnamespace": "grid"
 ```
 
 ---
@@ -13529,6 +14013,15 @@ await boardService.selectSingleGrid(param).then((res) => {
 this._searchFormRef.current.getFormInstance().getFieldsValue(); 
 ```
 
+### 오류 9: 잘못된 GeneralLogger 함수 호출
+
+**원인:** formInstance 대신 refObject.current 를 통해서 호출 시도함. `GeneralLogger.error("데이터 로딩에 실패했습니다:", error) ; // 오류!`
+
+**해결:**
+```typescript
+GeneralLogger.error(error);
+GeneralLogger.error("데이터 로딩 실패: " + JSON.stringify(error)); 
+```
 
 ---
 
