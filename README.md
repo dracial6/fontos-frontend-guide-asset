@@ -5062,7 +5062,17 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
 13. [Appendix](#13-appendix)
     - 13.1 [Available Components](#131-available-components)
     - 13.2 [Dependencies](#132-dependencies)
-
+14. [Mobile Development](#14-mobile-development)
+    - 14.1 [Two Ways to Support Mobile](#141-two-ways-to-support-mobile)
+    - 14.2 [Project Setup](#142-project-setup)
+    - 14.3 [Application Entry Point](#143-application-entry-point)
+    - 14.4 [Layout Design Guidelines](#144-layout-design-guidelines)
+    - 14.5 [TMonitoringLayout — Header / Content / Footer Template](#145-tmonitoringlayout--header--content--footer-template)
+    - 14.6 [Authentication in a Standalone Mobile Shell](#146-authentication-in-a-standalone-mobile-shell)
+    - 14.7 [Mobile Grid Cell Styling](#147-mobile-grid-cell-styling)
+    - 14.8 [Real-time Updates over WebSocket (STOMP)](#148-real-time-updates-over-websocket-stomp)
+    - 14.9 [Mobile Web App Manifest & Viewport](#149-mobile-web-app-manifest--viewport)
+    - 14.10 [Best Practices Checklist for Mobile Development](#1410-best-practices-checklist-for-mobile-development)
 ---
 
 ## 1. Introduction
@@ -13283,6 +13293,426 @@ The framework depends on:
 **Document Version**: 1.0  
 **Last Updated**: 2026 
 **Framework Version**: tsb-fontos-ui 1.0.0
+
+---
+
+## 14. Mobile Development
+
+`tsb-fontos-ui-mobile` is a companion package to `tsb-fontos-ui` for building a **dedicated mobile web frontend** — a standalone client with its own entry point, rather than a responsive re-flow of the desktop screens. This section documents the pattern based on the reference implementation in `packages/Fontos-Sample-MobilePrototype` (a mobile monitoring client for yard/vessel status, built on top of `tsb-catos-drawing-*`).
+
+### 14.1 Two Ways to Support Mobile
+
+The framework offers two different strategies, and choosing the right one matters before writing any code:
+
+| Strategy | Package | When to use |
+|---|---|---|
+| **Responsive layout switch** | `tsb-fontos-ui` (`MainComponent` / `TLayout`) | The same screens/menus should work on both desktop and mobile browsers. `MainComponent` already performs mobile detection and swaps to `TMobileLayout` automatically at render time (see [3.1.3 MainComponent Initialization Process](#313-maincomponent-initialization-process), step 6). No separate app is needed. |
+| **Dedicated mobile shell** (this section) | `tsb-fontos-ui-mobile` (`MobileMainComponent` / `MobileMainLayout` / `TMonitoringLayout`) | The mobile client is a separate deployable frontend with its own purpose-built screens (e.g. a handheld/kiosk monitoring view for field operators), not a shrunk-down copy of the desktop menu/tab system. |
+
+`Fontos-Sample-MobilePrototype` is an example of the second strategy: it is its own `create-react-app` package in the workspace, with its own `App.tsx`, rather than a mobile view registered inside a desktop app's menu.
+
+### 14.2 Project Setup
+
+A mobile client package lives alongside the other framework packages in the same yarn workspace root (the `Fontos-Framework_Template` project), under `packages/`:
+
+```text
+Fontos-Framework_Template/            (workspace root — clone this first)
+└── packages/
+    ├── Fontos-Framework-Frontend/    (desktop frontend, if present)
+    ├── Catos-Cm-Frontend/            (Common package)
+    └── Fontos-Sample-MobilePrototype/ (mobile client — this section)
+```
+
+1. Clone the workspace **template** repository first, then clone the Front-End, Common, and Sample/mobile repositories into its `packages/` folder (use your team's internal Git server / Azure DevOps organization for the actual clone URLs — do not hardcode any of them into application code).
+2. Each package's `package.json` `name`/`version` is what yarn workspaces uses to resolve cross-package dependencies — check that the mobile package's `devDependencies` reference the other packages by the `name` declared in their own `package.json`.
+3. From the workspace root:
+
+   ```bash
+   yarn install
+   ```
+
+4. Bring up the back-end (see the team's FONTOS development-environment install guide) before starting the mobile client, since it authenticates against a real server on first mount (see [14.6](#146-authentication-in-a-standalone-mobile-shell)).
+5. Start only the mobile package from the workspace root:
+
+   ```bash
+   yarn workspace fontos-sample-mobileprototype start
+   ```
+
+**`package.json` (mobile package) — key fields:**
+
+```json
+{
+  "name": "fontos-sample-mobileprototype",
+  "main": "public/Main.js",
+  "homepage": "./",
+  "dependencies": {
+    "@stomp/stompjs": "^7.0.0",
+    "sockjs-client": "^1.6.1"
+  },
+  "devDependencies": {
+    "tsb-catos-core": "1.0.0",
+    "tsb-catos-drawing-core": "1.0.0",
+    "tsb-catos-drawing-dmgchk": "1.0.0",
+    "tsb-catos-drawing-grid": "1.0.0",
+    "tsb-catos-drawing-ship": "1.0.0",
+    "tsb-catos-drawing-yard": "1.0.0",
+    "tsb-fontos-core": "1.0.0",
+    "tsb-fontos-ui": "1.0.0",
+    "tsb-fontos-ui-drawing": "1.0.0",
+    "tsb-fontos-ui-mobile": "1.0.0"
+  }
+}
+```
+
+> **Note:** keep new mobile-only dependencies to a minimum (see [14.4](#144-layout-design-guidelines)) — `@stomp/stompjs` / `sockjs-client` were added specifically for the WebSocket monitoring use case in [14.8](#148-real-time-updates-over-websocket-stomp), not as a general addition.
+
+**Testing without a physical device:** during development you can preview the mobile layout in a normal desktop browser by opening Chrome/Edge DevTools and switching to the device toolbar (mobile viewport emulation). Always validate touch interactions and orientation changes on a real device before release, though — viewport emulation does not emulate touch-event timing or reconnection behavior on real Wi-Fi.
+
+### 14.3 Application Entry Point
+
+A dedicated mobile shell replaces `MainComponent`/`MainLayout` with `MobileMainComponent`/`MobileMainLayout` from `tsb-fontos-ui-mobile`. Remote server configuration and service-provider registration follow the same pattern as the desktop app (see [3.3](#33-remote-server-configuration) and [3.4](#34-service-provider-registration)):
+
+```tsx
+import React from "react";
+import { MobileMainComponent, MobileMainLayout } from "tsb-fontos-ui-mobile";
+import {
+  AppConstant,
+  BaseRemoteServerKeys,
+  BizServiceProvider,
+  RemoteServerCfgHdl,
+  TRemoteConfig,
+} from "tsb-fontos-core";
+import MonitoringLayout from "./MonitoringLayout";
+import SampleServiceLocator from "config/context/SampleServiceLocator";
+
+function App() {
+  // Disables pinch-to-zoom so the layout behaves like a native app shell,
+  // not a zoomable web page.
+  // 핀치 줌 비활성화 — 웹페이지가 아닌 네이티브 앱처럼 동작하게 함
+  MobileMainLayout.disablePinchZoom();
+
+  //#region Remote server configuration (same shape as the desktop app)
+  // 원격 서버 설정 (데스크톱 앱과 동일한 구조)
+  const serverConfigHdl: RemoteServerCfgHdl = RemoteServerCfgHdl.getInstance();
+
+  const requestTRemoteServerConfig = () => {
+    const defaultConfig = new TRemoteConfig();
+    defaultConfig.key = BaseRemoteServerKeys.Default;
+    defaultConfig.protocol = "http";
+    // Use the server's real host/IP when accessing from an external device,
+    // not localhost.
+    // 외부 기기에서 접속할 때는 localhost 대신 실제 서버 주소를 사용
+    defaultConfig.baseURL = "http://<api-host>:8080";
+    defaultConfig.headers = {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+    };
+    defaultConfig.responseType = "json";
+    defaultConfig.withCredentials = true;
+    defaultConfig.applyWithCredentials = true;
+    defaultConfig.timeout = 30000;
+    defaultConfig.accessTokenScheme = AppConstant.AUTH_SCHEME_BEARER;
+    defaultConfig.accessTokenRefreshHeadName = AppConstant.TOKEN_REFRESH_HEADER;
+
+    serverConfigHdl.setConfig(defaultConfig);
+  };
+  requestTRemoteServerConfig();
+  //#endregion
+
+  // Registers the app-specific service locator (see 14.6 / 3.4).
+  // 앱 전용 서비스 로케이터 등록 (14.6 / 3.4 참고)
+  BizServiceProvider.getInstance().addService(new SampleServiceLocator());
+
+  // The single mobile screen to render. Swap this to point at a different
+  // screen component while developing/testing another view.
+  // 렌더링할 단일 모바일 화면. 다른 화면을 개발/테스트할 때는 이 부분만 교체
+  return <MobileMainComponent mobileComponent={<MonitoringLayout />} />;
+}
+
+export default App;
+```
+
+**Key differences from the desktop `MainComponent`:**
+
+- There is no `menu` prop and no menu/tab system — `mobileComponent` is a single root screen, matching the "no persistent tab area" guideline in [14.4](#144-layout-design-guidelines).
+- `MobileMainLayout.disablePinchZoom()` should be called once, before render, for any screen meant to feel like an app rather than a web page.
+- Authentication is not handled by a login screen automatically shown before `mobileComponent` mounts — see [14.6](#146-authentication-in-a-standalone-mobile-shell) for how the sample project logs in from inside the screen component itself.
+
+### 14.4 Layout Design Guidelines
+
+These guidelines come from the team's mobile layout design review and should be treated as defaults for any new mobile screen:
+
+- **Minimize fixed/chrome areas.** Only a menu-call button and a small set of common buttons should permanently occupy screen space; treat everything else as reclaimable content area on a small viewport.
+- **Menus overlay, they don't push.** The desktop `TLayout` menu docks and resizes the content area when opened. On mobile, render the menu as an overlay/popup on top of the content instead — resizing content around a menu wastes too much of a small screen.
+- **Exclude tab-strip–based components.** Components that assume a persistent tab area (`rc-dock`–based docking/tabs, `GlobalDockTabAgent`, see [10.3](#103-globaldocktabagent)) are not a good fit for mobile. Build a dedicated single-view mobile template per screen (like `TMonitoringLayout`, [14.5](#145-tmonitoringlayout--header--content--footer-template)) instead of trying to reuse the desktop dock layout.
+- **Watch bundle size.** Avoid adding new UI libraries for a mobile screen — reuse existing `tsb-fontos-ui` / `tsb-catos-drawing-*` components wherever possible. Every added dependency inflates a bundle that often has to load over slower or less reliable networks in yard/terminal environments.
+
+### 14.5 TMonitoringLayout — Header / Content / Footer Template
+
+`TMonitoringLayout` (from `tsb-fontos-ui-mobile`) is the standard single-screen template: it takes `header`, `content`, and `footer` render props and lays them out as fixed top/bottom bars around a scrollable content area — the "no persistent chrome beyond a status bar" pattern from [14.4](#144-layout-design-guidelines).
+
+```tsx
+import React, { createRef } from "react";
+import { TMonitoringLayout } from "tsb-fontos-ui-mobile";
+import { DateFormatter, LoginedUserInfo } from "tsb-fontos-core";
+import { TSpace, WifiOutlined, DatabaseFilled, PoweroffOutlined } from "tsb-fontos-ui";
+
+export default class MonitoringLayout extends React.PureComponent {
+  private _ref = createRef<TMonitoringLayout>();
+  private _intervalId: any;
+  private _init = false;
+
+  state = {
+    currentTime: DateFormatter.format(new Date().toISOString(), "MM/DD/YYYY HH:mm:ss"),
+  };
+
+  async componentDidMount() {
+    // Guard against re-entrant mounts / missing refs before wiring up
+    // intervals or grid data — the mobile shell can mount/unmount screens
+    // more often than a desktop SPA (e.g. when the app is backgrounded).
+    // 화면이 자주 mount/unmount 될 수 있으므로(예: 백그라운드 전환) ref/중복 초기화 가드 필요
+    if (!this._ref.current || this._init) return;
+    this._init = true;
+
+    this._intervalId = setInterval(() => {
+      if (!this._ref.current) return;
+      this.setState({
+        currentTime: DateFormatter.format(new Date().toISOString(), "MM/DD/YYYY HH:mm:ss"),
+      });
+    }, 1000);
+
+    // ... authenticate and load data — see 14.6
+  }
+
+  componentWillUnmount(): void {
+    // Always clear intervals/timers in componentWillUnmount to avoid leaks
+    // when a mobile screen is torn down.
+    // 모바일 화면이 내려갈 때 누수 방지를 위해 반드시 인터벌/타이머 해제
+    this._init = false;
+    clearInterval(this._intervalId);
+  }
+
+  render() {
+    return (
+      <TMonitoringLayout
+        ref={this._ref}
+        header={
+          <TSpace style={{ width: "100%", height: "100%", color: "white", backgroundColor: "#344c77" }}>
+            {this.state.currentTime}
+            {"ID - " + LoginedUserInfo.staffCd}
+            <WifiOutlined style={{ position: "absolute", right: 110, color: "#2cc1a3", fontSize: 35 }} />
+            <DatabaseFilled style={{ position: "absolute", right: 60, color: "#2cc1a3", fontSize: 35 }} />
+            <PoweroffOutlined style={{ position: "absolute", right: 10, color: "red", fontSize: 35 }} />
+          </TSpace>
+        }
+        content={<div style={{ height: "100%" }}>{/* screen body */}</div>}
+        footer={<span style={{ fontWeight: "bold" }}>&nbsp;&nbsp;Disconnected...</span>}
+      />
+    );
+  }
+}
+```
+
+**Props:**
+
+- `header`, `footer`: fixed-height regions rendered above/below `content` — used for connection status, current time/user, and a persistent footer message.
+- `content`: the scrollable body of the screen.
+- `ref`: `TMonitoringLayout` instance ref, in case layout-level methods need to be called imperatively.
+
+**Touch feedback:** CSS `:hover` does not fire reliably on touchscreens, so icon press-states are handled explicitly with `onTouchStart`/`onTouchEnd` instead of relying on hover styles used on desktop components:
+
+```tsx
+<FilterFilled
+  style={{ fontSize: 40, color: "white" }}
+  onClick={() => {/* run filter */}}
+  onTouchStart={(e) => {
+    (e.target as HTMLElement).style.color = "black";
+    (e.target as HTMLElement).style.backgroundColor = "white";
+  }}
+  onTouchEnd={(e) => {
+    (e.target as HTMLElement).style.color = "white";
+    (e.target as HTMLElement).style.backgroundColor = "black";
+  }}
+/>
+```
+
+### 14.6 Authentication in a Standalone Mobile Shell
+
+Because a dedicated mobile app does not go through the desktop `TLoginForm` flow, the screen component itself must request an access token before making any authenticated call — and must wait for that token to actually land on `RemoteServerCfgHdl` before firing off requests, to avoid a race:
+
+```tsx
+// Ensure Authorization is set on RemoteServerCfg before calling authenticated APIs.
+// A previous approach set `isLogined` before `requestToken` had actually
+// finished, causing early API calls to go out without a token.
+// 인증 API 호출 전에 RemoteServerCfg에 Authorization이 설정되었는지 확인.
+// 과거에는 requestToken이 끝나기 전에 로그인 상태를 먼저 표시해 토큰 없이
+// API가 호출되는 경쟁 상태(race condition)가 발생한 적이 있음.
+const remoteConfig = RemoteServerCfgHdl.getInstance().getConfig(BaseRemoteServerKeys.Default);
+if (!remoteConfig?.accessToken) {
+  const userName = LoginedUserInfo.staffCd || "test01";
+  const loginResult = await this._securityService.requestToken({ userName, password: "" });
+  if (!loginResult.data?.access_token) {
+    console.error("Mobile access token is missing after login", loginResult);
+    return;
+  }
+}
+
+const authControls = await this._securityService.inquiryAuthorityControls({
+  menuId: "mobileLayout",
+  userId: LoginedUserInfo.staffCd || "test01",
+});
+AuthControlUtil.setAuthControls(authControls, { rootRef: this._rootRef });
+```
+
+This relies on the same `BizServiceLocator` / `IBizServiceLocator` extension point used on desktop ([3.4 Service Provider Registration](#34-service-provider-registration)) — the mobile package registers its own `ISecurityService` implementation instead of using the desktop's default:
+
+```typescript
+// config/context/SampleServiceLocator.ts
+export default class SampleServiceLocator implements IBizServiceLocator {
+  public getLocationKey() {
+    return "SApp";
+  }
+
+  public getService<T>(svrName: string): T {
+    switch (svrName) {
+      case CoreServerName.CORE_SECURITY_SVR:
+        return new SampleTokenService(new SampleTokenDao()) as unknown as T;
+      default:
+        return null as unknown as T;
+    }
+  }
+}
+```
+
+`SampleTokenService` (implements `ISecurityService`) stores the token on the shared `RemoteServerCfgHdl` after a successful `requestToken()` call, and `SampleTokenDao` (extends `HttpWebDaoSupport`) performs the actual `/jwt/login`, `/jwt/verifyToken`, and `/auth/inquiryAuthorityControls` requests. Route the mobile app's toolbar/control-level authorization through `inquiryAuthorityControls` + `AuthControlUtil.setAuthControls()` the same way the desktop app derives toolbar authorization in [3.1.5](#315-menu-item-processing).
+
+### 14.7 Mobile Grid Cell Styling
+
+Small screens often need a denser, custom-drawn cell instead of several narrow columns. Implement `IListGridCellStyle` (from `tsb-catos-drawing-grid`) and draw directly on the cell's canvas:
+
+```typescript
+import { IListGridCellStyle } from "tsb-catos-drawing-grid";
+import ListCellContext from "tsb-catos-drawing-grid/dist/src/components/style/ListCellContext";
+import { Color, ContentAlignment, DrawPicture, DrawText, Size } from "tsb-fontos-ui-drawing";
+
+// Custom cell renderer: draws a two-line label plus a small direction icon
+// in a single, compact cell — used instead of spreading the same data
+// across three separate narrow columns on a small screen.
+// 좁은 화면에서는 3개의 컬럼에 나눠 표시하는 대신, 2줄 텍스트 + 아이콘을
+// 하나의 셀에 직접 그려서 공간을 절약하는 커스텀 셀 렌더러
+export default class FieldCellStyle implements IListGridCellStyle {
+  getBackColor(value: string, backColor: Color): Color {
+    return !value || !value.includes("3") ? backColor : Color.red;
+  }
+  getFontColor(value: string, fontColor: Color): Color { return fontColor; }
+  getFont(value: string, font: Font): Font { return font; }
+
+  private _drawPic = new DrawPicture("jobTypeImage");
+
+  async customDraw(ctx: CanvasRenderingContext2D, context: ListCellContext): Promise<void> {
+    const list = context.value as string[];
+    if (!list?.length || list.length <= 1) return;
+
+    const color = context.isSelected ? Color.white : Color.black;
+    const line1 = new DrawText("Text1");
+    line1.attribute.lineColor = color;
+    line1.attribute.textAlign = ContentAlignment.TopCenter;
+    line1.location = context.boundary.location;
+    line1.size = context.boundary.size;
+    line1.text = list[0];
+    line1.draw(ctx);
+
+    this._drawPic.location = context.boundary.location;
+    this._drawPic.size = new Size(30, 30);
+    if (!this._drawPic.src) this._drawPic.src = "../resources/up-arrow.png";
+    this._drawPic.draw(ctx);
+  }
+}
+```
+
+Attach it to a column with `setCellStyleToColumn`:
+
+```typescript
+this._gridRef.current.setCellStyleToColumn(2, new FieldCellStyle());
+```
+
+### 14.8 Real-time Updates over WebSocket (STOMP)
+
+A mobile monitoring screen usually needs live data (yard/vessel status) without spending screen space on a manual refresh button. The reference project uses `@stomp/stompjs` directly:
+
+```tsx
+import { Client, IMessage } from "@stomp/stompjs";
+
+// STOMP client wiring: connect once on mount, subscribe to a channel,
+// and always deactivate on unmount so the socket doesn't leak when the
+// screen is torn down (see 14.5's componentWillUnmount guidance).
+// STOMP 클라이언트 연결: mount 시 1회 연결하고 채널을 구독하며,
+// 화면이 내려갈 때 반드시 deactivate 하여 소켓 누수 방지 (14.5 참고)
+this.client = new Client({
+  brokerURL: "ws://<api-host>:8080/ws",
+  reconnectDelay: 5000, // auto-recover from spotty in-yard Wi-Fi
+  onConnect: () => this.subscribeToChannel(this.state.channelId),
+  onDisconnect: () => console.log("Disconnected"),
+});
+
+componentDidMount() {
+  this.client.activate();
+}
+
+componentWillUnmount() {
+  this.client?.deactivate();
+}
+
+subscribeToChannel = (channelId: string) => {
+  this.subscription = this.client.subscribe(`/sub/chat/${channelId}`, (message: IMessage) => {
+    const data = JSON.parse(message.body);
+    this.setState((prev) => ({ messages: [...prev.messages, data] }));
+  });
+};
+
+publish = (payload: unknown) => {
+  if (this.client?.connected) {
+    this.client.publish({ destination: "/pub/message", body: JSON.stringify(payload) });
+  }
+};
+```
+
+Unsubscribe (`this.subscription?.unsubscribe()`) before re-subscribing to a new channel if the screen lets the user switch channels, to avoid stacking up duplicate subscriptions.
+
+### 14.9 Mobile Web App Manifest & Viewport
+
+`public/index.html` and `public/manifest.json` control how the mobile client behaves when added to a device home screen:
+
+```html
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+<link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+```
+
+```json
+{
+  "short_name": "React App",
+  "name": "Create React App Sample",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
+```
+
+These ship with `create-react-app` defaults (`short_name`/`name`, icons) — **rename and re-icon them per project** before release; a mobile client left with the CRA placeholder name/icons will show "React App" on the device home screen.
+
+### 14.10 Best Practices Checklist for Mobile Development
+
+- Reuse existing `tsb-fontos-ui` / `tsb-catos-drawing-*` components instead of adding new UI libraries — every dependency added to a mobile bundle is felt more on field networks (see [14.4](#144-layout-design-guidelines)).
+- Use overlay-style menus, never push/resize menus, on mobile screens.
+- Avoid `rc-dock`/tab-strip–based layouts (`GlobalDockTabAgent`, `TTabs` in dock mode); build one `TMonitoringLayout`-based screen per purpose instead.
+- Handle touch feedback explicitly with `onTouchStart`/`onTouchEnd` — do not rely on CSS `:hover`, which is unreliable on touchscreens.
+- When bypassing the standard desktop login flow, always confirm the access token has actually landed on `RemoteServerCfgHdl` before firing authenticated requests (see [14.6](#146-authentication-in-a-standalone-mobile-shell)).
+- Always clear intervals, timers, and WebSocket subscriptions in `componentWillUnmount` — mobile screens mount/unmount more often than a desktop SPA's screens.
+- Rename the CRA-default `manifest.json`/icons per project before release.
+- Emulate mobile viewports in the browser during day-to-day development, but validate touch targets, orientation changes, and network reconnection on a real device before shipping.
+
+---
 
 # JavaScript → Fontos-Framework Migration Guide
 
