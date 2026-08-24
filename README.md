@@ -5013,6 +5013,32 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 7.13 [Excel Export Service](#713-excel-export-service)
      - 7.13.1 [Basic Excel Export](#7131-basic-excel-export)
      - 7.13.2 [Excel Export with Frontend Data](#7132-excel-export-with-frontend-data)
+   - 7.14 [Customizing Grid Font Size via CSS](#714-customizing-grid-font-size-via-css)
+     - 7.14.1 [Applying a Different Font Size to One Grid](#7141-applying-a-different-font-size-to-one-grid)
+   - 7.15 [Complete Public API Reference](#715-complete-public-api-reference)
+     - 7.15.1 [Ref and Column Layout Introspection](#7151-ref-and-column-layout-introspection)
+     - 7.15.2 [Column Schema and Column Setting Dialog](#7152-column-schema-and-column-setting-dialog)
+     - 7.15.3 [Column Display and Layout Control](#7153-column-display-and-layout-control)
+     - 7.15.4 [Row CRUD](#7154-row-crud)
+     - 7.15.5 [Cell Value and Formatting](#7155-cell-value-and-formatting)
+     - 7.15.6 [Cell and Row Rendering Info (Framework Extension)](#7156-cell-and-row-rendering-info-framework-extension)
+     - 7.15.7 [Source Item Methods (BaseItemList Binding, Framework Extension)](#7157-source-item-methods-baseitemlist-binding-framework-extension)
+     - 7.15.8 [Selection, Focus and Editing](#7158-selection-focus-and-editing)
+     - 7.15.9 [Checkbox Selection and Enable-Disable State](#7159-checkbox-selection-and-enable-disable-state)
+     - 7.15.10 [Sorting and Filtering](#71510-sorting-and-filtering)
+     - 7.15.11 [Validation and Mandatory Field Checks](#71511-validation-and-mandatory-field-checks)
+     - 7.15.12 [Modified-Data Tracking](#71512-modified-data-tracking)
+     - 7.15.13 [Tree and Nested Row Methods](#71513-tree-and-nested-row-methods)
+     - 7.15.14 [Pagination and Server Requests](#71514-pagination-and-server-requests)
+     - 7.15.15 [Scroll and Layout](#71515-scroll-and-layout)
+     - 7.15.16 [Summary Row and Dialogs (Framework Extension)](#71516-summary-row-and-dialogs-framework-extension)
+     - 7.15.17 [Event Handling](#71517-event-handling)
+   - 7.16 [Column Schema Property Reference](#716-column-schema-property-reference)
+     - 7.16.1 [JSON Schema File Structure](#7161-json-schema-file-structure)
+     - 7.16.2 [ColumnSchemas Field Reference](#7162-columnschemas-field-reference)
+     - 7.16.3 [CellType Specific Requirements](#7163-celltype-specific-requirements)
+     - 7.16.4 [Key vs DBField](#7164-key-vs-dbfield)
+     - 7.16.5 [Minimal Worked Example](#7165-minimal-worked-example)
 8. [Pivot Component](#8-pivot-component)
    - 8.1 [Overview](#81-overview)
    - 8.2 [PivotState and Props](#82-pivotstate-and-props)
@@ -5073,6 +5099,7 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
     - 14.8 [Real-time Updates over WebSocket (STOMP)](#148-real-time-updates-over-websocket-stomp)
     - 14.9 [Mobile Web App Manifest & Viewport](#149-mobile-web-app-manifest--viewport)
     - 14.10 [Best Practices Checklist for Mobile Development](#1410-best-practices-checklist-for-mobile-development)
+
 ---
 
 ## 1. Introduction
@@ -8883,10 +8910,18 @@ async componentDidMount(): Promise<void> {
       { totalCount: 1 } // Intialiaze essential property
     );
     
+	// Handle page move event
+    private handleBeforePageMove(e) {
+      if (!this._controller.validate()) {
+		return false; // Prevent 'afterMove' event ocurring.
+	  }
+    }
+	
     // Handle page move event
     private handlePageMove(e) {
       this._controller.retrieveData(e.page);
     }
+	this.grd_ADM_NewsList.current!.getCustomPagination()!.on('beforeMove', this.handleBeforePageMove);
     this.grd_ADM_NewsList.current!.getCustomPagination()!.on('afterMove', this.handlePageMove);
   } catch (ex) {
     GeneralLogger.error(ex);
@@ -9757,6 +9792,563 @@ downloadExcelFrontendSetDataAtServer = async () => {
 - `thousandSeparator`: Thousand separator for numbers
 - `decimalPoint`: Decimal point for numbers
 - `rowData`: Optional frontend-provided data (if not provided, server will fetch data)
+
+### 7.14 Customizing Grid Font Size via CSS
+
+`TSpreadGrid` does not expose a `fontSize` prop, and the underlying TUI Grid engine has no `fontSize` theme option either — grid font size is controlled entirely by the compiled stylesheets the application loads, not by a component prop or `Grid.applyTheme()` option.
+
+In a standard client project, the base grid styles live in the theme CSS files under:
+
+```
+{Client Project}\public\stylemode\day.css
+{Client Project}\public\stylemode\night.css
+```
+
+Both files ship the same base rule that sets the default font size for every grid on the page:
+
+```css
+/* day.css / night.css — base rule shipped with the framework
+   day.css / night.css 에 포함된 기본 규칙 */
+.tui-grid-container {
+  font-size: 12px;
+}
+.tui-grid-container p,
+.tui-grid-container input,
+.tui-grid-container textarea {
+  font-size: 12px;
+}
+```
+
+Individual cell classes (`.tui-grid-cell`, `.tui-grid-cell-header`, `.tui-grid-cell-summary`) do not declare their own `font-size`, so they inherit it from `.tui-grid-container`. This means overriding `.tui-grid-container` alone is enough to change the font size for an entire grid — there is no need to target each cell class separately.
+
+#### 7.14.1 Applying a Different Font Size to One Grid
+
+To give a specific `TSpreadGrid` instance a different font size than the rest of the app, wrap it in a container with a dedicated class and add a scoped override with higher specificity than the base rule. **Add the same override to both `day.css` and `night.css`** — if only one theme file is updated, the font size will look inconsistent when the user switches between light and dark mode.
+
+```css
+.grid-font-lg .tui-grid-container,
+.grid-font-lg .tui-grid-container p,
+.grid-font-lg .tui-grid-container input,
+.grid-font-lg .tui-grid-container textarea {
+  font-size: 16px;
+}
+```
+
+```tsx
+// Wrap only the grid instance that needs the larger font.
+// rowHeight is a standard TUI Grid option and is forwarded as-is because
+// TSpreadGrid spreads `...this.props` into the underlying grid instance,
+// so it can be passed directly as a prop.
+<div className="grid-font-lg">
+  <TSpreadGrid ref={this._grid} rowHeight={32} {...otherProps} />
+</div>
+```
+
+**Notes:**
+- `.grid-font-lg .tui-grid-container` has a specificity of two classes, which is higher than the base `.tui-grid-container` rule (one class) and neither rule uses `!important`, so the override applies without further changes.
+- Increase `rowHeight` alongside the font-size change so the larger text isn't clipped inside the default row height.
+- If a grid needs a smaller font instead (e.g., a dense summary/mobile view), use the same pattern with a different wrapper class and a smaller `font-size` value.
+
+### 7.15 Complete Public API Reference
+
+Sections 7.7–7.13 above walk through the most commonly used `TSpreadGrid` methods with usage examples. This section is the **exhaustive reference** — every `public` member defined directly on the `TSpreadGrid` class in `/src/grid/TSpreadGrid.tsx`, reachable through the component ref (e.g. `this.grd_MyGrid.current?.methodName(...)`), grouped by concern. Lifecycle methods (`constructor`, `componentDidMount`, `shouldComponentUpdate`, `componentWillUnmount`, `render`) are omitted since they are not meant to be called externally.
+
+Two kinds of members are mixed in the class:
+
+- **Toast UI Grid pass-through methods** — a thin wrapper that forwards the call to the internal `tui-grid` instance (`this._gridInst`). Their behavior matches the [Toast UI Grid API documentation](https://nhn.github.io/tui.grid/latest/) for the same method name.
+- **Framework extension methods** — logic written specifically for `tsb-fontos-ui` (source-item binding, cell lock/color rendering info, dialogs, mandatory-field checks, etc.). These have no Toast UI Grid equivalent and are the ones most specific to this framework.
+
+The tables below mark framework extension methods with **(Ext)**.
+
+#### 7.15.1 Ref and Column Layout Introspection
+
+| Member | Description |
+|---|---|
+| `static globalGridRefresh(): void` | **(Ext)** Calls `refreshLayout()` on every currently mounted `TSpreadGrid` instance. Instances register themselves in an internal static map while mounted; useful for refreshing all grids on the page after a global layout event (e.g. a docking-panel resize that affects multiple grids at once). |
+| `getRootElement(): HTMLElement \| undefined` | **(Ext)** Returns the outer `<div className="grid-container">` DOM element that wraps the grid, useful for manual DOM measurements or scoped CSS class toggling. |
+| `makeColumns(): Promise<void>` | **(Ext)** Rebuilds the internal `OptColumn[]` list from `columnSchemas` (and merges in any schema loaded via `specifiedSchemaFileName`), then applies it with `setColumns()`. Call this after manually pushing entries into `this._grid.current!.columnSchemas` (see [7.2 Grid Schema](#72-grid-schema)). |
+| `getColumnHierarchy(targetColumnName: string): string[]` | **(Ext)** Returns the full header path for a column, from the outermost complex-header group down to the column's own header, e.g. `["Shipment", "Container", "Weight"]` for a column nested under two merged header groups. |
+| `get/set frozenColumnCount: number` | **(Ext)** Property accessor around `setFrozenColumnCount()`. Reading it returns the currently applied frozen-column count; assigning to it re-applies the frozen column count on the grid. |
+| `get schemaFrozenColumnCount: number` | **(Ext)** Read-only. The frozen-column count as defined in the loaded grid schema (`GridSchema.FrozenColumnCount`), before any runtime override via `frozenColumnCount`. |
+
+#### 7.15.2 Column Schema and Column Setting Dialog
+
+| Member | Description |
+|---|---|
+| `getColumnSchema(columnKey: string): ColumnSchema \| undefined` | **(Ext)** Looks up a single `ColumnSchema` entry by `dbField`. Used internally by cell-color/cell-input resolution and commonly used to check `CodeType`, `cellType`, etc. for a given column at runtime (see [7.7.5](#775-column-methods)). |
+| `getColumnSchemas(): ColumnSchema[] \| undefined` | **(Ext)** Returns the full `columnSchemas` array currently bound to the grid. |
+| `hasColumnKey(columnKey: string): boolean` | **(Ext)** Case-insensitive check for whether a column key exists in `columnSchemas`. |
+| `getColumnIndexWithKey(columnKey: string): number` | **(Ext)** Returns the schema-defined `viewColumnSeq` for a column key (case-insensitive). Throws if the key is not found in `columnSchemas` — unlike `hasColumnKey`, this is not a safe existence check. |
+| `openColumnSettingDialog(): void` | **(Ext)** Opens the column visibility/order setting modal (`ColumnModal`). |
+| `setColumnSettingItems(items: IColumnItem[]): void` | **(Ext)** Pushes a list of `{ key, title }` items into the column setting modal and re-initializes it with just those column keys. |
+| `columnSettingInitialize(columnKeys: string[]): void` | **(Ext)** Re-initializes the column setting modal's visible-column selection to exactly the given keys, without changing the registered item list. |
+
+#### 7.15.3 Column Display and Layout Control
+
+| Member | Description |
+|---|---|
+| `getColumn(columnName: string): ColumnInfo \| null \| undefined` | Toast UI Grid pass-through. Returns the resolved column definition. |
+| `getOptColumns(): OptColumn[]` | **(Ext)** Returns the framework's own cached `OptColumn[]` (built by `makeColumns()`), as opposed to `getColumns()` which asks the live grid instance. |
+| `getColumns(): ColumnInfo[]` | Toast UI Grid pass-through. |
+| `getComplexColumnInfos(): ComplexColumnInfo[]` | **(Ext)** Returns the merged/complex header definitions built from the schema. |
+| `setColumns(columns: OptColumn[]): void` | **(Ext)** Applies a new column list to the grid. When `columnSchemas` is populated, columns are first filtered down to schema entries flagged `included` before being applied. |
+| `resetColumnsByKeys(columnKeys: string[], syncHideColumnKeys?: boolean): void` | **(Ext)** Rebuilds and applies the column list using only the given keys, in that order, sourced from the internally cached column set. Backing implementation for `hideColumn` / `showColumn` / `showAllColumn`. |
+| `setColumnHeaders(columnsMap: Dictionary<string>): void` | Toast UI Grid pass-through — bulk-update column header labels, keyed by column name. |
+| `resetColumnWidths(widths: number[]): void` | Toast UI Grid pass-through — reset all column widths at once, by position. |
+| `getColumnValues(columnName: string): CellValue[]` | Toast UI Grid pass-through — all cell values in a column, in row order. |
+| `getIndexOfColumn(columnName: string): number` | Toast UI Grid pass-through — current visible index of a column (post reordering/hide/show). |
+| `hideColumn(...columnName: string[]): void` | **(Ext)** Hides one or more columns while preserving the current template/visible-column ordering, and keeps the internal hidden-key list deduplicated. |
+| `showColumn(...columnName: string[]): void` | **(Ext)** Re-shows one or more previously hidden columns, restoring them into the tracked column order. |
+| `showAllColumn(): void` | **(Ext)** Clears the hidden-column tracking and re-applies the full column set. |
+| `setFrozenColumnCount(count: number): void` | Toast UI Grid pass-through. Prefer the `frozenColumnCount` property for most cases, since it also keeps the internal tracked value in sync. |
+| `moveColumn(columnName: string, targetIndex: number): void` | Toast UI Grid pass-through — reorder a column to a target index. |
+| `addColumnClassName(columnName: string, className: string): void` | Toast UI Grid pass-through. |
+| `removeColumnClassName(columnName: string, className: string): void` | Toast UI Grid pass-through. |
+| `getColumnClassName(columnName: string): string[]` | Toast UI Grid pass-through. |
+
+#### 7.15.4 Row CRUD
+
+See also [7.7.2 Row Data Methods](#772-row-data-methods) for usage examples, and [7.15.7 Source Item Methods](#7157-source-item-methods-baseitemlist-binding-framework-extension) for the `BaseItemList`-aware equivalents.
+
+| Member | Description |
+|---|---|
+| `insertRow<T extends BaseDataItem>(clazz: { new (): T }): void` | **(Ext)** **Not** a direct row-insert call — it opens the `InsertRowModal` dialog, passing it the data-item class to instantiate once the user confirms. To insert a row programmatically without a dialog, use `appendRow` / `prependRow` / `addSourceItem` / `insertSourceItem` instead. |
+| `appendRow(row?: any, options?: OptAppendRow): void` | **(Ext)** Appends a raw row to the grid **and** keeps `getSourceItemList()` in sync by splicing the same `row` into the internal source list at the matching position. |
+| `prependRow(row?: any, options?: OptAppendRow): void` | **(Ext)** Same as `appendRow`, but inserts at the beginning (or at `options.at`). |
+| `appendRows(data: OptRow[]): void` | Toast UI Grid pass-through — bulk append, does **not** sync the source item list (unlike `appendRow`). |
+| `removeRow(rowKey: number \| string, options?: OptRemoveRow): void` | **(Ext)** Clears any tracked cell-rendering info (lock/color) for the row on every column, then removes the row from the grid. Does not update `opCode` or the source item list — prefer `removeSourceItemByRowKey` or `deleteRow` when working with `BaseItemList`-bound data. |
+| `removeRows(rowKeys: (number \| string)[]): void` | Toast UI Grid pass-through — bulk remove by row key. |
+| `setRow(rowKey: number \| string, row: OptRow): void` | Toast UI Grid pass-through — replace an entire row's data. |
+| `setRows(rows: OptRow[]): void` | Toast UI Grid pass-through — replace multiple rows' data. |
+| `moveRow(rowKey: number \| string, targetIndex: number, options: OptMoveRow): void` | Toast UI Grid pass-through — used together with `draggable` (see [7.10.4](#7104-draggable-rows)). |
+| `getRow(rowKey: number \| string): Row \| null \| undefined` | Toast UI Grid pass-through. |
+| `getRowAt(rowIdx: number): Row \| null \| undefined` | Toast UI Grid pass-through. ⚠️ Index-based, so it can be inaccurate after sort/filter — combine with `getSelectionRange()`, which returns viewport-relative indices, when you need both. |
+| `getIndexOfRow(rowKey: number \| string): number` | Toast UI Grid pass-through. |
+| `getData(): Omit<Row, InternalProp>[]` | Toast UI Grid pass-through — all rows, unfiltered. |
+| `getFilteredData(): Omit<Row, InternalProp>[]` | Toast UI Grid pass-through — rows after the active filter is applied. |
+| `getRowCount(): number` | Toast UI Grid pass-through. |
+| `getRowRange(): [number, number]` | Toast UI Grid pass-through — `[startIndex, endIndex]` of rows currently rendered in the viewport. |
+| `getFocusedRowIndex(): number \| undefined` | **(Ext)** Convenience wrapper: `getIndexOfRow(getFocusedCell().rowKey)`. |
+| `clear(): void` | **(Ext)** Detaches property-change handlers from every source item, clears the source item list (calling `.clear()` if it's a `BaseItemList`), clears cell-rendering info, and clears the underlying grid. |
+| `resetData(data: OptRow[], options?: ResetOptions): void` | **(Ext)** Resets the grid's row data, preserves scroll position across the reset, re-applies row locking based on `rowLockColumnKey`/`bizRule.isRowLock()`, updates the row-count state used by the summary strip, and drives the custom pagination footer. Normally called indirectly through `bindListAsGridDataSource`. |
+| `findRows(conditions: ((row: Row) => boolean) \| Dictionary<any>): Row[]` | Toast UI Grid pass-through — find rows either by predicate or by a partial-match object. |
+| `resetOriginData(): void` | Toast UI Grid pass-through — re-baselines the "original" data snapshot used for modified-row diffing, without changing the displayed data. |
+| `removeCheckedRows(showConfirm?: boolean): boolean` | Toast UI Grid pass-through — removes all checked rows, optionally after a confirm dialog; returns whether rows were actually removed. |
+| `destroy(): void` | Toast UI Grid pass-through — destroys the internal `tui-grid` instance and releases the reference. Called automatically on unmount; only call manually for advanced teardown scenarios. |
+
+#### 7.15.5 Cell Value and Formatting
+
+| Member | Description |
+|---|---|
+| `setValue(rowKey: number \| string, columnName: string, value: CellValue): void` | Toast UI Grid pass-through. This is the correct way to change a cell's value programmatically — it goes through the grid's change pipeline, so `isModified()` / `getModifiedItems()` and `afterDataSourceChange` fire correctly, unlike mutating a data item property directly. |
+| `getValue(rowKey: number \| string, columnName: string): CellValue \| null` | Toast UI Grid pass-through. |
+| `setColumnValues(columnName: string, columnValue: CellValue, checkCellState?: boolean): void` | Toast UI Grid pass-through — set the same value across every row in a column. |
+| `getFormattedValue(rowKey: number \| string, columnName: string): string \| null \| undefined` | Toast UI Grid pass-through — the cell's *displayed* (formatted) value rather than its raw stored value. |
+| `getElement(rowKey: number \| string, columnName: string): Element \| null \| undefined` | Toast UI Grid pass-through — the cell's DOM element, for advanced DOM manipulation. |
+
+#### 7.15.6 Cell and Row Rendering Info (Framework Extension)
+
+These methods manage a per-cell `CellRenderingInfo` map (`{ locked, backColor, foreColor }`) that is independent of `ColorRuleType` in the schema — they let you override lock state and colors at runtime for specific cells or rows (e.g., conditionally locking a cell based on another cell's value).
+
+| Member | Description |
+|---|---|
+| `getCellRenderingInfo(row: RowKey, column: string): CellRenderingInfo \| undefined` | Reads the current rendering info for one cell, if any has been set. |
+| `setCellRenderingInfo(row: RowKey, column: string, info: CellRenderingInfo): void` | Sets/replaces the rendering info for one cell directly. |
+| `getCellLock(row: RowKey, column: string): boolean \| undefined` | Returns the tracked lock state for a cell (`undefined` if never set). |
+| `setCellLock(row: RowKey, column: string, lock: boolean): void` | Sets the tracked lock state for a cell and immediately calls `disableCell`/`enableCell` to match. |
+| `setCellBackColor(row: RowKey, column: string, backColor: string): void` | Overrides one cell's background color. |
+| `setCellForeColor(row: RowKey, column: string, foreColor: string): void` | Overrides one cell's foreground (text) color. |
+| `setRowBackColor(row: RowKey, backColor: string): void` | Applies `setCellBackColor` to every column in the row. |
+| `setRowForeColor(row: RowKey, foreColor: string): void` | Applies `setCellForeColor` to every column in the row. |
+| `removeCellRenderingInfo(row: RowKey, column: string): void` | Clears any tracked rendering info for one cell. |
+| `addCellClassName(rowKey, columnName, className): void` / `removeCellClassName(rowKey, columnName, className): void` / `getCellClassName(rowKey, columnName): string[]` | Toast UI Grid pass-through — CSS class management scoped to a single cell. |
+| `addRowClassName(rowKey, className): void` / `removeRowClassName(rowKey, className): void` / `getRowClassName(rowKey): string[]` | Toast UI Grid pass-through — CSS class management scoped to a whole row. |
+
+#### 7.15.7 Source Item Methods (BaseItemList Binding, Framework Extension)
+
+The framework's central data-binding layer, connecting grid rows to `BaseDataItem` instances. See [7.7.3](#773-source-item-methods-framework-extension) for worked examples.
+
+| Member | Description |
+|---|---|
+| `bindListAsGridDataSource<T extends BaseDataItem>(sourceItemList: Array<T>, option?: ResetOptions): void` | Binds a `BaseDataItem[]` (typically a `BaseItemList<T>`) as the grid's data source: wires up property-change handlers on every item, strips stale `rowKey`/`_attributes` left over from prior binding, calls `resetData`, auto-checks rows whose `opCode` is `CREATE`/`UPDATE` (unless `autoCheckOnChange={false}`), and fires `onAfterDataSourceBinded` / `afterDataSourceBinded`. |
+| `getSourceItemList<T extends BaseDataItem>(): T[]` | Returns the currently bound source item array. |
+| `getSourceItem<T extends BaseDataItem>(row: Row): T \| null` | Resolves the source item backing a given grid `Row` (via the lookup map when `useLookup` is enabled, otherwise by linear search on `guid`). |
+| `getSourceItemAt<T extends BaseDataItem>(rowIndex: number): T \| null` | Convenience wrapper: `getSourceItem(getRow(rowIndex))`. |
+| `getActiveRowItem(): Row \| null` | Returns the grid `Row` at the currently focused cell, or `null` if nothing is focused. |
+| `getActiveSourceItem<T extends BaseDataItem>(): T \| null` | Returns the source item backing the currently focused row. |
+| `addSourceItem<T extends BaseDataItem>(clazz: { new (): T }, rowIndex?: number): BaseDataItem` | Instantiates a new item of `clazz`, sets `opCode = OpCodes.CREATE`, wires its property-change handler, and inserts it via `insertSourceItem`. Returns the created item. |
+| `insertSourceItem(sourceItem: BaseDataItem, rowIndex?: number): void` | Inserts an already-constructed item into the source list at `rowIndex` (or appends when omitted/negative), fires `onAfterDataSourceAdd` / `afterDataSourceAdd`, then re-binds the whole list via `bindListAsGridDataSource`. |
+| `addSourceItems<T extends BaseDataItem>(clazz: { new (): T }, rowCount: number, rowIndex?: number): BaseDataItem[]` | Bulk version of `addSourceItem` — creates `rowCount` new items and inserts them together via `insertSourceItems`. |
+| `insertSourceItems(sourceItems: BaseDataItem[], rowIndex?: number): void` | Bulk version of `insertSourceItem`. |
+| `removeSourceItem<T extends BaseDataItem>(sourceItem?: T): void` | Removes a source item (falling back to the currently active row item when `sourceItem` is omitted) by delegating to `removeSourceItemByRowKey`. |
+| `removeSourceItemByRowKey(rowKey: RowKey): void` | Marks the item's `opCode = OpCodes.DELETE`, removes the grid row via `removeRow`, splices the item out of the source list, invalidates the lookup map, and fires `onAfterDataSourceRemove` / `afterDataSourceRemove`. |
+| `deleteRow(): void` | Higher-level delete: operates on the current selection range (or the focused row if no range is selected). For rows whose `opCode` is already `CREATE`, they are removed outright via `removeSourceItem`; for existing rows, `opCode` is set to `DELETE` and they stay in the list (soft delete, picked up by `getModifiedItems().deletedItems`) until saved. Fires a single batched `onAfterDataSourceRemove` / `afterDataSourceRemove` for the whole selection. **This is the method typically wired to a "Delete Row" toolbar button** — it is not the same as `removeRow` or `removeSourceItemByRowKey`, which act on one row key immediately. |
+| `getRowIndex<T extends BaseDataItem>(sourceItem: T): number` | Returns the row index (rowKey) currently backing a given source item, or `-1` if not found. |
+
+#### 7.15.8 Selection, Focus and Editing
+
+| Member | Description |
+|---|---|
+| `setSelectionRange(range: { start: Range; end: Range }): void` | Toast UI Grid pass-through. See [7.7.4](#774-selection-methods). |
+| `getSelectionRange(): { start: Range; end: Range } \| null` | Toast UI Grid pass-through. |
+| `getFocusedCell(): { rowKey, columnName, value }` | Toast UI Grid pass-through. |
+| `blur(): void` | Toast UI Grid pass-through — remove focus from the grid. |
+| `focus(rowKey: number \| string, columnName: string, setScroll?: boolean): boolean` | Toast UI Grid pass-through — focus by row key. Returns whether focus succeeded. |
+| `focusAt(rowIndex: number, columnIndex: number, setScroll?: boolean): boolean` | **(Ext)** Focus by row/column index, with bounds-checking against the current row/column count added on top of the Toast UI Grid call (returns `false` instead of throwing when out of range). |
+| `activateFocus(): void` | Toast UI Grid pass-through — re-activates focus styling on the currently focused cell (e.g. after a modal closes). |
+| `startEditing(rowKey: number \| string, columnName: string, setScroll?: boolean): void` | Toast UI Grid pass-through. |
+| `startEditingAt(rowIndex: number, columnIndex: number, setScroll?: boolean): void` | Toast UI Grid pass-through. |
+| `finishEditing(rowKey?: number \| string, columnName?: string, value?: string): void` | Toast UI Grid pass-through — commit (or cancel, if omitted) the current cell edit. |
+| `copyToClipboard(): void` | Toast UI Grid pass-through — copies the current selection to the clipboard. |
+
+#### 7.15.9 Checkbox Selection and Enable-Disable State
+
+| Member | Description |
+|---|---|
+| `check(rowKey)` / `uncheck(rowKey)` | Toast UI Grid pass-through. |
+| `checkBetween(startRowKey, endRowKey?)` / `uncheckBetween(startRowKey, endRowKey?)` | Toast UI Grid pass-through — check/uncheck a contiguous row range. |
+| `checkAll()` / `uncheckAll()` | Toast UI Grid pass-through. |
+| `getCheckedRowKeys(): RowKey[]` / `getCheckedRows(): Row[]` | Toast UI Grid pass-through. |
+| `setCheckAllStateColumn(columnName: string): void` | **(Ext)** Cycles the "check all" state (two-state or three-state, per `TCheckBoxCellStyle.threeState`) for a `CheckBox`-typed column and applies the resulting value to every visible, unlocked row in that column via `setValue`. Used to back a custom "select all" checkbox rendered in the column header. |
+| `enable()` / `disable()` | Toast UI Grid pass-through — enable/disable the entire grid. |
+| `disableRow(rowKey, withCheckbox?)` / `enableRow(rowKey, withCheckbox?)` | Toast UI Grid pass-through. |
+| `disableColumn(columnName)` / `enableColumn(columnName)` | Toast UI Grid pass-through. |
+| `disableCell(rowKey, columnName)` / `enableCell(rowKey, columnName)` | Toast UI Grid pass-through. |
+| `disableRowCheck(rowKey)` / `enableRowCheck(rowKey)` | Toast UI Grid pass-through — disable/enable just the row's checkbox, independent of the row's editable state. |
+
+#### 7.15.10 Sorting and Filtering
+
+| Member | Description |
+|---|---|
+| `sort(columnName: string, ascending: boolean, multiple?: boolean): void` | Toast UI Grid pass-through. |
+| `unsort(columnName?: string): void` | Toast UI Grid pass-through — omit `columnName` to clear all sorting. |
+| `getSortState(): SortState` | **(Ext)** Toast UI Grid's sort state, with the framework's internal `sortKey` pseudo-column filtered out of `columns`. See [7.12.1](#7121-get-sort-state). |
+| `setFilter(columnName: string, filterOptionType: FilterOptionType): void` | Toast UI Grid pass-through. |
+| `getFilterState(): Filter[] \| null \| undefined` | Toast UI Grid pass-through. |
+| `filter(columnName: string, state: FilterState[]): void` | Toast UI Grid pass-through — apply filter conditions programmatically. |
+| `unfilter(columnName?: string): void` | Toast UI Grid pass-through — omit `columnName` to clear all filters. |
+
+#### 7.15.11 Validation and Mandatory Field Checks
+
+| Member | Description |
+|---|---|
+| `validate(): InvalidRow[]` | Toast UI Grid pass-through — runs the `validation` rules declared per column (see [7.7.7](#777-validation-methods)) and returns the invalid rows/columns. |
+| `checkMandatory(itemList?: BaseDataItem[]): string` | **(Ext)** Checks `mandatoryFieldMap` (property name → display label) against either the given `itemList`, or — when omitted — every currently created/updated source item. Returns a human-readable, newline-separated summary of rows with missing mandatory fields, or an empty string when all are filled. Typically shown in a `TMessageManager.warning()`. |
+| `checkDataSourceMandatory(): string` | **(Ext)** Similar intent to `checkMandatory`, but iterates `mandatoryFieldMap` over created/updated **source items** directly (via `Reflect.get`), reporting `(rowIndex)[missingLabel1,missingLabel2]` per offending row. Prefer `checkMandatory()` for grid-integrated flows (it is the one referenced elsewhere in this guide); `checkDataSourceMandatory()` is a source-item-centric alternative with a slightly different message format. |
+
+#### 7.15.12 Modified-Data Tracking
+
+| Member | Description |
+|---|---|
+| `isModified(): boolean` | **(Ext)** `true` if `getModifiedItems(BaseDataItem)` reports any created, updated, or deleted item. |
+| `getModifiedRows(options?: ModifiedRowsOptions): ModifiedRows` | Toast UI Grid pass-through — raw `{ createdRows, updatedRows, deletedRows }` from the grid engine. |
+| `getModifiedItems<T>(type: { new (): T }, options?: ModifiedRowsOptions): { createdItems: T[]; updatedItems: T[]; deletedItems: T[] }` | **(Ext)** The source-item-aware equivalent of `getModifiedRows`: created/updated items come straight from the source item list filtered by `opCode`; deleted items combine both the grid's own `deletedRows` (mapped onto `new T()` instances) and any source items already marked `opCode = OpCodes.DELETE`. This is the method used throughout this guide's save-flow examples (e.g. [7.7.8](#778-complete-example-master-detail-grid)). |
+| `clearModifiedData(type?: ModificationTypeCode): void` | Toast UI Grid pass-through — resets the modified-row tracking (optionally only for one modification type) without changing the currently displayed data. |
+
+#### 7.15.13 Tree and Nested Row Methods
+
+| Member | Description |
+|---|---|
+| `expand(rowKey, recursive?)` / `expandAll()` | Toast UI Grid pass-through. |
+| `collapse(rowKey, recursive?)` / `collapseAll()` | Toast UI Grid pass-through. |
+| `getParentRow(rowKey)` / `getChildRows(rowKey)` / `getAncestorRows(rowKey)` / `getDescendantRows(rowKey)` | Toast UI Grid pass-through — tree-mode row navigation. |
+| `getDepth(rowKey): number` | Toast UI Grid pass-through — nesting depth of a tree row. |
+| `getRowSpanData(rowKey, columnName): RowSpan \| null \| undefined` | Toast UI Grid pass-through — row-span info for merged cells. |
+
+#### 7.15.14 Pagination and Server Requests
+
+| Member | Description |
+|---|---|
+| `getPagination(): Pagination \| null \| undefined` | Toast UI Grid pass-through. |
+| `getCustomPagination(): Pagination \| null` | Toast UI Grid pass-through — the framework's custom pagination UI instance, if created. |
+| `createCustomPagination(element: string \| HTMLElement, options?: PageOptions): void` | **(Ext)** Creates the custom pagination control and, when `useAutoResize` is enabled, re-applies the tracked grid height so the pagination bar doesn't clip the grid body. |
+| `setPerPage(perPage: number): void` | Toast UI Grid pass-through. |
+| `setPaginationTotalCount(totalCount: number): void` / `getPaginationTotalCount(): number` | Toast UI Grid pass-through. |
+| `readData(page: number, data?: Params, resetData?: boolean): void` | Toast UI Grid pass-through — triggers the grid's built-in data-source request for a page (only relevant when using tui-grid's own `dataSource` request mechanism, not the framework's `bindListAsGridDataSource` flow). |
+| `request(requestType: RequestType, options?: RequestOptions): void` | Toast UI Grid pass-through. |
+| `reloadData(): void` | Toast UI Grid pass-through. |
+| `restore(): void` | Toast UI Grid pass-through — reverts all modifications back to the original data snapshot. |
+| `setRequestParams(params: Dictionary<any>): void` | Toast UI Grid pass-through — extra params merged into the grid's own data-source requests. |
+
+#### 7.15.15 Scroll and Layout
+
+| Member | Description |
+|---|---|
+| `setScrollPosition(top: number, left: number): void` | Toast UI Grid pass-through. See [7.8.2](#782-scroll-event). |
+| `getScrollLeft(): number` / `getScrollTop(): number` | Toast UI Grid pass-through. |
+| `refreshLayout(): void` | **(Ext)** Toast UI Grid pass-through plus, when `useAutoResize` is enabled, re-applies the tracked height afterward. See [7.7.6](#776-layout-and-display-methods). |
+| `setWidth(width: number): void` | Toast UI Grid pass-through. |
+| `setHeight(height: number): void` | **(Ext)** Sets the grid height and caches it internally (used by `refreshLayout`/`createCustomPagination` when `useAutoResize` is on). **Note:** per the warning at the top of this section, do not combine this with the `bodyHeight` prop, and prefer `resizeValue`/`resizeValues`/`gridResizeValue` on the surrounding layout component for rc-dock-integrated grids. |
+| `setBodyHeight(bodyHeight: number): void` | Toast UI Grid pass-through — same caution as `bodyHeight` prop applies when calling this directly on a docked grid. |
+| `setHeader({ height, complexColumns, columns }: OptHeader): void` | Toast UI Grid pass-through — updates header height and/or complex header configuration at runtime. |
+
+> **Note on `refreshContent()`:** an earlier example in [7.7.6](#776-layout-and-display-methods) calls `this.grd_MyGrid.current?.refreshContent()`. `TSpreadGrid` does not define a `refreshContent` method (only `refreshLayout` and `refreshContent` on *unrelated* `9. UI Templates` interfaces do). If a content-only refresh is needed, use `refreshLayout()` or a data-level refresh such as `resetData()` / `bindListAsGridDataSource()` instead.
+
+#### 7.15.16 Summary Row and Dialogs (Framework Extension)
+
+| Member | Description |
+|---|---|
+| `setSummaryColumnContent(columnName: string, columnContent: string \| SummaryColumnContentMap): void` | Toast UI Grid pass-through — set the summary-row content template for a column. |
+| `getSummaryValues(columnName: string): SummaryValueMap \| null \| undefined` | Toast UI Grid pass-through. |
+| `openSummaryDialog(): void` | Extracts the current grid data into a header+rows string matrix (caching it until the data is modified again) and opens the `SummaryModal` with it. |
+| `openExcelDialog(): void` | Opens the Excel import dialog (`ExcelImportDialog`). Paired with the `beforeExcelImport` / `afterExcelImport` events (7.15.17). |
+| `openCodeDialog(rowKey: RowKey, columnName: string, items: CodeDataItem[]): void` | Opens `CodeValueModal` for a specific cell with a given code list — the underlying mechanism behind `CODE`-based `CellInput` types (see [CellInput Configuration](#cellinput-configuration)). Normally invoked by the framework's own cell click handling rather than called directly. |
+| `openFindDialog(): void` | Opens the Find dialog (`FindModal`), pre-filled with the currently focused column and cell value. |
+| `setLoadingState(state: LoadingState): void` | Toast UI Grid pass-through — toggle the grid's built-in loading overlay (`"DONE" \| "LOADING" \| "EMPTY"`). |
+| `export(format: "csv" \| "xlsx" \| "pdf", options?: OptExport): void` | Toast UI Grid pass-through client-side export. For server-side Excel export with framework formatting, prefer `ExportGridService` (see [7.13](#713-excel-export-service)). |
+
+#### 7.15.17 Event Handling
+
+| Member | Description |
+|---|---|
+| `on(eventName: GridEventName, fn: GridEventListener): void` | Toast UI Grid pass-through — subscribe to a raw tui-grid event by name (e.g. `"mousedown"`, `"scroll"`). See [7.8](#78-grid-event-handling-on-method). |
+| `off(eventName: GridEventName, fn?: GridEventListener): void` | Toast UI Grid pass-through — unsubscribe (all handlers for the event when `fn` is omitted). Always pair with `on()` in `componentWillUnmount` to avoid leaking handlers across remounts. |
+
+In addition to the `onXxx` **props** documented in [7.3](#73-grid-events) and the `GridEventName` strings used with `on()`/`off()` above, the instance itself exposes a set of public `TEvent`-based fields that can be subscribed to directly through the ref, independent of props:
+
+| Field | Fires when |
+|---|---|
+| `afterInsertRow` | After a row is inserted through the `insertRow()` dialog flow. |
+| `afterDataSourceAdd` | After `insertSourceItem` / `insertSourceItems` add an item to the source list. |
+| `afterDataSourceRemove` | After `removeSourceItemByRowKey` / `deleteRow` remove item(s) from the source list. |
+| `afterDataSourceChange` | After a bound source item's property is updated as a result of a grid cell edit. |
+| `afterDataSourceBinded` | After `bindListAsGridDataSource` finishes binding a new source list. |
+| `beforeExcelImport` / `afterExcelImport` | Around an Excel import via `openExcelDialog()`. |
+| `beforeFocusChange` / `afterFocusChange` | Around a focus change, mirroring the `onBeforeFocusChange` / `onAfterFocusChange` props. |
+| `afterSchemaLoaded` | After the grid schema (from `specifiedSchemaFileName` and/or `columnSchemas`) finishes loading. |
+
+Subscribe with `addEvent` / unsubscribe with `removeEvent`, e.g.:
+
+```typescript
+componentDidMount() {
+  this.grd_MyGrid.current?.afterDataSourceChange.addEvent(this.handleDataSourceChange);
+}
+
+componentWillUnmount() {
+  this.grd_MyGrid.current?.afterDataSourceChange.removeEvent(this.handleDataSourceChange);
+}
+
+private handleDataSourceChange = (sender: any, e: TSpreadGridEventArgs) => {
+  // e.columnSchema, e.rowKey, e.prevValue, e.currValue, e.rowItem, e.sourceItem
+};
+```
+
+### 7.16 Column Schema Property Reference
+
+Sections [7.2](#72-grid-schema) and [7.15.2](#7152-column-schema-and-column-setting-dialog) describe how a Column Schema file is *used*. This section documents what every property in `ColumnSchemas[]` actually does and which values it accepts, traced directly from `/src/grid/schema/ColumnSchema.ts` and the two code paths that consume it in `/src/grid/TSpreadGrid.tsx`:
+
+- **`specifiedSchemaFileName` (JSON schema file) path** — the `initSchema` routine that runs in `componentDidMount()`, which reads `public/grid/{fileName}.json` and maps its PascalCase keys onto a `ColumnSchema` object.
+- **Manual code path** — pushing fully-formed `ColumnSchema` objects into `this._grid.current!.columnSchemas` yourself and calling `makeColumns()` (see [7.2](#72-grid-schema)), which applies the same cell-type switch but does **not** go through the JSON key mapping at all.
+
+The two paths read the same `ColumnSchema` fields, but only the manual path lets you set every field independently — the JSON path derives a couple of fields differently, called out below where it matters.
+
+#### 7.16.1 JSON Schema File Structure
+
+A schema file has three top-level sections, of which only `GridSchema` and `ColumnSchemas` are read by `TSpreadGrid` today:
+
+| Top-level key | Read by | Purpose |
+|---|---|---|
+| `GridSchema.FrozenColumnCount` | Yes — parsed with `parseInt()` into `schemaFrozenColumnCount` and applied as the initial `frozenColumnCount`. | Number of leftmost columns frozen (non-scrolling). Must be a numeric string (`"0"`, `"2"`, …); a missing or non-numeric value becomes `NaN`, so always include it explicitly. |
+| `ColumnSchemas[]` | Yes | The array documented in [7.16.2](#7162-columnschemas-field-reference) below. |
+| `ComplexColumns[]` | Yes, only if present | Merged/grouped header definitions. Each entry needs `Header` (label resource key, translated the same way as `LabelResKey`), `Name` (a synthetic parent column name referenced by children), and `ChildNames` (array of child column `DBField`/`Name` values). Applied via `setHeader({ complexColumns })`. |
+
+#### 7.16.2 ColumnSchemas Field Reference
+
+Each entry in `ColumnSchemas[]` is one column. The **JSON Key** column is the key the schema-editor tool writes into the `.json` file; **Internal Property** is the resulting `ColumnSchema` field on the TypeScript side (what you'd set directly if building the array in code instead of JSON).
+
+| JSON Key | Internal Property | Type | Allowed values | Effect |
+|---|---|---|---|---|
+| `Key` | `key` | `string` | Any string | The property name `TSpreadGrid` uses with `Reflect.get`/`Reflect.set` when syncing a grid cell to/from the bound `BaseDataItem`. **Must exactly match the getter/setter name on your data item class** (see [7.16.4](#7164-key-vs-dbfield)) — it is looked up by exact string match, not through `@JsonMapperProperty`. |
+| `DBField` | `dbField` | `string` | Any string, unique per column | Becomes the grid's internal column name (`OptColumn.name`), i.e. the value you pass as `columnName` to `getValue`/`setValue`/`getColumnSchema`/etc. Conventionally set equal to `Key` and to the `@JsonMapperProperty(...)` value on the data item, but the grid itself does not enforce that — only `Key` is used for the reflection-based sync. |
+| `LabelResKey` | `labelResKey` | `string` | A resource key resolvable by `Localization.translator()` | Column header text. Resolved as `` `${AppConfig.getInstance().language_gridnamespace}:${labelResKey}` ``, so it must exist in that namespace's localization resource. |
+| `ViewColumnSeq` | `viewColumnSeq` | `number` | Any number, unique per column recommended | Column display order — `columnSchemas` is sorted ascending by this value before columns are built. Also returned as-is by `getColumnIndexWithKey()`; note this can drift from the column's *actual* current position once columns are hidden/shown/reordered at runtime (use `getIndexOfColumn()` for the live index instead). |
+| `isVisible` | `visible` | `boolean` | `true` / `false` | `false` hides the column at load time via the same mechanism as `hideColumn()` — the column still exists and can be re-shown later through the Column Setting dialog or `showColumn()`. |
+| `isIncluded` (optional) | `included` | `boolean` | `true` / `false` (defaults to `true` when omitted **only** on the JSON path) | Gate applied inside `setColumns()`: any `OptColumn` whose name has no matching schema entry with `included !== false`, or no matching schema entry at all, is silently dropped from the grid. This is a harder exclusion than `isVisible` — an excluded column cannot be brought back via the Column Setting dialog. When hand-authoring `ColumnSchema` objects in code, this field is **required** (not optional in the TypeScript interface) — always set it explicitly. |
+| `Width` | `width` | `number` | Pixel width | Sets both `width` and `minWidth` to the same value, so a resizable column will not shrink below its configured width. |
+| `HorizontalAlignment` | `horizontalAlignment` | `string` | `"L"` (left), `"R"` (right), anything else including `"C"`/blank (center) | Only `"L"` and `"R"` are specifically matched; every other value — including `"C"` — falls through to center. |
+| `VerticalAlignment` | `verticalAlignment` | `string` | `"T"` (top), `"B"` (bottom), anything else (middle) | Same fallback pattern as horizontal alignment. |
+| `Sort` | `sort` | `string` | `""`/`"N"` (not sortable), `"A"` (sortable, default ascending), `"D"` (sortable, default descending), any other non-empty value (sortable, no default direction) | Drives both `sortable` and `sortingType` on the underlying `OptColumn`. |
+| `isFilter` | `filter` | `boolean` | `true` / `false` | `true` applies tui-grid's `"select"` filter type. **No other filter type is currently wired up** — there is no schema-driven way to get a text/date filter through this property. |
+| `CellInput` | `cellInputType` | `string` | One of the `CellInputTypes` enum values (`"N"`, `"D"`, `"R"`, `"L"`, `"U"`, `"S"`, `"W"`, `"C"`, `"V"`, `"H"`, `"I"`, `"A"`, `"E"`, `"F"`, `"B"`, `"G"`, `"P"`, `"O"`) — see [CellInput Configuration](#cellinput-configuration) | Determines edit behavior. Also interacts with `Locked` (below): a locked column with `CellInput` other than `"N"` (`NONE`) still gets an active editor (`LockColumnEditor`) instead of becoming fully read-only, so users can still invoke code dialogs on a "locked" cell. |
+| `CellStyleID` | `cellStyleId` | `string` | An ID that exists in the style JSON matching `CellType` (see [7.16.3](#7163-celltype-specific-requirements)) | Looked up once via `CellStyleManager` and cached; a non-matching ID means no cell style is found, and the column silently falls back to a plain text editor/renderer. |
+| `CellType` | `cellType` | `string` | `"Text"`, `"Number"`, `"CheckBox"`, `"ComboBox"`, `"DateTime"`, `"Button"`, `"Mask"`, `"Custom"` | Selects which `CellStyleManager.get*CellStyle()` lookup and which editor/renderer pair is used. **Note:** the `CellTypes` enum in `/src/grid/type/CellTypes.ts` only lists 6 of these 8 values (it is missing `Button` and `Custom`) — both are still valid, handled values in the actual `switch`, just not present in that enum, so don't rely on the enum alone to know what's accepted. |
+| `CellDisplay` | `cellDisplayType` | `string` | A `ValueDisplayTypes` value (`"N"`, `"C"`, `"M"`, `"D"`, `"F"`, `"S"`) | For `Text`-typed columns, any value other than `"N"`/`NONE` routes rendering through `bizRule.getRenderer()` instead of the framework's default renderer — i.e. it's also an opt-in switch for custom bizRule rendering, not just a display-format flag. |
+| `ValueDisplay` | `valueDisplayType` | `string` | Same `ValueDisplayTypes` values as above | Controls formatting inside `CodeValueModal` (see [CellDisplay and ValueDisplay Configuration](#celldisplay-and-valuedisplay-configuration)). |
+| `ColorRuleType` | `colorRule` | `string` | A `ColorRuleTypes` value (`"N"`, `"D"`, `"C"`, `"I"`, `"L"`, `"U"`, `"V"`, `"W"`) | See [ColorRuleType Configuration](#colorruletype-configuration) — note the **field name on the object is `colorRule`, not `colorRuleType`**, even though the JSON key and the enum type are both named `ColorRuleType`/`ColorRuleTypes`. |
+| `BackColor` / `ForeColor` | `backColor` / `foreColor` | `string` (JSON path also accepts a numeric OLE color) | A CSS color string (`"#FFFFE0"`, `"rgba(198,255,255)"`, `"Black"`), **or** a decimal OLE color number as a string (e.g. `"16777158"`) | If the value parses as a number, it is converted to `rgba(r,g,b)` automatically (`value % 256`, `(value / 256) % 256`, `(value / 65536) % 256`); otherwise it's used as-is. Only takes visual effect when `ColorRuleType` resolves to `DEFAULT_COLOR`, or as the fallback color in several other rule branches — see [ColorRuleType Configuration](#colorruletype-configuration). |
+| `CodeType` | `codeType` | `string` | A code type identifier registered with `CodeManager` | Used by the `CODE`-based `CellInput` flow ([CodeValueModal Behavior](#cellinput-configuration)) and as a secondary signal in `getCellColor()`'s default-color branch (presence of `codeType` picks `GRID_CEL_BACKCOLOR_LIST_INPUT` vs `GRID_CEL_BACKCOLOR_DIRECT_INPUT`). **Not** used to populate an editable `ComboBox`'s dropdown list — that list comes from the matching `TComboBoxCellStyle.category` field instead (see [7.16.3](#7163-celltype-specific-requirements)). |
+| `RefDBField` | `refDBField` | `string` | A `DBField` value of another column in the same row | Enables the "Reference Field Color Override" in `getCellColor()` — reads the named field's current row value and re-queries `bizRule.getCellCodeColor()` with it. |
+| *(none — see note)* | `refCodeType` | `string` | A code type identifier | ⚠️ **On the JSON schema file path, this is not read from a `RefCodeType` JSON key at all — it is hard-set to the same value as `RefDBField`.** If your schema-editor tool writes a separate `RefCodeType` key, it is currently ignored by `TSpreadGrid`'s loader. If you need `refDBField` and `refCodeType` to hold different values (e.g. a field name plus an unrelated code type), you must build that column's schema in code (`columnSchemas.push({...})`) rather than via the JSON file, since the manual path lets you set every field independently. |
+| `Locked` | `locked` | `boolean` | `true` / `false` | `true` removes the default editor (unless `CellInput` says otherwise, see `CellInput` above) and, in `getCellColor()`'s default branch, forces the read-only background color when combined with `CellInput` of `"N"`/`"D"`/`"R"`. |
+| `isMandatory` | `isMandatory` | `boolean` | `true` / `false` | Sets `validation: { required: true }` on the column and registers `dbField → translated label` in `mandatoryFieldMap`, which `checkMandatory()` / `checkDataSourceMandatory()` read (see [7.15.11](#71511-validation-and-mandatory-field-checks)). |
+| `IsPrimaryKey` | `isPrimaryKey` | `boolean` | `true` / `false` | Feeds the primary-key branches of `getCellColor()`'s default color logic, in combination with the grid's `allowNullPrimaryField` prop. |
+| *(none — always `true` on this path)* | `enabled` | `boolean` | `true` / `false` | Hard-coded to `true` whenever a column is loaded from a JSON schema file — there is currently no JSON key that sets it, and **no code in `TSpreadGrid.tsx` reads `columnSchema.enabled` at all**. Setting it to `false` when hand-building a schema in code has no observable effect today; use `disableColumn()` / `disableCell()` at runtime instead if you need a column disabled. |
+
+#### 7.16.3 CellType Specific Requirements
+
+Every `CellType` value (except `Custom`) looks up its `CellStyleID` in a different style map inside `CellStyleManager`, which in turn is populated by your app's `ICellStyleLoader` implementation (registered in [3.2 Cell Style Manager Setup](#32-cell-style-manager-setup)) from the matching `T*CellStyles.json` file. The tables below are every field on each style interface (`/src/grid/cellStyles/CellStyleManager.ts`), so you know exactly what a `CellStyleID` entry can declare.
+
+**`CellType: "Text"` → `TTextCellStyle`**
+
+| Field | Type | Notes |
+|---|---|---|
+| `cellStyleId` | `string` | Must match `CellStyleID` in the schema. |
+| `characterSet` | `string` | Character-set restriction for input. |
+| `characterCasing` | `string` | Case transformation applied to input. |
+| `isPassword` | `boolean` | `true` renders through `PasswordRenderer` instead of the normal text renderer (only when `CellDisplay` is `"N"`/`NONE`, since a non-`NONE` `CellDisplay` routes to `bizRule.getRenderer()` first). |
+| `stringTrim` | `boolean` | Trims whitespace from input. |
+| `maxLength` | `number` | Maximum input length. |
+
+**`CellType: "Number"` → `TNumberCellStyle`**
+
+| Field | Type | Notes |
+|---|---|---|
+| `cellStyleId` | `string` | |
+| `decimalPlace` | `number` | Decimal precision. |
+| `separator` | `boolean` | Thousands separator on/off. |
+| `maxValue` / `minValue` | `number` | Input range. |
+| `negativeRed` | `boolean` | `true` renders through `NegativeNumberRenderer` (negative values styled, typically red). |
+| `maxLength` | `number` (optional) | Optional input length cap. |
+
+**`CellType: "CheckBox"` → `TCheckBoxCellStyle`**
+
+| Field | Type | Notes |
+|---|---|---|
+| `cellStyleId` | `string` | |
+| `threeState` | `boolean` | Enables the tri-state cycle (`true`/`false`/`undefined`) used by `setCheckAllStateColumn()` (see [7.15.9](#7159-checkbox-selection-and-enable-disable-state)); `false` cycles only `true`/`false`. |
+| `checkAllEvent` | `boolean` | Must be `true` for the column's header "check all" toggle behavior (`setCheckAllStateColumn`) to do anything. |
+| `textTrue` / `textFalse` / `textIndeterminate` | `string` | Display labels for each state. |
+
+**`CellType: "ComboBox"` → `TComboBoxCellStyle`**
+
+| Field | Type | Notes |
+|---|---|---|
+| `cellStyleId` | `string` | |
+| `category` | `string` | The code category passed to `bizRule.getCodeList(category)` to populate the dropdown — **this, not the column's `CodeType`, is what actually fills an editable combo box's options.** |
+| `editable` | `boolean` | Must be `true` for the column to get a live dropdown editor at all (`setCodes()` is only invoked when `cellStyle.editable` is truthy); `false` renders it as a plain display column. |
+| `characterSet` / `characterCasing` / `maxLength` | `string`/`string`/`number` | Same meaning as the `Text` style equivalents, applied when the combo box also allows free text. |
+| `codeType` | `string` | A second, style-level code type field, distinct from the column schema's own `CodeType`. |
+
+**`CellType: "DateTime"` → `TDateTimeCellStyle`**
+
+| Field | Type | Notes |
+|---|---|---|
+| `cellStyleId` | `string` | |
+| `userDefinedFormat` | `string` | A date format string. Normalized at load time (`DDDD`→`dddd`, `DDD`→`ddd`, `SS`→`ss`, `:MM`→`:mm`, `MM:`→`mm:`) so you can author it in upper-case tokens; the normalization is naive string replacement, so avoid formats where those substrings appear outside their date-token meaning. |
+
+**`CellType: "Mask"` → `TMaskCellStyle`**
+
+| Field | Type | Notes |
+|---|---|---|
+| `cellStyleId` | `string` | |
+| `mask` | `string` | The input mask pattern. |
+| `maskCharacter` | `string` | Placeholder character for unfilled mask positions. |
+| `stringTrim` | `boolean` | Trims whitespace from input. |
+
+**`CellType: "Button"` → `TButtonCellStyle`**
+
+| Field | Type | Notes |
+|---|---|---|
+| `cellStyleId` | `string` | |
+| `gradient` | `boolean` | Gradient fill on/off. |
+| `twoState` | `boolean` | Toggle-style button with two visual states. |
+| `text` / `textDown` | `string` | Label in normal / pressed state. |
+| `wordWrap` | `boolean` | Wrap long labels. |
+| `gradientColor` / `gradientMode` | `string` | Gradient styling. |
+| `pictureImage` / `pictureDownImage` | `string` | Icon/image URLs for normal / pressed state. |
+| `textAlign` | `string` | Label alignment. |
+
+**`CellType: "Custom"`**
+
+No dedicated style interface. `editor`/`renderer` are pulled from the `customSchemaEditorMap` / `customSchemaRendererMap` props (keyed by the column's `Key`, not `DBField`), which you supply yourself on `<TSpreadGrid>`. `CellStyleID` is looked up via `CellStyleManager.getMaskCellStyle()` for this cell type, but the result is never actually used by the `Custom` branch — so `CellStyleID` can be left blank for `Custom` columns.
+
+#### 7.16.4 Key vs DBField
+
+These two string fields look interchangeable and are usually set to the same value, but they serve different, exact-match purposes and are worth keeping straight when authoring a schema by hand:
+
+- **`DBField`** becomes the grid's column identity — the string tui-grid itself knows the column by (`OptColumn.name`). Every ref-based grid call that takes a `columnName` (`getValue`, `setValue`, `getColumnSchema`, `disableColumn`, event `columnName` fields, etc.) uses this value.
+- **`Key`** is the property name `TSpreadGrid` reflects onto your bound `BaseDataItem` instance directly (`Reflect.get`/`Reflect.set`), both when pushing a cell edit into the source item (`setSourceItem`) and when reacting to a source item's own property-changed notification (`TSpreadGrid_onItemPropertyChanged`). It must be spelled exactly like the getter/setter on your data item class — there is no decorator-based lookup here, just a literal string match against `e.propertyName` / a literal `Reflect.set(item, key, value)` call.
+
+In the common case where your data item class exposes a property named identically to its grid column (e.g. `get unid()`/`set unid()` backing a `DBField: "unid"` column), setting `Key` and `DBField` to the same string is correct and is what every example elsewhere in this guide does. Only give them different values if you deliberately want the grid's column identity and the bound property name to diverge.
+
+#### 7.16.5 Minimal Worked Example
+
+A trimmed schema entry per major `CellType`, showing only the properties that the current loader actually reads (compare against the larger example in [7.2 Grid Schema](#72-grid-schema), which also includes several legacy fields the schema-editor tool writes but `TSpreadGrid` does not currently read — e.g. `Seq`, `TsbCellType`, `CellTypeID`, `AllowCodeExclude`/`IsAllowCodeExclude`, `ForegroundColor`/`BackgroundColor` as separate string colors, `SortSeq`/`SortDirection`, `DummyFieldEditable`/`DummyFieldEditableType`, `CellEditor`/`CellEditorType`/`CellTypeCode`, `ValueOrder`/`ValueOrderType`/`AutoSortSeq`, and `SchemaVersion`; these are harmless to leave in a generated file, but editing them will not change grid behavior):
+
+```json
+{
+  "GridSchema": {
+    "FrozenColumnCount": "1"
+  },
+  "ColumnSchemas": [
+    {
+      "Key": "unid",
+      "DBField": "unid",
+      "LabelResKey": "WRD_FTSL_UNID",
+      "ViewColumnSeq": 0,
+      "isVisible": true,
+      "isIncluded": true,
+      "Width": 80,
+      "HorizontalAlignment": "C",
+      "VerticalAlignment": "C",
+      "Sort": "A",
+      "isFilter": false,
+      "CellInput": "N",
+      "CellStyleID": "Unid",
+      "CellType": "Text",
+      "CellDisplay": "N",
+      "ValueDisplay": "N",
+      "ColorRuleType": "N",
+      "BackColor": "rgba(198,255,255)",
+      "ForeColor": "Black",
+      "CodeType": "",
+      "RefDBField": "",
+      "Locked": false,
+      "isMandatory": true,
+      "IsPrimaryKey": true
+    },
+    {
+      "Key": "status",
+      "DBField": "status",
+      "LabelResKey": "WRD_FTSL_STATUS",
+      "ViewColumnSeq": 1,
+      "isVisible": true,
+      "isIncluded": true,
+      "Width": 120,
+      "HorizontalAlignment": "C",
+      "VerticalAlignment": "C",
+      "Sort": "N",
+      "isFilter": true,
+      "CellInput": "L",
+      "CellStyleID": "OPR",
+      "CellType": "ComboBox",
+      "CellDisplay": "M",
+      "ValueDisplay": "F",
+      "ColorRuleType": "C",
+      "BackColor": "White",
+      "ForeColor": "Black",
+      "CodeType": "STATUS_CODE",
+      "RefDBField": "",
+      "Locked": false,
+      "isMandatory": false,
+      "IsPrimaryKey": false
+    }
+  ]
+}
+```
+
+Matching `CellStyleID` entries this example depends on (see [3.2 Cell Style Manager Setup](#32-cell-style-manager-setup)):
+
+```json
+// TTextCellStyles.json
+{ "CellStyles": [ { "CellStyleID": "Unid", "characterSet": "", "characterCasing": "", "isPassword": false, "stringTrim": true, "maxLength": 20 } ] }
+```
+
+```json
+// TComboBoxCellStyles.json — note "editable": false here, since CellInput "L" drives selection through
+// the CodeValueModal dialog rather than an inline dropdown; "category" is only consulted when editable is true.
+{ "CellStyles": [ { "CellStyleID": "OPR", "category": "", "editable": false, "characterSet": "", "characterCasing": "", "maxLength": 0, "codeType": "" } ] }
+```
 
 ## 8. Pivot Component
 
@@ -11069,7 +11661,7 @@ All UI template components share the following features:
 
 6. **UI Authorization**: Components automatically apply authorization controls to UI elements based on user permissions.
 
-#### UI Authorization
+#### 9.7.1 UI Authentication
 
 All UI template components (`BaseSingleGridComponent`, `BaseMultiGridComponent`, `BaseSingleDrawComponent`, `BaseMultiDrawComponent`, `BaseCompositeComponent`, `CustomContainerComponent`) inherit from `BaseComponent`, which provides automatic UI Authorization through the `setAuthControls()` method.
 
