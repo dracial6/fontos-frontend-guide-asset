@@ -7758,15 +7758,50 @@ private createHeader(): JSX.Element {
 
 `TSpreadGrid` is the core grid component of the framework, providing advanced data grid functionality. It is based on **Toast UI Grid (tui-grid)**, a powerful JavaScript grid library that provides features like sorting, filtering, editing, and more.
 
-**Important:** Do not use the `bodyHeight` prop on `TSpreadGrid`. When `bodyHeight` is set, the grid height is fixed internally and the resize integration with **rc-dock** (e.g. `TResizePanel`, `BaseSingleGridComponent`, `BaseMultiGridComponent`, `BaseCompositeComponent`) does not work correctly. Use `resizeValue`, `resizeValues`, or `gridResizeValue` on the base layout component instead so the docking panel resize handler can calculate and apply the grid area height.
+**Grid height: two supported approaches.** `TSpreadGrid` height can be controlled two independent ways. Pick **one** per screen — don't mix them without a clear reason.
+
+**A) `bodyHeight="fitToParent"` (or `"auto"`)** — best for simple layouts where the grid's immediate parent element already resolves to a real CSS height (e.g. a `height: 100%` wrapper inside a `TLayout` Header/Content/Footer screen, see [5.1 TLayout](#51-tlayout)). The Toast UI Grid engine reads the parent element's `clientHeight` and sizes the grid body to fill it — no manual pixel math needed. This requires `width={"auto"}` as well, since the engine only re-measures on a `window` `resize` event, and that listener is only registered when `width` is `"auto"`.
 
 ```typescript
-// ❌ Do not use — breaks rc-dock resize integration
+// ✅ A) Simple flex-filled layout — let the grid measure its own parent
+<div className="width-full height-full">
+  <TSpreadGrid
+    width={"auto"}
+    bodyHeight={"fitToParent"}
+    // ... other props
+  />
+</div>
+```
+
+Because approach A) only re-measures on a real `window` `resize` event, any layout change that isn't one — collapsing/expanding a filter panel (`TCollapse.onChange`), opening a modeless dialog (`CTDialogUtil.showModeless`/`showModelessOnlyParam`), adding/removing a docked tab, etc. — must re-dispatch one manually so the grid picks up the new size:
+
+```typescript
+setTimeout(() => window.dispatchEvent(new Event('resize')), 200);
+```
+
+**B) `resizeValue` / `resizeValues` / `gridResizeValue`** — best for layouts that can't be expressed as "parent fills grid" (e.g. a detail form stacked above the grid, where the grid area is "docking panel height minus the known fixed-height regions above it"). Set these props on the surrounding **`BaseSingleGridComponent`** / **`BaseMultiGridComponent`** / **`BaseCompositeComponent`**, not on `TSpreadGrid` itself — see [9.1 BaseSingleGridComponent](#91-basesinglegridcomponent), [9.2 BaseMultiGridComponent](#92-basemultigridcomponent), [9.5 BaseCompositeComponent](#95-basecompositecomponent). These base components track the **rc-dock** panel size (a `ResizeObserver` on the dock panel, a `window` `resize` listener, and rc-dock's own `LayoutChange` event — fired on panel move/float/resize, including when another screen opens a modeless dialog via `GlobalDockTabAgent`) and push the computed height into the grid automatically — no manual resize dispatch needed.
+
+```typescript
+// ✅ B) Docking-panel-driven layout — let BaseSingleGridComponent compute the height
+<BaseSingleGridComponent
+  rootRef={this._rootRef}
+  gridRef={this._grid}
+  resizeValue={100} // subtract 100px for the filter area above the grid
+  // ... other props
+/>
+```
+
+**Do not set `bodyHeight` to a fixed number** (e.g. `bodyHeight={200}`) on a grid hosted inside `BaseSingleGridComponent`/`BaseMultiGridComponent`/`BaseCompositeComponent`. A fixed number opts the grid out of *both* A) and B) — it will track neither its parent element nor the docking panel.
+
+```typescript
+// ❌ Do not use — a fixed number disables both A) and B) above
 <TSpreadGrid
   bodyHeight={200}
   // ... other props
 />
 ```
+
+> **Note:** `TSpreadGrid.setHeight()` — the method both `refreshLayout()`/`createCustomPagination()` (see [7.15.14](#71514-pagination-and-server-requests), [7.15.15](#71515-scroll-and-layout)) and the `BaseSingleGridComponent`/`BaseMultiGridComponent`/`BaseCompositeComponent` rc-dock resize handlers ultimately call — treats `bodyHeight="fitToParent"`/`"auto"` as authoritative and no-ops in that case. This means approach A) is never overridden by a B)-style rc-dock resize event even if the grid happens to sit inside one of those base components. Still, treat A) and B) as mutually exclusive by design rather than relying on this precedence — pick the one that matches the screen's layout.
 
 ### 7.1 Basic Usage
 
@@ -10061,7 +10096,7 @@ The framework's central data-binding layer, connecting grid rows to `BaseDataIte
 |---|---|
 | `getPagination(): Pagination \| null \| undefined` | Toast UI Grid pass-through. |
 | `getCustomPagination(): Pagination \| null` | Toast UI Grid pass-through — the framework's custom pagination UI instance, if created. |
-| `createCustomPagination(element: string \| HTMLElement, options?: PageOptions): void` | **(Ext)** Creates the custom pagination control and, when `useAutoResize` is enabled, re-applies the tracked grid height so the pagination bar doesn't clip the grid body. |
+| `createCustomPagination(element: string \| HTMLElement, options?: PageOptions): void` | **(Ext)** Creates the custom pagination control and, when `useAutoResize` is enabled, re-applies the tracked grid height (via `setHeight()`) so the pagination bar doesn't clip the grid body. No effect when `bodyHeight` is `fitToParent`/`auto` — see [7](#7-tspreadgrid-component). |
 | `setPerPage(perPage: number): void` | Toast UI Grid pass-through. |
 | `setPaginationTotalCount(totalCount: number): void` / `getPaginationTotalCount(): number` | Toast UI Grid pass-through. |
 | `readData(page: number, data?: Params, resetData?: boolean): void` | Toast UI Grid pass-through — triggers the grid's built-in data-source request for a page (only relevant when using tui-grid's own `dataSource` request mechanism, not the framework's `bindListAsGridDataSource` flow). |
@@ -10076,10 +10111,10 @@ The framework's central data-binding layer, connecting grid rows to `BaseDataIte
 |---|---|
 | `setScrollPosition(top: number, left: number): void` | Toast UI Grid pass-through. See [7.8.2](#782-scroll-event). |
 | `getScrollLeft(): number` / `getScrollTop(): number` | Toast UI Grid pass-through. |
-| `refreshLayout(): void` | **(Ext)** Toast UI Grid pass-through plus, when `useAutoResize` is enabled, re-applies the tracked height afterward. See [7.7.6](#776-layout-and-display-methods). |
+| `refreshLayout(): void` | **(Ext)** Toast UI Grid pass-through plus, when `useAutoResize` is enabled, re-applies the tracked height afterward (via `setHeight()`). No effect on the re-applied height when `bodyHeight` is `fitToParent`/`auto` — see [7](#7-tspreadgrid-component). See also [7.7.6](#776-layout-and-display-methods). |
 | `setWidth(width: number): void` | Toast UI Grid pass-through. |
-| `setHeight(height: number): void` | **(Ext)** Sets the grid height and caches it internally (used by `refreshLayout`/`createCustomPagination` when `useAutoResize` is on). **Note:** per the warning at the top of this section, do not combine this with the `bodyHeight` prop, and prefer `resizeValue`/`resizeValues`/`gridResizeValue` on the surrounding layout component for rc-dock-integrated grids. |
-| `setBodyHeight(bodyHeight: number): void` | Toast UI Grid pass-through — same caution as `bodyHeight` prop applies when calling this directly on a docked grid. |
+| `setHeight(height: number): void` | **(Ext)** Sets the grid height and caches it internally. **No-ops when `bodyHeight` is `fitToParent`/`auto`** (see [7](#7-tspreadgrid-component)) — this is what lets approach A) and approach B) coexist safely. When `bodyHeight` is anything else, this is the method both `refreshLayout`/`createCustomPagination` (when `useAutoResize` is on) and the `BaseSingleGridComponent`/`BaseMultiGridComponent`/`BaseCompositeComponent` rc-dock resize handlers call to apply a `resizeValue`-derived height. |
+| `setBodyHeight(bodyHeight: number): void` | Toast UI Grid pass-through — **does not check the `bodyHeight` prop** the way `setHeight()` does. Calling this directly with a fixed number on a `fitToParent`/`auto` grid will still override the auto-calculated height, so avoid calling it manually on a docked or `fitToParent` grid. |
 | `setHeader({ height, complexColumns, columns }: OptHeader): void` | Toast UI Grid pass-through — updates header height and/or complex header configuration at runtime. |
 
 > **Note on `refreshContent()`:** an earlier example in [7.7.6](#776-layout-and-display-methods) calls `this.grd_MyGrid.current?.refreshContent()`. `TSpreadGrid` does not define a `refreshContent` method (only `refreshLayout` and `refreshContent` on *unrelated* `9. UI Templates` interfaces do). If a content-only refresh is needed, use `refreshLayout()` or a data-level refresh such as `resetData()` / `bindListAsGridDataSource()` instead.
