@@ -6369,7 +6369,25 @@ import { TInput } from "tsb-fontos-ui";
 - `onAfterPressEnter`: After press enter event handler (receives `TInputEventArgs`)
 - `disabled`: Disable input
 - `readOnly`: Make input read-only
+- `pasteTransformReplacer`: Character or string used to replace line breaks when text containing multiple lines is pasted (string)
 - **CommonProps**: All CommonProps are supported (except `height` and `width` which are handled separately)
+
+**Paste Transform:**
+```typescript
+import { TInput } from "tsb-fontos-ui";
+
+// Merge multi-line paste into one line using the given separator
+<TInput
+  width={200}
+  placeholder="Paste multi-line text"
+  pasteTransformReplacer=", "
+/>
+```
+Pasting the following multi-line text:
+A001
+A002
+A003
+with `pasteTransformReplacer=", "` results in the input value: `A001, A002, A003` (empty lines are automatically dropped).
 
 **Event Args:**
 
