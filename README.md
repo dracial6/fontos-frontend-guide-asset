@@ -2129,8 +2129,28 @@ Localization and internationalization manager built on top of i18next. Provides 
 - `getCommonMessageResources(): any` - Get common message resources
 - `addVocabularyResource(vocabulary: any): void` - Add vocabulary resources dynamically
 - `addMessageResource(message: any): void` - Add message resources dynamically
-- `getVocabulary(resourceKey: string): string` - Get translated vocabulary string by key
-- `getMessage(resourceKey: string, ...args: string[]): string` - Get translated message string by key with parameter substitution
+- `getVocabulary(resourceKey: string): string` - Get translated vocabulary string by key (looked up in the **`vocabulary`** namespace)
+- `getMessage(resourceKey: string, ...args: string[]): string` - Get translated message string by key with parameter substitution (looked up in the **`message`** namespace)
+
+**Lookup Namespaces (`getVocabulary` / `getMessage`):**
+
+| Method | Namespace | Typical keys |
+|--------|-----------|--------------|
+| `getVocabulary(key)` | `vocabulary` | `WRD_*` (labels, buttons, column headers) |
+| `getMessage(key, ...args)` | `message` | `MSG_*` (confirm, error, notification text) |
+
+- `getVocabulary()` loads its text only from the `vocabulary` namespace, and `getMessage()` only from the `message` namespace.
+- A key that exists only in another namespace (e.g., an `MSG_*` key loaded into `vocabulary`) is **not found**, and the key string itself is returned.
+- Map your resource files to the right namespace in `AppConfig.language_namespaces` / `properties.json` `language.namespaces`:
+
+```json
+// Load translation.json into "vocabulary", message.json into "message"
+// translation.json → "vocabulary" namespace, message.json → "message" namespace 로 로드
+"language.namespaces": [
+  { "vocabulary": ["translation"] },
+  { "message": ["message"] }
+]
+```
 
 **Basic Usage:**
 
@@ -2368,12 +2388,31 @@ Language resources are loaded from JSON files located at `./locales/{language}/{
 
 1. **Language must be set** before calling `loadLanguage()`
 2. **Namespaces are configured** in `AppConfig.language_namespaces`
-3. **Vocabulary** is used for UI labels and static text
-4. **Messages** support parameter substitution using `{0}`, `{1}`, etc.
+3. **Vocabulary** is used for UI labels and static text — `getVocabulary()` loads from the **`vocabulary`** namespace
+4. **Messages** support parameter substitution using `{0}`, `{1}`, etc. — `getMessage()` loads from the **`message`** namespace
 5. **Resources can be added dynamically** at runtime
 6. **If a key is not found**, the key itself is returned
 7. **Uses i18next** under the hood for translation management
 8. **Common resources** (vocabulary, message) are automatically loaded from built-in files
+9. **Resource key naming rule:** vocabulary keys use `WRD_{Terminal Code}_{ResourceName}` (e.g., `WRD_CARRIER_BillOfLading`), message keys use `MSG_{Terminal Code}_XXXXX` with a 5-digit sequence number (e.g., `MSG_CARRIER_00001`). Framework common resources use the `FTCO` code (e.g., `WRD_FTCO_Save`, `MSG_FTCO_00170`). See "Migration Guide › 3. Locales(다국어) 설정 › 키 네이밍 규칙".
+
+**Using Resource Keys in UI Components and Menus:**
+
+- tsb-fontos-ui components (`TButton`, `TLabel`, `TCheckbox`, `TMessageManager` params) take a resource key through the **`textResourceKey`** prop and render the translated text automatically — no need to call `Localization.getVocabulary()` yourself.
+- `TMessageManager`'s `textResourceKey` is looked up in the **`message`** namespace (same as `Localization.getMessage()`). Put `MSG_*` keys used in message boxes into a file mapped to the `message` namespace.
+- Menu names are localized by putting a resource key in the **`label`** property of `menuitem.json`.
+- See "JavaScript → Fontos-Framework Migration Guide › 3. Locales(다국어) 설정" for examples.
+
+```tsx
+// Component text by resource key / 컴포넌트 텍스트는 리소스 키로 지정
+<TLabel textResourceKey="WRD_CTIP_Label_UserName" />
+<TButton type="primary" textResourceKey="WRD_FTCO_Save" />
+```
+
+```json
+// menuitem.json — label holds a resource key / label에 리소스 키 지정
+{ "key": "mnuTruckMasterList", "label": "WRD_CTIP_Menu_TruckList" }
+```
 
 ### 11.3 LoginedUserInfo
 
@@ -2686,7 +2725,7 @@ async function apiCall(url: string, options: RequestInit = {}) {
 **Key Points:**
 
 1. **All constants are readonly static properties** - cannot be modified
-2. **Authentication schemes** are used for HTTP Authorization headers
+2. **Authentication schemes** are used for HTTP Authentication headers
 3. **Token refresh header** (`x-access-token`) is sent by server to update JWT tokens
 4. **Cookie names** are standardized for SSO and app-specific tokens
 5. **Use with CookieUtil** to manage authentication cookies
@@ -5338,6 +5377,58 @@ MainLayout.setCustomCommonToolbars([
   <UserOutlined />,
 ]);
 ```
+
+**Toolbar Lock (Priority Deactivation):**
+
+`deactivateControllerToolbars()` is temporary: whenever a view gets focus (tab switch, click on the view, dock layout change), `BaseComponent.enableToolbars()` re-activates every toolbar the controller has a decorator for. To keep a toolbar disabled across focus changes, lock it. Locked toolbars take priority over both `BaseComponent.enableToolbars()` and `activateControllerToolbars()`.
+
+```typescript
+// Lock toolbar(s) for the active view (tab) - stays disabled across focus changes
+MainLayout.lockControllerToolbars("Insert");
+MainLayout.lockControllerToolbars(["Insert", "Delete"]);
+
+// Unlock - re-enabled only if the active view has the toolbar decorator
+MainLayout.unlockControllerToolbars("Insert");
+
+// Check lock state
+const locked = MainLayout.isControllerToolbarLocked("Insert");
+
+// Clear all locks of a view (called automatically on BaseComponent unmount)
+MainLayout.clearControllerToolbarLocks();
+```
+
+| Method | Description |
+|--------|-------------|
+| `lockControllerToolbars(menus, menuKey?)` | Locks toolbar(s) for a view. Disables them immediately when the target is the active view. |
+| `unlockControllerToolbars(menus, menuKey?)` | Removes the lock. Re-enables only toolbars registered (by decorator) in the active view. |
+| `isControllerToolbarLocked(menu, menuKey?)` | Returns whether the toolbar is locked for the view. |
+| `clearControllerToolbarLocks(menuKey?)` | Removes all locks of the view. |
+
+- `menus`: a single `ControllerToolBarType` or an array of them.
+- `menuKey`: target tab id. Defaults to `MenuState.activeMenuId` (the active view). Pass it explicitly when calling from an async callback that may run while another view is active.
+- Locks are scoped per view (tab) and are cleared automatically in `BaseComponent.componentWillUnmount()`, so they do not leak to other views or to a reopened tab.
+
+Example - enable `Insert` only after a required code is selected:
+
+```typescript
+// Controller
+@(ControllerToolbarSet.getInstance().NewDecorator())
+public menuNew(): void {
+    MainLayout.lockControllerToolbars("Insert");
+    // ... create new item ...
+}
+
+// View
+private selectCode_onAfterChange(e: TSelectEventArgs): void {
+    if (e.sourceItem !== undefined) {
+        MainLayout.unlockControllerToolbars("Insert");
+    } else {
+        MainLayout.lockControllerToolbars("Insert");
+    }
+}
+```
+
+> **Note:** Use `deactivateControllerToolbars()` for a one-time disable that may be reset on the next focus change, and `lockControllerToolbars()` when the disabled state depends on view data and must survive focus changes.
 
 **Theme Control:**
 
@@ -11714,7 +11805,7 @@ All UI template components share the following features:
 
 6. **UI Authorization**: Components automatically apply authorization controls to UI elements based on user permissions.
 
-#### 9.7.1 UI Authentication
+#### 9.7.1 UI Authorization
 
 All UI template components (`BaseSingleGridComponent`, `BaseMultiGridComponent`, `BaseSingleDrawComponent`, `BaseMultiDrawComponent`, `BaseCompositeComponent`, `CustomContainerComponent`) inherit from `BaseComponent`, which provides automatic UI Authorization through the `setAuthControls()` method.
 
@@ -11749,7 +11840,7 @@ Grid columns are identified using the format: `authControlId|columnName` (e.g., 
 
 **Implementing ISecurityService:**
 
-To enable UI authentication, you must implement the `ISecurityService` interface and register it with the service locator.
+To enable UI authorization, you must implement the `ISecurityService` interface and register it with the service locator.
 
 **Step 1: Create Security Service Implementation**
 
@@ -12851,6 +12942,9 @@ MainLayout.setCustomCommonToolbars([
 ### 11.1 TMessageManager
 
 Message manager for displaying alerts, confirmations, and notifications.
+
+**Resource lookup:** `textResourceKey` is resolved from the **`message`** namespace (same as `Localization.getMessage()`), and `args` replace `{0}`, `{1}`, ... placeholders. A key that exists only in another namespace (e.g., `vocabulary`) is not found and the key string itself is displayed.
+`textResourceKey`는 **`message` namespace**에서 조회됩니다 (`Localization.getMessage()`와 동일). `MSG_*` 키는 `message` namespace로 매핑된 파일(예: `message.json`)에 두어야 합니다.
 
 ```typescript
 import { TMessageManager, TMessageBoxParam, TMessageBoxResult } from "tsb-fontos-ui";
@@ -14434,7 +14528,6 @@ src/
 ```json
 {
   "language": "enUS",
-  "language.list": ["enUS", "vi"],
   "language.namespaces": [
     { "vocabulary": ["translation"] }
   ],
@@ -14490,17 +14583,145 @@ src/public/locales/
   "WRD_CARRIER_BillOfLading": "B/L No.",
   "WRD_CARRIER_VesselName": "Vessel",
   "WRD_FTCO_Find": "Search",
-  "MSG_CARRIER_CONFIRM_DELETE": "Are you sure you want to delete?"
+  "MSG_CARRIER_00001": "Are you sure you want to delete?"
 }
 ```
 
 ### 키 네이밍 규칙
 
-| 접두사 | 용도 |
-|--------|------|
-| `WRD_CARRIER_` | 그리드 컬럼 헤더, 폼 레이블 |
-| `WRD_FTCO_` | 공통 UI 텍스트 (Find, Save 등) |
-| `MSG_CARRIER_` | 사용자 메시지 (confirm, error) |
+다국어 리소스 키는 아래 형식을 따릅니다.
+
+| 구분 | 형식 | 예시 | 용도 | namespace |
+|------|------|------|------|-----------|
+| Vocabulary | `WRD_{Terminal Code}_{ResourceName}` | `WRD_CARRIER_BillOfLading` | 그리드 컬럼 헤더, 폼 레이블, 버튼, 메뉴 | `vocabulary` |
+| Message | `MSG_{Terminal Code}_XXXXX` | `MSG_CARRIER_00001` | 사용자 메시지 (confirm, error, 알림) | `message` |
+
+- `{Terminal Code}`: 터미널(모듈) 코드. 프레임워크 공통 리소스는 `FTCO`를 사용합니다 (예: `WRD_FTCO_Find`, `MSG_FTCO_00170`).
+- `{ResourceName}`: 리소스 의미를 나타내는 PascalCase 이름 (예: `BillOfLading`, `VesselName`).
+- `XXXXX`: 5자리 숫자 일련번호 (`00001`부터 순번 부여, 0으로 자리 채움). 메시지 키에는 의미 이름 대신 번호를 사용합니다.
+
+```json
+// ✅ Correct / 올바른 예
+"WRD_CARRIER_VesselName": "Vessel",
+"MSG_CARRIER_00001": "Are you sure you want to delete?"
+
+// ❌ Wrong / 잘못된 예
+"VesselName": "Vessel",                                   // prefix/terminal code missing / 접두사·터미널 코드 누락
+"MSG_CARRIER_CONFIRM_DELETE": "Are you sure you want to delete?", // not numbered / 번호 형식 아님
+"MSG_CARRIER_1": "..."                                    // not 5 digits / 5자리 아님
+```
+
+### `getVocabulary` / `getMessage` 조회 namespace
+
+`Localization.getVocabulary()`는 **`vocabulary` namespace**에서, `Localization.getMessage()`는 **`message` namespace**에서 리소스를 load 합니다.
+
+| 메서드 | 조회 namespace | 주 용도 |
+|--------|----------------|---------|
+| `Localization.getVocabulary(key)` | `vocabulary` | `WRD_*` 레이블, 버튼, 컬럼 헤더 |
+| `Localization.getMessage(key, ...args)` | `message` | `MSG_*` 확인/오류/알림 메시지 (`{0}`, `{1}` 치환) |
+| `TMessageManager` (`textResourceKey`) | `message` | `MSG_*` 메시지 박스 본문 (`args`로 `{0}`, `{1}` 치환) |
+
+- 다른 namespace에만 있는 키는 찾지 못하고 **키 문자열이 그대로 반환**됩니다. (예: `MSG_*` 키를 `vocabulary` namespace 파일에만 넣고 `getMessage()`로 조회하는 경우)
+- 따라서 `properties.json`의 `language.namespaces`에서 번역 파일을 올바른 namespace로 매핑해야 합니다.
+
+```json
+// src/public/properties.json
+// Load translation.json into "vocabulary", message.json into "message"
+// translation.json → "vocabulary", message.json → "message" namespace 로 로드
+"language.namespaces": [
+  { "vocabulary": ["translation"] },
+  { "message": ["message"] }
+],
+"language.gridnamespace": "vocabulary"
+```
+
+```tsx
+import { Localization } from "tsb-fontos-core";
+
+// Label from "vocabulary" namespace / "vocabulary" namespace에서 조회
+const blLabel = Localization.getVocabulary("WRD_CARRIER_BillOfLading"); // "B/L No."
+
+// Message from "message" namespace with parameter / "message" namespace에서 조회 + 파라미터 치환
+const vgmMsg = Localization.getMessage("MSG_CARRIER_00002", "CNTR0000001");
+// e.g. "VGM is required for container {0}." → "VGM is required for container CNTR0000001."
+```
+
+(상세 API는 tsb-fontos-core 11.2 Localization 참고)
+
+### UI 컴포넌트 다국어 적용 — `textResourceKey`
+
+tsb-fontos-ui 컴포넌트는 표시 텍스트를 문자열로 직접 넣지 않고 **`textResourceKey` 속성에 리소스 키를 지정**합니다. 컴포넌트가 현재 언어의 번역 문구로 자동 변환해 표시하므로 `Localization.getVocabulary()`를 별도로 호출할 필요가 없습니다.
+
+| 컴포넌트 | `textResourceKey` 용도 | 참고 섹션 |
+|----------|------------------------|-----------|
+| `TButton` | 버튼 레이블 | 4.2 TButton |
+| `TLabel` | 레이블 텍스트 | 4.4 TLabel |
+| `TCheckbox` | 체크박스 레이블 | 4.7 TCheckbox |
+| `TMessageManager` (param) | 메시지 본문 (`args`로 `{0}`, `{1}` 치환) — **`message` namespace에서 조회** | 11.1 TMessageManager |
+
+```tsx
+import { TButton, TLabel, TCheckbox, TForm, TMessageManager } from "tsb-fontos-ui";
+
+// Label / button / checkbox text via resource key
+// 레이블·버튼·체크박스 텍스트는 리소스 키로 지정
+<TLabel textResourceKey="WRD_CARRIER_BillOfLading" />
+
+<TForm.Item name="chkVgmVerified" valuePropName="checked">
+  <TCheckbox textResourceKey="WRD_CARRIER_VgmVerified" />
+</TForm.Item>
+
+<TButton type="primary" textResourceKey="WRD_FTCO_Find" onClick={this.onSearch} />
+
+// Message box text via resource key (+ parameters)
+// 메시지 박스도 리소스 키 + 파라미터로 지정
+await TMessageManager.warning({
+  textResourceKey: "MSG_CARRIER_00001",
+  buttons: "OK",
+});
+```
+
+```tsx
+// ❌ Avoid hard-coded text — not translated when language changes
+// ❌ 하드코딩 텍스트 — 언어가 바뀌어도 번역되지 않음
+<TButton type="primary">Search</TButton>
+
+// ✅ Use resource key / 리소스 키 사용
+<TButton type="primary" textResourceKey="WRD_FTCO_Find" />
+```
+
+### 메뉴 다국어 적용 — `menuitem.json`의 `label`
+
+메뉴 이름(메뉴 트리, 탭 제목)은 **`menuitem.json`의 `label` 속성에 리소스 키를 넣으면** 현재 언어로 번역되어 표시됩니다. 텍스트만으로 된 탭 제목은 `label`로 충분하며, `Menu.tsx`의 `customTabTitle`은 이미지+텍스트처럼 JSX가 필요할 때만 사용합니다 (3.1.5 Menu Item Processing 참고).
+
+```json
+// src/public/environment/menuitem.json
+{
+  "menu": {
+    "CARRIER": {
+      "WRD_CARRIER_Menu_Delivery": [
+        {
+          "key": "mnuEdoList",
+          "label": "WRD_CARRIER_Menu_EdoList"
+        }
+      ]
+    }
+  }
+}
+```
+
+```json
+// src/public/locales/enUS/translation.json
+{
+  "WRD_CARRIER_Menu_Delivery": "Delivery",
+  "WRD_CARRIER_Menu_EdoList": "e-D/O List"
+}
+```
+
+### ⚠️ 주의사항
+
+- `textResourceKey` / `label`에 지정한 키는 `language.namespaces`로 로드되는 번역 파일에 반드시 존재해야 합니다. 키가 없으면 **키 문자열이 그대로 화면에 표시**됩니다 (오류는 발생하지 않음).
+- `label`에 일반 문자열(예: `"File Upload"`)을 넣어도 화면에는 그대로 표시되지만 번역되지 않습니다. 다국어 대상 메뉴는 반드시 리소스 키를 사용하세요.
+- 새 키를 추가할 때는 **모든 언어 폴더**(`enUS`, `vi` 등)의 번역 파일에 동일한 키를 함께 추가합니다.
 
 ---
 
