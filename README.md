@@ -7939,7 +7939,7 @@ private grd_ADM_NewsList = React.createRef<TSpreadGrid>();
     BaseBizRule.createCommonContextMenuItemList()
   )} // Configures the right-click context menu and its associated handlers
   bizRule={BaseBizRule} // Assigns common business logic rules to the grid
-  showTotalCount={true} // Displays the total number of data records at the bottom
+  showTotalCount={true} // Displays "Total Count: {focused}/{total}" at the bottom; with a header filter, "(focused-in-filter/filtered)" is appended. e.g. 5/1442 (2/763)
   selectionUnit="row" // Sets the selection unit to the entire row
   useLookup={true} // Create a map by copying the source list for fast indexing. (Performance improvement, Memory usage increase)  
   bindingItemType={NewsItem} // Determines item binding type to covert imported data like excel import.
