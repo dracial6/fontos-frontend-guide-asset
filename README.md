@@ -5052,6 +5052,11 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
    - 7.13 [Excel Export Service](#713-excel-export-service)
      - 7.13.1 [Basic Excel Export](#7131-basic-excel-export)
      - 7.13.2 [Excel Export with Frontend Data](#7132-excel-export-with-frontend-data)
+     - 7.13.3 [Export Data Flow](#7133-export-data-flow)
+     - 7.13.4 [Header Filter in Excel Export](#7134-header-filter-in-excel-export)
+     - 7.13.5 [Code Columns: CODE / DESCRIPTION](#7135-code-columns-code--description)
+     - 7.13.6 [Exporting Grid Data (`ExportUtil.buildExportRowData`)](#7136-exporting-grid-data-exportutilbuildexportrowdata)
+     - 7.13.7 [Server Cell Conversion](#7137-server-cell-conversion)
    - 7.14 [Customizing Grid Font Size via CSS](#714-customizing-grid-font-size-via-css)
      - 7.14.1 [Applying a Different Font Size to One Grid](#7141-applying-a-different-font-size-to-one-grid)
    - 7.15 [Complete Public API Reference](#715-complete-public-api-reference)
@@ -9935,7 +9940,144 @@ downloadExcelFrontendSetDataAtServer = async () => {
 - `applyRowDataCellColorByHeader`: Apply cell colors from header
 - `thousandSeparator`: Thousand separator for numbers
 - `decimalPoint`: Decimal point for numbers
-- `rowData`: Optional frontend-provided data (if not provided, server will fetch data)
+- `rowData`: Optional frontend-provided data (if not provided, server will fetch data). When provided, it takes precedence over server re-search (see 7.13.3)
+- `filterValueType`: How header filter values of code display columns are sent to server: `'DESCRIPTION'` (default) or `'CODE'` (see 7.13.5)
+- `columnFilterValueTypes`: Per-column override of `filterValueType` (key: column `dataField`) (see 7.13.5)
+
+> `CTGridExporter.downloadExcel()` (Catos) passes `filterValueType` and `columnFilterValueTypes` to `ExportGridService` as well. `dataLocation` is set by the server controller, not by the screen.
+
+#### 7.13.3 Export Data Flow
+
+The server builds the Excel file from one of two data sources.
+
+| Data source | When | How cells are read |
+|---|---|---|
+| **Server re-search** (default) | `rowData` is not provided | The controller sets `dataLocation` (`"beanId.methodName"`). The server calls that service method again with `searchConditions` and reads each cell from the DTO getter of the header `dataField`. |
+| **Frontend `rowData`** | `rowData` is provided (not empty) | Server re-search is skipped, even if the controller sets `dataLocation`. Cells are matched to headers **by index**. |
+
+```text
+[FE] ExportGridService.downloadExcel()  → POST {url} (FileExportParm: headers, filters, searchConditions, rowData)
+[BE] Controller (sets dataLocation)
+       → TBaseExportRestController.exportExcel()
+       → ExcelExportProvider → ExcelFileExporter.createFile()
+            1) rowData present ? skip re-search : re-search via dataLocation
+            2) apply header filters (re-searched data only)
+            3) validate row/column limit
+            4) build workbook (title, headers, data rows) → temp file → download
+```
+
+Notes:
+- Unsaved grid changes (edited, added, deleted rows) are **not** included in server re-search. Save first, or use `rowData` (7.13.6).
+- Hidden columns (`hidden == true`) are not exported. Header cells removed by the controller (e.g. `Button` columns) are excluded from export and from header filters.
+
+#### 7.13.4 Header Filter in Excel Export
+
+Header filters set on the grid (`ColumnSchema.filter` → select filter) are applied to Excel export automatically. No screen code is needed.
+
+| Item | Behavior |
+|---|---|
+| Rule | OR within a column, AND between columns (same as the grid select filter) |
+| Paging / no paging | Both supported. With server re-search, the filter is applied to **all pages** of the re-searched data |
+| Editable ComboBox (`listItemText`) | Filter text (code name) is converted back to the code value before sending |
+| Empty value | `""` matches `null` / empty |
+| Numbers | Compared numerically (`10.50` equals `10.5`) |
+| Row/column limit | Checked **after** filtering |
+| Filter input limit | Max 100 filtered columns, 10,000 values per column. Exceeding throws `excel.export.filter.limit.exceeded` |
+
+The filter is applied on the server to the re-searched data, so the filter value must match the value returned by the export service. If the export service converts values (e.g. code → code name with `@CodeMappingAnnotation`), set `filterValueType` accordingly (7.13.5).
+
+#### 7.13.5 Code Columns: CODE / DESCRIPTION
+
+For code display columns (`codeType` set and `cellDisplayType` not `N`/`C`), the grid filter holds **codes** (e.g. `REL`). Some export services return **code names** instead (e.g. `RELEASE`, via `CodeMappingUtil.covertCodeToCodeName` with `@CodeMappingAnnotation`). Use the options below so the filter values match the server data.
+
+| Option | Value | Description |
+|---|---|---|
+| `filterValueType` | `'DESCRIPTION'` (default) | Codes are converted to code names before sending |
+| | `'CODE'` | Codes are sent as-is |
+| `columnFilterValueTypes` | `Record<dataField, 'CODE' \| 'DESCRIPTION'>` | Per-column override |
+
+Resolution order: `columnFilterValueTypes[dataField]` → `filterValueType` → `'DESCRIPTION'`. Invalid values are ignored.
+
+```typescript
+const item: DownloadFileItem = await excelService.downloadExcel({
+  gridRef: this.grid as any,
+  // ...
+  url: '/hold/export/customshold-excel-export-download',
+  // Screen default: send codes / 화면 기본: 코드 전송
+  filterValueType: 'CODE',
+  // Only this column returns code names from server / 이 컬럼만 서버가 코드명을 반환
+  columnFilterValueTypes: { customAppType: 'DESCRIPTION' },
+});
+```
+
+Guidelines:
+- Field annotated with `@CodeMappingAnnotation` in the export service DTO → `'DESCRIPTION'`
+- Export service that returns codes as-is → `'CODE'`
+- Since the default is `'DESCRIPTION'`, screens whose export service returns codes **must** set `'CODE'` for code display columns, or filtered export returns no rows.
+
+Code → code name conversion is done by `BaseBizRule.getCodeDescriptions(columnSchema, codes)`. The default implementation returns codes as-is; product bizrules override it (Catos: `CTGridBizRule`, same rule as server `CodeMappingUtil`: empty code name → code, unknown code → as-is). The method can be reused anywhere a code name list is needed.
+
+```typescript
+// Code → code name (result order/length matches input) / 코드 → 코드명 (입력과 순서/길이 동일)
+const names = await grid.bizRule?.getCodeDescriptions(columnSchema, ['REL', 'HLD']);
+```
+
+#### 7.13.6 Exporting Grid Data (`ExportUtil.buildExportRowData`)
+
+Use this when server re-search is not possible (e.g. statistics screens with dynamic columns such as GC names per terminal). It builds `rowData` from the grid **as shown on screen**. When `rowData` is sent, the server skips re-search (7.13.3), so the controller does not need to change.
+
+```typescript
+import { ExportGridService, ExportUtil } from "tsb-fontos-ui";
+
+const grid = this.grid.current!;
+// Header-filtered rows, fixed colors (default) / 헤더 필터 적용 행, 고정 색상 (기본)
+const rowData = await ExportUtil.buildExportRowData(grid);
+
+const item: DownloadFileItem = await new ExportGridService().downloadExcel({
+  gridRef: this.grid as any,
+  // ...
+  rowData,
+});
+```
+
+`ExportRowDataOptions`:
+
+| Option | Default | Description |
+|---|---|---|
+| `useAllRows` | `false` | `false`: header-filtered rows (`getFilteredData`), `true`: all rows (`getData`, header filter ignored) |
+| `useCellColor` | `false` | `false`: white background / black text, `true`: actual grid cell colors (rendering info, or `SpreadGridUtil.getCellColor` for rows not drawn yet) |
+
+Cell text rules:
+
+| Column | Text |
+|---|---|
+| Code display column (`cellDisplayType` M / F / S) | As shown on screen: M `RELEASE`, F `REL:RELEASE`, S `RELEASE:REL`. No code name → code |
+| Code display column (other types, e.g. D) | Code list `textValue`, else code name |
+| CheckBox | `Y` / `N` |
+| DateTime (`cellType` DateTime or `cellInputType` `D`) | `yyyy-MM-dd HH:mm:ss`. Empty / `0` / invalid → `null` (blank cell) |
+| Others | Grid formatted value (`getFormattedValue`), else raw value |
+
+Columns are the visible columns in grid order (same rule as `ExportGridService` headers), so cells line up with headers. `ExportUtil.getVisibleDbFields(grid)` returns that column list.
+
+Notes:
+- Header filter is already applied by `getFilteredData()`. The server does not filter `rowData` again, and `filterValueType` has no effect on this path.
+- Paging grid: only the current page is exported.
+- Complex headers: the server matches `rowData` cells to headers by index. Check the result when `complexHeaders` reorders columns.
+- All rows are sent in the request body. Check the server request size limit for large grids.
+- `useCellColor: true` computes colors per cell asynchronously and can be slow for large grids.
+
+#### 7.13.7 Server Cell Conversion
+
+The server converts cell values by header type in both data sources (7.13.3).
+
+| Header | Excel cell |
+|---|---|
+| `dataType = NUMBER` | Numeric cell with `#,##0` (+ precision) format. Empty → `0` |
+| `cellType = DateTime` | Date cell (`yyyy-MM-dd HH:mm:ss`). Unparsable → blank |
+| `cellType = CheckBox` | `true` / `1` / `Y` → `Y`, empty → blank, others → `N` |
+| Others | Text cell |
+
+DTO `Boolean` (wrapper) fields are read via `getXxx()` and primitive `boolean` fields via `isXxx()`, so checkbox values are exported correctly for both.
 
 ### 7.14 Customizing Grid Font Size via CSS
 
