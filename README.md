@@ -2423,6 +2423,9 @@ Static utility class for managing logged-in user information and login state. Pr
 - `isLogined: boolean` - Get/set login status. When changed, all registered callbacks are invoked
 - `staffCd: string` - Staff code of the logged-in user
 - `userGroup: string` - User group of the logged-in user
+- `userLevel: string` - User level (C# `BaseUserInfo.UserLevel`). Grid templates treat `"A"` as administrator (see tsb-fontos-ui 7.17 / 7.18). Default `""`
+- `isAdminYN: string` - Administrator Y/N (C# `BaseUserInfo.IsAdminYN`). Stored in upper case; `null`/`undefined` become `""`
+- `isAdmin: boolean` (readonly) - `isAdminYN` converted like C# `ConvertUtil.ToBoolean` (`"Y"`, `"YES"`, `"TRUE"`, `"1"` → `true`; `""`, `"N"`, `"NO"`, `"FALSE"`, `"0"` → `false`). Throws for any other value
 - `roleId: string` (readonly) - Returns `userGroup` if available, otherwise returns `staffCd`
 - `callbacks: Map<string, (isLogined: boolean) => void>` - Map of callback functions to be called when login state changes
 
@@ -2599,6 +2602,17 @@ if (checkPermission("MANAGER")) {
 5. **User information** (`staffCd`, `userGroup`) should be set before or when setting `isLogined = true`
 6. **Static class** - all properties and methods are static
 7. **Callback system** allows multiple components to react to login state changes
+
+> **Note:** `isAdmin` is for menu/screen authority (same as C# `IsAdmin`). Grid template permissions (column setting, summary, common filter) do **not** use it; they use `userLevel === "A"`, the same as the C# client. Set both in the login strategy if your project needs them.
+
+```typescript
+// Login strategy (after the login response) / 로그인 전략 (로그인 응답 이후)
+LoginedUserInfo.staffCd = user.staffCd;
+LoginedUserInfo.userGroup = user.userGroup ?? "";
+LoginedUserInfo.userLevel = user.userLevel ?? ""; // "A" = template admin / 템플릿 관리자
+LoginedUserInfo.isAdminYN = user.adminYn;         // "Y" / "N"
+LoginedUserInfo.isLogined = true;
+```
 
 ### 11.4 AppConstant
 
@@ -4746,6 +4760,7 @@ Interface for pagination parameters used in API requests.
 - `paging?: boolean` - Whether paging is enabled
 - `pageNum?: number` - Page number to retrieve
 - `pageSize?: number` - Number of items per page
+- `gridFilterJson?: string` - Grid common filter conditions as a JSON string, for server-side filtering. Set by `TSpreadGrid.applyServerFilterParam()`; do not set it by hand (see tsb-fontos-ui [7.18](#718-grid-common-filter))
 
 **Usage:**
 
@@ -5083,6 +5098,19 @@ This guide is for client developers who want to use the `tsb-fontos-ui` framewor
      - 7.16.3 [CellType Specific Requirements](#7163-celltype-specific-requirements)
      - 7.16.4 [Key vs DBField](#7164-key-vs-dbfield)
      - 7.16.5 [Minimal Worked Example](#7165-minimal-worked-example)
+   - 7.17 [Template Ownership: Column Setting, Grid Summary and Common Filter](#717-template-ownership-column-setting-grid-summary-and-common-filter)
+     - 7.17.1 [User Info Used](#7171-user-info-used)
+     - 7.17.2 [Template Levels](#7172-template-levels)
+     - 7.17.3 [Column Setting vs Grid Summary](#7173-column-setting-vs-grid-summary)
+     - 7.17.4 [Shared Rules](#7174-shared-rules)
+     - 7.17.5 [Permission Rules (same as C#)](#7175-permission-rules-same-as-c)
+   - 7.18 [Grid Common Filter](#718-grid-common-filter)
+     - 7.18.1 [Client Mode vs Server Mode](#7181-client-mode-vs-server-mode)
+     - 7.18.2 [Applying Server Mode to a Screen](#7182-applying-server-mode-to-a-screen)
+     - 7.18.3 [Props, Members and Event](#7183-props-members-and-event)
+     - 7.18.4 [Saved Filters and Permissions](#7184-saved-filters-and-permissions)
+     - 7.18.5 [Filter Store Service](#7185-filter-store-service)
+     - 7.18.6 [Checklist](#7186-checklist)
 8. [Pivot Component](#8-pivot-component)
    - 8.1 [Overview](#81-overview)
    - 8.2 [PivotState and Props](#82-pivotstate-and-props)
@@ -10313,6 +10341,12 @@ The framework's central data-binding layer, connecting grid rows to `BaseDataIte
 | `getFilterState(): Filter[] \| null \| undefined` | Toast UI Grid pass-through. |
 | `filter(columnName: string, state: FilterState[]): void` | Toast UI Grid pass-through — apply filter conditions programmatically. |
 | `unfilter(columnName?: string): void` | Toast UI Grid pass-through — omit `columnName` to clear all filters. |
+| `openFilterDialog(): void` | **(Ext)** Opens the common filter dialog. See [7.18](#718-grid-common-filter). |
+| `applyCommonFilter(filters, filterName?, matchedCase?): Promise<number>` | **(Ext)** Applies common filter conditions. Returns the shown row count, or `-1` in server mode. |
+| `clearCommonFilter(): void` | **(Ext)** Clears the common filter. |
+| `applyServerFilterParam<T>(param: T): T` | **(Ext)** Switches the grid to server mode and sets/clears `param.gridFilterJson`. |
+| `getServerFilterConditions()` / `getServerFilterJson()` | **(Ext)** Applied conditions converted to DB values (array / JSON string). |
+| `hasCommonFilter()` / `isCommonFilterActive()` / `isServerFilterMode()` | **(Ext)** Filter state checks. See [7.18.3](#7183-props-members-and-event). |
 
 #### 7.15.11 Validation and Mandatory Field Checks
 
@@ -10635,6 +10669,216 @@ Matching `CellStyleID` entries this example depends on (see [3.2 Cell Style Mana
 // the CodeValueModal dialog rather than an inline dropdown; "category" is only consulted when editable is true.
 { "CellStyles": [ { "CellStyleID": "OPR", "category": "", "editable": false, "characterSet": "", "characterCasing": "", "maxLength": 0, "codeType": "" } ] }
 ```
+
+### 7.17 Template Ownership: Column Setting, Grid Summary and Common Filter
+
+Both the Column Setting dialog (`ColumnModal`) and the Grid Summary dialog (`SummaryModal`) save **templates** on the server. Which templates a user can see is decided by the logged-in user info and the template **level**.
+
+#### 7.17.1 User Info Used
+
+| Field | Used for |
+|---|---|
+| `LoginedUserInfo.staffCd` | Owner of a template. A `User` level template is visible only to this user. |
+| `LoginedUserInfo.userGroup` | Group of the user. A `Group` level template is visible to users in the same group. |
+| `LoginedUserInfo.userLevel` | `"A"` = template administrator. Decides who can create **All** level templates and manage common ones (7.17.5). |
+
+- Set both values in the login strategy (login and auto-login) **before** any grid dialog is opened. `GridColSetting`, `GridSummary` and their param classes copy these values when they are created.
+- If `userGroup` is empty, the **Group** level cannot be selected in either dialog (only All / User are shown).
+
+#### 7.17.2 Template Levels
+
+| Level | Code | Visible to |
+|---|---|---|
+| All | `A` | Every user |
+| Group | `G` | Users in the same user group |
+| User | `U` | The creator only |
+
+When a dialog opens, templates are loaded in the order **User → Group → All**.
+
+#### 7.17.3 Column Setting vs Grid Summary
+
+| | Column Setting | Grid Summary |
+|---|---|---|
+| Template key | `PGM_CODE` + `MENU` + `GRID_IDX` + `TEMPLATE_NAME` | `PGM_CODE` + `MODULE_ID` + `VIEW_NAME` + `GRID_ID` + `TEMPLATE_NAME` |
+| Level feature | Always on | Off by default. Enable with `SummaryConfig.useLevel = true` (requires backend support) |
+| Config class | `ColumnSettingConfig` | `SummaryConfig` |
+| Default level (new template) | Admin (`userLevel "A"`) → `A`, user group → `G`, else `U`. `ColumnSettingConfig.defaultLevel` wins when selectable | `SummaryConfig.defaultLevel` when selectable, else admin → `A`, else `U` (fallback `U` → `G` → `A`) |
+| How the group is resolved | Server checks the creator's current group (`TB_STAFF.USER_GROUP`) | Group is stored on the template (`USER_GROUP`) when it is created |
+| Legacy marker | - | `USER_ID = '*'` means common (`A`). Kept for desktop client compatibility |
+
+#### 7.17.4 Shared Rules
+
+- **Name is unique per grid**, regardless of level or owner. When adding, the dialog checks the name on the server (including templates hidden by level) and blocks duplicates.
+- **Update / delete match by template name only.** Who may modify or delete is decided by 7.17.5.
+- If no user/group info is set, only All and User level templates work as expected.
+
+```typescript
+// App bootstrap (after login info is available)
+import { ColumnSettingConfig, SummaryConfig } from "tsb-fontos-ui";
+
+ColumnSettingConfig.enabledLevels = ["A", "G", "U"]; // optional
+ColumnSettingConfig.defaultLevel = "U";              // optional
+
+SummaryConfig.useLevel = true;       // only after the backend supports TEMPLATE_TYPE / USER_GROUP
+SummaryConfig.defaultLevel = "G";    // optional (default: admin → "A", else "U")
+```
+
+> **Note:** Before enabling `SummaryConfig.useLevel`, check existing summary templates for duplicated names in the same view/grid. Since update/delete/field lookup now match by name only, duplicated names would affect each other.
+
+#### 7.17.5 Permission Rules (same as C#)
+
+All rules are in one internal class, `GridTemplateAuthority` (not exported). They control the UI only; **the server does not check them**. Projects only provide `LoginedUserInfo.staffCd`, `userGroup` and `userLevel`.
+
+| | Column Setting | Grid Summary | Common Filter |
+|---|---|---|---|
+| C# reference | `LegacySpreadColSettingAddTemplateView.DoCheckTemplateLevel` | `GeneralSpreadSummaryView` | `LegacySpreadFilterDBStrategy` |
+| Create **All** / **Common** | `userLevel "A"` only | `userLevel "A"` only | `userLevel "A"` only (Common/Private radios are disabled for others) |
+| Create **Group** | User has a `userGroup` | User has a `userGroup` (web only level) | - |
+| Create **User** / **Private** | Always | Always | Always |
+| Modify / delete existing | Anyone who can see it (C# is the same) | Admin, or owner (`USER_ID == staffCd`). Others: Save/Remove disabled | Admin, or own **Private** filter. Others: "You cannot modify this filter." |
+
+- `ColumnSettingConfig.enabledLevels` / `SummaryConfig.enabledLevels` can only **narrow** these levels further; they cannot enable a level the rules above deny.
+- Admin rights are read at login. A user whose level changes keeps the old rights until the next login.
+
+### 7.18 Grid Common Filter
+
+The common filter dialog (C# `LegacySpreadFilterView`) lets users build AND/OR conditions on grid columns, apply them, and save them as named filters (`TB_FILTER_TEMPLATE`). It opens from the grid toolbar/context menu (`BaseSingleGridController`, `BaseMultiGridController`, `BaseCompositeController` call `grid.openFilterDialog()`).
+
+Operators: `EQUAL`, `NOT EQUAL`, `LESS THAN`, `LESS THAN OR EQUAL`, `GREATER THAN`, `GREATER THAN OR EQUAL`, `BETWEEN`, `LIKE`, `NOT LIKE`, `BLANK`, `NOT BLANK`, `IN`, `NOT IN`, `CONTAIN ALL`, `CONTAIN PARTIAL`. The list shown depends on the column type.
+
+#### 7.18.1 Client Mode vs Server Mode
+
+| | Client mode (default) | Server mode |
+|---|---|---|
+| C# equivalent | `SkipCommonFilter = false` | `SkipCommonFilter = true` (`ApplyFilterToSearchParam`) |
+| Who filters | The grid, on the bound list in the browser | The inquiry SQL on the server (`GridFilterInterceptor`) |
+| Use for | Grids that load all rows | **Paged grids** (filter must cover every page and the total count) |
+| Screen code | None | `applyServerFilterParam()` + re-query in `onCommonFilterChanged` |
+| Backend | None | resultMap + interceptor rules (Backend Developer Guide §16.3) |
+
+In client mode only the current page would be filtered on a paged grid, so paged grids should use server mode.
+
+#### 7.18.2 Applying Server Mode to a Screen
+
+**Step 1 — Controller: add the filter to the search parameter.** Call it every time the parameter is built. It turns on server mode (like C# `ApplyFilterToSearchParam`), sets `gridFilterJson` when a filter is applied, and removes it when not (so a reused parameter never keeps an old filter).
+
+```typescript
+// CustomsFreeZoneController.getSearchParam()
+searchParam.bookingNo = formInst.getFieldValue('bookingNo');
+
+// Server filter mode: send applied grid filter conditions with the inquiry
+// 서버 필터 모드: 적용된 그리드 필터 조건을 조회와 함께 전송
+this.grid?.current?.applyServerFilterParam(searchParam);
+
+if (this.view.state.hasPaging) {
+    searchParam.pageNum = pageNum;
+    searchParam.paging = true;
+    ...
+}
+```
+
+The parameter needs a `gridFilterJson?: string` field. Parameters that extend `IPageParam` already have it.
+
+**Step 2 — View: re-query when the filter changes.** In server mode the grid does not filter; the screen must re-query from page 1.
+
+```tsx
+<TSpreadGrid
+  ref={this.grid}
+  ...
+  onCommonFilterChanged={(e) => {
+    // Re-query when the filter is applied/cleared / 필터 적용·해제 시 재조회
+    if (e.isServerFilter) this._controller?.menuRefresh();
+  }}
+/>
+```
+
+**Step 3 — Backend.** The inquiry must follow the server filter rules (resultMap, aliases in ORDER BY, no custom `_COUNT`). See Backend Guide 16.3.
+
+> **Why a JSON string?** Inquiries are usually GET. A query string cannot carry a nested list, so the conditions travel as one JSON string (`gridFilterJson`). The server parses it into `gridFilters`. Excel export sends the same parameter; the server accepts both the string and the parsed array.
+
+How conditions are converted before sending (`GridFilterServerCondition`):
+
+| Column type | Sent value |
+|---|---|
+| Number / Currency | Invariant number (`"1234.5"`); grouping separators removed |
+| DateTime | ISO (`"2026-11-05T09:30:00"`); date-only formats send `"2026-11-05"` and the server extends the upper bound to the end of the day |
+| Code columns | The **code**, not the display text |
+| Others | As entered |
+
+`field` is the column's `dbField`, so it must match a `property` in the backend resultMap. An invalid number/date throws when the filter is applied, and the grid keeps its previous state.
+
+#### 7.18.3 Props, Members and Event
+
+**Props**
+
+| Prop | Type | Description |
+|---|---|---|
+| `skipCommonFilter` | `boolean` | Initial server mode. Usually not needed: `applyServerFilterParam()` turns it on. |
+| `isReApplyFilter` | `boolean` | Client mode: re-apply the filter when a cell value changes (C# `IsReApplyFilter`). Default off: edited rows stay visible. |
+| `onCommonFilterChanged` | `(e: CommonFilterChangedEventArgs) => void` | Fired when a filter is applied or cleared (C# `GridFilterOptionApplied` / `Cleared`). |
+
+**`CommonFilterChangedEventArgs`**
+
+| Field | Description |
+|---|---|
+| `grid` | The grid |
+| `appliedFilterList` | Applied conditions, `null` when cleared |
+| `appliedFilterName` | Saved filter name (`""` for an unsaved one) |
+| `filteredCount` / `totalCount` | Shown rows / source rows (client mode) |
+| `isServerFilter` | `true` in server mode → re-query |
+
+**Members**
+
+| Member | Description |
+|---|---|
+| `skipCommonFilter` (get/set) | Server mode flag at runtime |
+| `isServerFilterMode()` | Same as `skipCommonFilter` |
+| `hasCommonFilter()` | Conditions are applied (both modes) |
+| `isCommonFilterActive()` | The grid is filtering in the browser (`false` in server mode) |
+| `appliedFilterList` / `appliedFilterName` | Current filter |
+| `filteredItemList` | Rows shown by the filter (client mode); the source list in server mode; `null` if no filter |
+| `applyServerFilterParam(param)` | See 7.18.2 |
+| `getServerFilterConditions()` / `getServerFilterJson()` | Conditions as server values (POST body / GET string) |
+| `applyCommonFilter(filters, name?, matchedCase?)` / `clearCommonFilter()` | Apply/clear from code |
+| `openFilterDialog()` | Opens the dialog |
+
+#### 7.18.4 Saved Filters and Permissions
+
+| Filter type | Code | Visible to | Who can modify/delete |
+|---|---|---|---|
+| Common | `C` | Every user of the grid | Admin only (`userLevel "A"`) |
+| Private | `P` | Owner only | Admin, or the owner |
+
+- Key: `PGM_CODE` + `MENU` + `GRID_IDX` + `FILTER_NAME`; one row per condition (`SEQ`).
+- A new filter is **Common** for admins and **Private** for others. Only admins can change the radio.
+- Saving a name used by another user's filter asks for confirmation (C# `GetDuplicatedFilterCount`).
+- Messages: `MSG_FTCO_00300` (no condition entered), `MSG_FTCO_00301` (filter not manageable) in `message.json`.
+- The server does **not** check these permissions (same as summary/column setting). See 7.17.5.
+
+#### 7.18.5 Filter Store Service
+
+The dialog uses `IGridFilterService`. The default `GridFilterService` calls these endpoints on `BaseRemoteServerKeys.Default`:
+
+| Method | URL | Purpose |
+|---|---|---|
+| GET | `/inquiryFilterStoredItemList` | Own private + common filters of the grid |
+| GET | `/inquiryDuplicatedFilterCount` | Same name owned by another user |
+| POST | `/processFilterStoredItem` | Delete old + insert new conditions (one transaction) |
+| POST | `/deleteFilterStoredItem` | Delete one filter |
+
+The backend of each project provides these (Catos: `catos.ct.ip` `GridFilterController`; WebPrototype: `GridFilterController`). To use another server or URL, implement `IGridFilterService` and return it for the key `GRID_FILTER_SERVICE_NAME` (`"CORE_GRID_FILTER_SVR"`) from your service locator ([3.4](#34-service-provider-registration)). If no service is registered under that key, the default `GridFilterService` is used.
+
+`BETWEEN` is stored as `from~to` in one row, like C#.
+
+#### 7.18.6 Checklist
+
+- [ ] Paged grid → server mode; non-paged grid → nothing to do
+- [ ] Controller calls `applyServerFilterParam(param)` every time the parameter is built (inquiry **and** paging)
+- [ ] View re-queries in `onCommonFilterChanged` when `e.isServerFilter`
+- [ ] Every filterable column's `dbField` exists as a `property` in the backend resultMap
+- [ ] Backend inquiry follows Backend Guide 16.3 (resultMap, ORDER BY aliases, no `_COUNT`)
+- [ ] `LoginedUserInfo.userLevel` is set at login if admins must manage common filters
+- [ ] Excel export with a filter applied returns the filtered rows
 
 ## 8. Pivot Component
 

@@ -88,6 +88,8 @@ It is the backend companion to the `[tsb-fontos-ui] Developer Guide` (frontend/R
 16. [Database & Datasource Configuration](#16-database--datasource-configuration)
     - 16.1 [Multi-Dialect Mapper Switching](#161-multi-dialect-mapper-switching)
     - 16.2 [Multi-Datasource Routing](#162-multi-datasource-routing)
+    - 16.3 [Grid Server Filter (`GridFilterInterceptor`)](#163-grid-server-filter-gridfilterinterceptor)
+    - 16.4 [Grid Filter Template Store](#164-grid-filter-template-store)
 17. [Web Serial (COM Port) Communication (Frontend Reference)](#17-web-serial-com-port-communication-frontend-reference)
     - 17.1 [Overview](#171-overview)
     - 17.2 [Test Environment Setup](#172-test-environment-setup)
@@ -1096,6 +1098,8 @@ implementation 'com.github.pagehelper:pagehelper:5.3.0'
 | `params` | `count=countSql` | Parameter name used with `startPage(Object params)` |
 | `autoRuntimeDialect` | `false` | Detect DB type at runtime — useful with multi-datasource setups (§16) |
 | `closeConn` | `true` | Close the Connection after the count query |
+
+> If the module uses the grid server filter, register `GridFilterInterceptor` **after** `PageInterceptor`. See [16.3](#163-grid-server-filter-gridfilterinterceptor).
 
 **Controller/Service pattern:**
 
@@ -4549,6 +4553,224 @@ public class BoardService extends TBaseRestService {
 | Single-terminal, different DBs, no cross-DB TX | Single | No | `DataSourceTransactionManager` (plain Spring local TX per DataSource) |
 
 In the no-cross-DB-transaction case, only the primary DataSource is read/write — secondary DataSources are typically treated as read-only. Use `JTA DB Transaction` only when a single business operation must commit/rollback atomically across more than one physical database; otherwise prefer the simpler `DataSourceTransactionManager` per DataSource.
+
+### 16.3 Grid Server Filter (`GridFilterInterceptor`)
+
+Paged grids cannot filter in the browser (only one page is loaded). In **server mode** the frontend sends the grid's common filter conditions with the inquiry (`gridFilterJson`, frontend guide 7.18), and a MyBatis plugin in `tsb.fontos.core` adds them to the SELECT. This is the web version of C# `SkipCommonFilter` / `ApplyFilterToSearchParam`.
+
+```text
+original : SELECT M.CNTR_NO cntrNo, ... FROM ... WHERE ... ORDER BY vslCd, cntrNo
+filtered : SELECT * FROM ( SELECT M.CNTR_NO cntrNo, ... FROM ... WHERE ... ) GF_
+           WHERE GF_.cntrNo = ? AND ...
+           ORDER BY vslCd, cntrNo
+```
+
+PageHelper then adds paging and builds the count query from the **filtered** SQL, so the total count and every page are filtered.
+
+**Package:** `tsb.fontos.core.gridfilter`
+
+| Class | Role |
+|---|---|
+| `interceptor.GridFilterInterceptor` | MyBatis plugin. Wraps SELECTs whose parameter carries filter conditions |
+| `param.IGridFilterSearchParam` | Marks a search parameter: `List<GridFilterCondition> getGridFilters()` |
+| `param.GridFilterSearchParam` | Base class (`extends BaseBizParm`) with `gridFilters` + `setGridFilterJson(Object)` |
+| `param.GridFilterJsonParser` | Parses `gridFilterJson` (JSON string or already parsed list) |
+| `item.GridFilterCondition` | `field`, `operator`, `value`, `value2`, `matchedCase` |
+| `sql.GridFilterSqlBuilder` | Builds the WHERE clause with bind parameters |
+| `dialect.*` | Oracle / SQL Server differences |
+
+#### 16.3.1 Setup (once per application)
+
+Register the plugin in `sql-mapper-config.xml`, **after** `PageInterceptor`. MyBatis runs the last registered plugin first, so the filter is added before PageHelper builds the count and page queries.
+
+```xml
+<plugins>
+    <plugin interceptor="com.github.pagehelper.PageInterceptor">
+        ...
+    </plugin>
+    <!-- Grid common filter (server mode) / 그리드 공통 필터 (서버 모드) -->
+    <plugin interceptor="tsb.fontos.core.gridfilter.interceptor.GridFilterInterceptor">
+        <property name="dialect" value="sqlserver" /> <!-- oracle | sqlserver -->
+    </plugin>
+</plugins>
+```
+
+| `dialect` | Notes |
+|---|---|
+| `oracle` | `REGEXP_LIKE`; `BLANK` = `IS NULL`; date-only upper bound = end of day − 1 ms |
+| `sqlserver` (`mssql`, `sqlserver2012`) | `LIKE` with `[` escaped; `BLANK` = `IS NULL OR = ''`; end of day − 3 ms; queries starting with a CTE (`WITH`) are not supported |
+| (omitted) | Detected once from the JDBC connection |
+
+Applied: Catos `catos.ct.ip` (`sqlserver`), Fontos-Sample-WebPrototype (`oracle`).
+
+#### 16.3.2 Search Parameter
+
+The parameter must implement `IGridFilterSearchParam`. The frontend sends a JSON string (`gridFilterJson`) because GET query strings cannot carry a nested list; `setGridFilterJson` turns it into `gridFilters`. Spring/Jackson calls this setter when it binds the request; you never call it.
+
+**Option 1 — extend the base class** (when the parameter has no other parent):
+
+```java
+// SingleGridParam (WebPrototype)
+public class SingleGridParam extends GridFilterSearchParam {
+    ...
+}
+```
+
+**Option 2 — implement the interface** (when the parameter already extends a project base class, e.g. Catos `CTBaseParam`):
+
+```java
+import tsb.fontos.core.gridfilter.item.GridFilterCondition;
+import tsb.fontos.core.gridfilter.param.GridFilterJsonParser;
+import tsb.fontos.core.gridfilter.param.IGridFilterSearchParam;
+
+public class HoldParam extends CTBaseParam implements IGridFilterSearchParam {
+    ...
+    // Conditions used by GridFilterInterceptor / GridFilterInterceptor 가 사용하는 조건
+    private List<GridFilterCondition> gridFilters = new ArrayList<>();
+
+    @Override
+    public List<GridFilterCondition> getGridFilters() { return gridFilters; }
+
+    /**
+     * Bound from "gridFilterJson" (GET string, or array after Excel export re-parsing).
+     * "gridFilterJson" 에서 바인딩 (GET 문자열, 또는 Excel export 재파싱 후 배열).
+     */
+    public void setGridFilterJson(Object json) {
+        this.gridFilters = GridFilterJsonParser.parse(json);
+    }
+}
+```
+
+> **Keep the setter type `Object`.** Excel export (`ExportReflectionUtil`) converts `"[...]"` strings into a `List` before binding. A `String` setter fails with `Cannot deserialize value of type java.lang.String from Array value`.
+
+The interceptor also finds the parameter inside a `@Param` map. **Every** SELECT that receives this parameter with conditions is filtered, so don't pass the same parameter object to other queries (combo lookups, detail queries) in the same request, or clear `gridFilters` first.
+
+#### 16.3.3 Mapper Rules
+
+| # | Rule | Why |
+|---|---|---|
+| 1 | Use **`resultMap`** (not `resultType`). `property` = grid `dbField`, `column` = select alias | The resultMap is the **whitelist**: only mapped properties can be filtered, and only mapped columns are written into SQL. Without it: `Grid filter requires a resultMap` |
+| 2 | Top-level `ORDER BY` uses **select aliases** (or positions), not table aliases | It is moved outside the wrapped query, where `M.`/`H.` are not visible (see below) |
+| 3 | **No custom `<id>_COUNT`** statement | PageHelper would run it without the filter → wrong total. The interceptor fails fast: `Grid filter cannot be used with a custom count statement` |
+| 4 | No CTE (`WITH ...`) on SQL Server | A CTE cannot be placed inside a derived table |
+| 5 | Dynamic sort columns map to **aliases** | Same as rule 2 (e.g. `HoldService.reSetCustomsSortColumns`) |
+
+**Why ORDER BY is moved outside**
+
+- SQL Server forbids `ORDER BY` in a derived table (unless with `TOP`/`OFFSET`/`FOR XML`).
+- Oracle allows it, but does not guarantee the order after the outer `WHERE`.
+- PageHelper's SQL Server paging (`OFFSET ... FETCH`) needs `ORDER BY` at the same level, at the end.
+
+Queries whose `ORDER BY` selects rows (`TOP`, `OFFSET`, `FETCH`, `LIMIT`) keep it inside; moving it would change the result.
+
+**Example (`HoldMap.xml`, SQL Server)**
+
+```xml
+<resultMap id="customsHoldListResult" type="catos.biz.common.item.hold.HoldItem">
+    <result property="vslCd"          column="vslCd" />
+    <result property="cntrNo"         column="cntrNo" />
+    <result property="updateDateTime" column="updateDateTime" />
+    ...
+</resultMap>
+
+<!-- inquiryCustomsHoldList_COUNT : removed (grid filter) / 삭제 (그리드 필터) -->
+
+<select id="inquiryCustomsHoldList" resultMap="customsHoldListResult"
+        parameterType="catos.biz.common.param.hold.HoldParam">
+    <include refid="getCustomsHolds" /> <!-- SELECT M.VSL_CD vslCd, M.CNTR_NO cntrNo, ... -->
+    <trim prefix="ORDER BY">
+        <if test="sortColumns == null or sortColumns.isEmpty()">
+            vslCd, callYear, callSeq, cntrNo          <!-- select aliases / select 별칭 -->
+        </if>
+        <if test="sortColumns != null and !sortColumns.isEmpty()">
+            <foreach collection="sortColumns" item="sortColum" separator=",">
+                ${sortColum.columnName} ${sortColum.sortDirection}
+            </foreach>
+        </if>
+    </trim>
+</select>
+```
+
+> `${...}` in ORDER BY is raw substitution. Map the client sort columns to known aliases in the service (e.g. `HoldService.reSetCustomsSortColumns`) and reject anything else; never pass client text through as is.
+
+> Lombok getters like `getPSztp()` are named `PSztp` by MyBatis. Property lookup is case-insensitive, so `pSztp` from the grid still matches.
+
+> Watch for full-width spaces (U+3000) in mapper SQL. PageHelper's count parser (jsqlparser) cannot parse them.
+
+#### 16.3.4 Conditions and Limits
+
+| Operator | SQL |
+|---|---|
+| `EQUAL`, `NOT EQUAL`, `LESS THAN`, `LESS THAN OR EQUAL`, `GREATER THAN`, `GREATER THAN OR EQUAL` | `=`, `<>`, `<`, `<=`, `>`, `>=` |
+| `BETWEEN` | `>= value AND <= value2` (date-only `value2` → end of day) |
+| `LIKE`, `NOT LIKE` | `*` / `%` wildcards; Oracle `REGEXP_LIKE`, SQL Server `LIKE` |
+| `BLANK`, `NOT BLANK` | Dialect-specific (16.3.1) |
+| `IN`, `NOT IN` | Comma-separated values |
+| `CONTAIN ALL`, `CONTAIN PARTIAL` | Every / any token (LIKE) |
+
+- Values are always **bind parameters** (`__gridFilter_n`); never concatenated.
+- Values are converted by the resultMap property's Java type (number, date, string). Invalid → `IllegalArgumentException`.
+- `matchedCase = false` compares case-insensitively.
+
+| Limit | Value |
+|---|---|
+| Conditions per query | 50 |
+| `IN` values | 1,000 |
+| `LIKE` tokens | 100 |
+| Value length | 4,000 |
+| `gridFilterJson` length | 100,000 characters |
+
+Unknown fields (`Grid filter field is not allowed`), invalid operators and exceeded limits throw `IllegalArgumentException`. Map them to a 400-level response in your exception handler if needed.
+
+#### 16.3.5 Checklist
+
+- [ ] `GridFilterInterceptor` registered after `PageInterceptor`, with the right `dialect`
+- [ ] Search parameter implements `IGridFilterSearchParam` (`setGridFilterJson(Object)`)
+- [ ] Inquiry uses `resultMap`; every filterable grid `dbField` is a `property`
+- [ ] Top-level `ORDER BY` and dynamic sort columns use select aliases
+- [ ] `<id>_COUNT` removed
+- [ ] Tested: filter + paging (count and page 2), filter + sort, filter + Excel export
+
+### 16.4 Grid Filter Template Store
+
+Saved filters are stored in `TB_FILTER_TEMPLATE` (same table as the C# client). The store is implemented **in each project**, like the grid summary store; `tsb.fontos.core` only has the server filter (16.3).
+
+| Project | Controller | Service / Dao | Mapper |
+|---|---|---|---|
+| Catos | `catos.ct.ip` `controller.common.gridfilter.GridFilterController` | `catos.biz.common` `service.gridfilter.GridFilterService` / `GridFilterDao` | `mapper/mssql/gridfilter/GridFilterMapper.xml` |
+| WebPrototype | `GridFilterController` | `service.gridfilter.GridFilterService` / `dao.gridfilter.GridFilterDao` | `mapper/oracle/gridfilter/GridFilterMapper.xml` |
+
+**Endpoints** (called by the frontend `GridFilterService`):
+
+| Method | URL | Input | Output |
+|---|---|---|---|
+| GET | `/inquiryFilterStoredItemList` | `GridFilterStoreParam` (`pgmCode`, `menu`, `gridIdx`) | Own private + common filters, ordered by name, seq |
+| GET | `/inquiryDuplicatedFilterCount` | + `filterName`, `filterType` | Count of the same name owned by other users (common only when saving as private) |
+| POST | `/processFilterStoredItem` | `GridFilterSaveRequest` `{ deleteItem, filterItems[] }` (JSON body) | Saved items. Deletes `deleteItem`'s rows, then inserts `filterItems`, in one transaction |
+| POST | `/deleteFilterStoredItem` | `GridFilter` (JSON body) | Deleted row count |
+
+**Table columns:** `PGM_CODE`, `MENU`, `GRID_IDX`, `FILTER_NAME`, `SEQ`, `FIELD`, `OPERATOR`, `VALUE`, `USER_ID`, `STAFF_CD`, `UPDATE_TIME`, `FILTER_TYPE` (`C` common / `P` private). One row per condition; `BETWEEN` is stored as `from~to`.
+
+**User ID:** take it from the authenticated user, not the request body.
+
+```java
+// catos.ct.ip GridFilterController (excerpt)
+// User id from the authenticated JWT user, not from the client / 클라이언트 값이 아닌 인증된 JWT 사용자 ID 사용
+TDefaultUser user = (TDefaultUser) authentication.getPrincipal();
+String userId = user.getJwtAccessToken() != null ? user.getJwtAccessToken().getUsername() : user.getUsername();
+if (userId == null || userId.trim().isEmpty()) {
+    throw new IllegalStateException("Not authenticated.");
+}
+```
+
+> ⚠️ WebPrototype's controller still uses the `userID` sent by the client. Replace it with the authenticated user before using it as a reference.
+
+**Permissions:** the server does not check who may create or change common filters; the frontend controls it (frontend guide 7.17.5 / 7.18.4), the same as summary and column setting templates. If a module needs server enforcement, add it in that module's service.
+
+**Application config**
+
+- Catos `catos.ct.ip`: nothing to add. It already has `<mybatis:scan base-package="catos.biz.common" />` and `mapperLocations = classpath*:mapper/${app.dbType}/**/*.xml` (`classpath*:` is needed to read mapper XML from the `catos.biz.common` jar).
+- WebPrototype: the store is in the same project, so `classpath:mapper/${app.dbType}/**/*.xml` is enough.
 
 ---
 
